@@ -1,0 +1,19 @@
+[project]
+name = "lfmap-core"
+version = "0.1.0"
+description = "LFMAP core: Tool base, manifest, discovery, permissions and generated adapters."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "mcp==2.3.0",
+    "pydantic>=2",
+    "typer>=0.27.3",
+]
+
+[project.scripts]
+lfmap = "lfmap_core.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

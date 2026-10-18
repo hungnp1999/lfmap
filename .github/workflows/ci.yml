@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      - name: Install Python 3.12
+        run: uv python install 3.12
+      - name: License check (runtime dependencies only)
+        run: |
+          uv sync --frozen --no-dev
+          uv run --no-sync python scripts/check_licenses.py
+      - name: Install with dev tools
+        run: uv sync --frozen
+      - name: Lint
+        run: |
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
+      - name: Test
+        run: uv run --no-sync pytest
+      - name: CLI smoke test
+        run: uv run --no-sync lfmap echo say --text "xin chao" --json
