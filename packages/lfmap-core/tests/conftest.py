@@ -57,8 +57,24 @@ side_effects = "local_write"
 """
 
 
+@pytest.fixture(autouse=True)
+def user_dirs(tmp_path, monkeypatch):
+    """Keep config.toml and per-plugin data folders inside the test's temporary folder."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "localappdata"))
+    monkeypatch.setenv("LFMAP_CONFIG", str(tmp_path / "config.toml"))
+    return tmp_path
+
+
 @pytest.fixture
 def registry() -> Registry:
     reg = Registry()
     reg.register(PluginEntry("fake-plugin", FakeTool, parse_manifest(MANIFEST)))
+    return reg
+
+
+@pytest.fixture
+def external_registry() -> Registry:
+    reg = Registry()
+    manifest = parse_manifest(MANIFEST.replace('side_effects = "local_write"', 'side_effects = "external"'))
+    reg.register(PluginEntry("fake-plugin", FakeTool, manifest))
     return reg

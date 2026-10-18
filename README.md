@@ -40,6 +40,28 @@ Each operation becomes an MCP tool named `<plugin>_<operation>` (for example `ec
 4. Raise `ToolError(code, message, details)` for business errors. Codes: `invalid_input`, `permission_denied`, `not_found`, `backend_unavailable`, `timeout`, `internal`.
 5. Check file access with `self.ctx.permissions.require_read(path)` / `require_write(path)`; only what `[permissions]` declares is granted.
 
+## Folders and approvals
+
+Folders a plugin may touch come from your own config file, `%LOCALAPPDATA%\lfmap\config.toml` (or the file named by `LFMAP_CONFIG`). No operation writes it, so a caller such as an AI agent cannot widen them.
+
+```toml
+[paths]
+documents = ['D:\Docs', 'E:\Scans']   # used as ${documents} in a manifest's [permissions]
+exports = 'D:\Docs\_markdown'
+```
+
+- Each value must be an absolute local path; network paths (`\\server\share`, `//host`) are refused. A list gives one folder per entry.
+- `${data_dir}` and `${temp_dir}` are built in: `%LOCALAPPDATA%\lfmap\<plugin>` and its `tmp` subfolder.
+- A variable you have not defined grants nothing, so every path under it is refused.
+
+Operations with side effects (`side_effects` other than `none`) ask before running in the CLI (`--yes` skips the prompt). Over MCP an agent cannot confirm for you, so they are refused unless you approve them when starting the server:
+
+```powershell
+uv run lfmap serve mcp --plugins markitdown --approve markitdown.export
+```
+
+Operations with `external` side effects cannot be pre-approved.
+
 ## License
 
 Apache-2.0.

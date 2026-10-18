@@ -122,11 +122,15 @@ def build_app(registry: Registry) -> typer.Typer:
     @serve_app.command("mcp")
     def serve_mcp(
         plugins: Annotated[list[str] | None, typer.Option("--plugins", help="Plugin ids; default all.")] = None,
+        approve: Annotated[
+            list[str] | None,
+            typer.Option("--approve", help="Allow <plugin>.<operation> with local side effects for this server."),
+        ] = None,
     ) -> None:
         """Serve plugin operations as MCP tools over stdio."""
         from lfmap_core.mcp_adapter import build_server
 
-        build_server(registry, plugins or []).run()
+        build_server(registry, plugins or [], approve or []).run()
 
     for entry in registry.all():
         if not entry.manifest.adapters.cli:

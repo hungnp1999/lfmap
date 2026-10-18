@@ -64,9 +64,33 @@ def test_remote_root_refused():
     assert caught.value.code == "permission_denied"
 
 
-def test_undefined_variable():
+def test_undefined_variable_grants_nothing(dirs):
+    perms = PermissionManager.from_manifest(Permissions(fs_read=["${input_dir}"]), {})
+    assert perms.read_roots == []
+    denied(perms.require_read, dirs[0] / "a.pdf")
+
+
+def test_list_variable_gives_one_root_per_value(dirs):
+    data, out, sibling = dirs
+    perms = PermissionManager.from_manifest(
+        Permissions(fs_read=["${documents}"]), {"documents": [str(data), str(sibling)]}
+    )
+    assert perms.require_read(data / "a.pdf")
+    assert perms.require_read(sibling / "a.pdf")
+    denied(perms.require_read, out / "a.pdf")
+
+
+def test_variable_inside_pattern(dirs):
+    data = dirs[0]
+    (data / "sub").mkdir()
+    perms = PermissionManager.from_manifest(Permissions(fs_read=["${documents}/sub"]), {"documents": [str(data)]})
+    assert perms.require_read(data / "sub" / "a.pdf")
+    denied(perms.require_read, data / "a.pdf")
+
+
+def test_relative_root_refused():
     with pytest.raises(ToolError) as caught:
-        PermissionManager.from_manifest(Permissions(fs_read=["${input_dir}"]), {})
+        PermissionManager.from_manifest(Permissions(fs_read=["${d}"]), {"d": "docs"})
     assert caught.value.code == "invalid_input"
 
 
