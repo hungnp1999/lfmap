@@ -1,0 +1,26 @@
+[plugin]
+id = "echo"
+name = "Echo"
+version = "0.1.0"
+description = "Repeat text back."
+license = "Apache-2.0"
+authors = ["Hung"]
+
+[plugin.entrypoint]
+module = "lfmap_echo.tool"
+class = "EchoTool"
+
+[[operations]]
+name = "say"
+input = "lfmap_echo.schemas:SayInput"
+output = "lfmap_echo.schemas:SayOutput"
+side_effects = "none"
+
+[permissions]
+
+[adapters]
+cli = true
+mcp = true
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0"]
