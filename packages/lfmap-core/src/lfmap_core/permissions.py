@@ -1,6 +1,8 @@
 """Permission Manager: grants exactly what a plugin declares in [permissions]."""
 
+import logging
 import os
+import re
 from pathlib import Path
 
 from lfmap_core.errors import ToolError
@@ -8,21 +10,34 @@ from lfmap_core.manifest import Permissions
 
 # Network and device paths: touching them can send the user's NTLM hash or reach other machines.
 _REMOTE_PREFIXES = ("\\\\", "//")
+_VARIABLE = re.compile(r"\$\{(\w+)\}")
+
+log = logging.getLogger(__name__)
 
 
 def _is_remote(value: str) -> bool:
     return value.startswith(_REMOTE_PREFIXES) or value.startswith("\\??\\")
 
 
-def _expand(pattern: str, variables: dict[str, str]) -> str:
-    result = pattern
-    for name, value in variables.items():
-        result = result.replace("${" + name + "}", value)
-    if "${" in result:
-        raise ToolError("invalid_input", "Permission uses an undefined variable", {"pattern": pattern})
-    if _is_remote(result):
-        raise ToolError("permission_denied", "Network paths cannot be granted", {"pattern": pattern})
-    return os.path.realpath(os.path.abspath(result))
+def _expand(pattern: str, variables: dict[str, list[str]]) -> list[str]:
+    """Expand `${name}` variables; a list variable gives one root per value. Unknown variable: no root."""
+    results = [pattern]
+    for name in _VARIABLE.findall(pattern):
+        if name not in variables:
+            log.warning("Permission %r uses undefined variable ${%s}; it grants nothing", pattern, name)
+            return []
+        results = [r.replace("${" + name + "}", value) for r in results for value in variables[name]]
+    roots = []
+    for result in results:
+        if _is_remote(result):
+            raise ToolError("permission_denied", "Network paths cannot be granted", {"pattern": pattern})
+        if not os.path.isabs(result):
+            raise ToolError("invalid_input", "Permission roots must be absolute paths", {"root": result})
+        root = os.path.realpath(result)
+        if _is_remote(root):
+            raise ToolError("permission_denied", "Root resolves to a network path", {"pattern": pattern})
+        roots.append(root)
+    return roots
 
 
 class PermissionManager:
@@ -32,10 +47,11 @@ class PermissionManager:
         self.network = network
 
     @classmethod
-    def from_manifest(cls, perms: Permissions, variables: dict[str, str]) -> "PermissionManager":
+    def from_manifest(cls, perms: Permissions, variables: dict[str, str | list[str]]) -> "PermissionManager":
+        values = {name: [v] if isinstance(v, str) else list(v) for name, v in variables.items()}
         return cls(
-            [_expand(p, variables) for p in perms.fs_read],
-            [_expand(p, variables) for p in perms.fs_write],
+            [root for p in perms.fs_read for root in _expand(p, values)],
+            [root for p in perms.fs_write for root in _expand(p, values)],
             perms.network,
         )
 
