@@ -18,6 +18,7 @@ class GreetOutput(BaseModel):
 
 class NestedInput(BaseModel):
     names: list[str]
+    escalate: str | None = None
 
 
 class FakeTool(Tool):
@@ -32,6 +33,8 @@ class FakeTool(Tool):
     @operation("write")
     def write(self, inp: NestedInput) -> GreetOutput:
         """Pretend to write something."""
+        if inp.escalate:
+            self.ctx.require_approval(inp.escalate, detail="out.txt")
         return GreetOutput(message=",".join(inp.names))
 
 

@@ -12,10 +12,13 @@
 - User config `%LOCALAPPDATA%\lfmap\config.toml` (`LFMAP_CONFIG` overrides): `[paths]` defines the folders behind `${name}` variables in `[permissions]`; built-in `${data_dir}` and `${temp_dir}` per plugin.
 - `lfmap serve mcp --approve <plugin>.<operation>`; MCP tools carry read-only and open-world hints.
 - `ToolContext` carries the plugin's `data_dir`, `temp_dir`, `settings` (from `[plugins.<id>.settings]` in the user config), the calling `channel` and an `approver` hook. `context_for` builds the context for an in-process call to another plugin with no more rights than the caller.
-- `lfmap_core.approval`: risk tiers T0–T3 (ADR-017), the `[approval]` policy in `config.toml`, the approval decision table and an append-only `audit.jsonl`. T3 can never be pre-approved or relaxed below "ask", and only an interactive CLI may ask for it. Not wired into the adapters yet.
+- `lfmap_core.approval`: risk tiers T0–T3 (ADR-017), the `[approval]` policy in `config.toml`, the approval decision table and an append-only `audit.jsonl`. T3 can never be pre-approved or relaxed below "ask", and only an interactive CLI may ask for it. Wired into the CLI and MCP adapters (see Changed).
+- `ToolContext.require_approval(reason, detail)` lets a plugin escalate a call to T2 (overwrite, rename, delete) or T3 (`external`) before acting.
+- `lfmap approvals grant|revoke|list`: time-limited approvals in `%LOCALAPPDATA%\lfmap\grants.json` (T3 at most 24 hours, T1–T2 at most 7 days), from an interactive terminal only; every grant and revoke is audited.
 
 ### Changed
 
+- CLI and MCP decide approvals by tier (ADR-017). Operations declared `local_write` (T1) now run without a prompt and are logged to `audit.jsonl`. T2 asks: a terminal prompt or `--yes` in the CLI; `serve mcp --approve` (now valid for 8 hours) or MCP elicitation. T3 needs a grant, or a prompt in an interactive terminal; `--yes`, `--approve` and elicitation never cover it. A connection that cannot carry elicitation is refused, not allowed.
 - CLI and MCP now expand permission variables from the user config instead of none. A list variable gives one root per entry; an undefined variable grants nothing (with a warning) instead of failing the whole plugin. Relative roots are refused, and so is a root that resolves to a network path.
 
 ### Security
