@@ -84,15 +84,18 @@ def text_quality(text: str) -> tuple[float | None, int]:
     return 1 - sum(is_garbled_word(word) for word in words) / len(words), len(words)
 
 
-def analyze_pdf_text(pdf_path: Path | str) -> PdfTextReport:
-    """Find pages without text and pages whose text layer looks wrongly encoded."""
+def analyze_pdf_text(pdf_path: Path | str | bytes) -> PdfTextReport:
+    """Find pages without text and pages whose text layer looks wrongly encoded.
+
+    Accepts the PDF bytes as well, so a caller can analyse what it already read from one handle.
+    """
     try:
         import pypdfium2 as pdfium
 
         empty: list[int] = []
         low_quality: list[int] = []
         weighted, judged = 0.0, 0
-        with pdfium.PdfDocument(str(pdf_path)) as document:
+        with pdfium.PdfDocument(pdf_path if isinstance(pdf_path, bytes) else str(pdf_path)) as document:
             for page_index in range(len(document)):
                 page = document[page_index]
                 try:
