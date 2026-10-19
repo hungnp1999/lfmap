@@ -13,10 +13,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # Workspace packages are Apache-2.0 by ADR-010; listed here so a missing metadata field cannot hide them.
-WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-workspace"}
+WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-markitdown", "lfmap-workspace"}
 # Reviewed exceptions: name -> reason. Keep in sync with 04_License_Register.md.
 EXCEPTIONS: dict[str, str] = {
     "cffi": "MIT-0 (MIT without the attribution clause), more permissive than MIT",
+    "numpy": "BSD-3-Clause plus 0BSD, MIT, Zlib, CC0-1.0 for bundled parts, all permissive",
+    "pillow": "MIT-CMU (OSI-approved, permissive, MIT-style)",
+    "pypdfium2": "Apache-2.0 / BSD-3-Clause; metadata adds 'dependency licenses' for the bundled PDFium (BSD-style)",
 }
 
 ALIASES = {

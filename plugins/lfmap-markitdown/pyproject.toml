@@ -1,0 +1,21 @@
+[project]
+name = "lfmap-markitdown"
+version = "0.1.0"
+description = "LFMAP plugin: convert local documents (PDF, Office OOXML, HTML, EPUB, CSV) to Markdown."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = ["lfmap-core", "markitdown[docx,pptx,xlsx,xls,pdf]==0.1.8", "pypdfium2>=5.14"]
+
+[project.optional-dependencies]
+ocr = ["ocrmypdf==17.13.0", "pillow>=12"]
+
+[project.entry-points."lfmap.plugins"]
+markitdown = "lfmap_markitdown.tool:MarkitdownTool"
+
+[tool.uv.sources]
+lfmap-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
