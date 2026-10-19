@@ -1,28 +1,80 @@
 """Building tools and contexts for adapters and SDK callers."""
 
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
 from lfmap_core.config import load_config, plugin_variables
+from lfmap_core.errors import ToolError
 from lfmap_core.permissions import PermissionManager
 from lfmap_core.registry import PluginEntry
-from lfmap_core.tool import Tool, ToolContext, invoke
+from lfmap_core.tool import Channel, Tool, ToolContext, invoke
+
+Variables = dict[str, str | list[str]]
 
 
 def default_context(plugin_id: str, permissions: PermissionManager | None = None) -> ToolContext:
     return ToolContext(plugin_id=plugin_id, permissions=permissions or PermissionManager([], []))
 
 
-def build_tool(entry: PluginEntry, variables: dict[str, str | list[str]] | None = None) -> Tool:
-    """Variables default to the user's config.toml, never to anything the caller sends."""
+def _plugin_settings(config: dict, plugin_id: str) -> dict[str, Any]:
+    section = config.get("plugins", {})
+    section = section.get(plugin_id, {}) if isinstance(section, dict) else None
+    settings = section.get("settings", {}) if isinstance(section, dict) else None
+    if not isinstance(settings, dict):
+        raise ToolError("invalid_input", f"[plugins.{plugin_id}.settings] must be a table", {"plugin": plugin_id})
+    return settings
+
+
+def _plugin_dirs(variables: Variables) -> dict[str, Path | None]:
+    return {key: Path(variables[key][0]) if variables.get(key) else None for key in ("data_dir", "temp_dir")}
+
+
+def build_tool(
+    entry: PluginEntry,
+    variables: Variables | None = None,
+    *,
+    channel: Channel = "sdk",
+    approver: Any = None,
+    config: dict | None = None,
+) -> Tool:
+    """Variables and settings default to the user's config.toml, never to anything the caller sends."""
+    config = load_config() if config is None else config
     if variables is None:
-        variables = plugin_variables(load_config(), entry.id)
-    perms = PermissionManager.from_manifest(entry.manifest.permissions, variables)
-    return entry.tool_class(default_context(entry.id, perms))
+        variables = plugin_variables(config, entry.id)
+    ctx = ToolContext(
+        plugin_id=entry.id,
+        permissions=PermissionManager.from_manifest(entry.manifest.permissions, variables),
+        settings=_plugin_settings(config, entry.id),
+        channel=channel,
+        approver=approver,
+        **_plugin_dirs(variables),
+    )
+    return entry.tool_class(ctx)
 
 
 def run_operation(
-    entry: PluginEntry, name: str, payload: dict[str, Any], variables: dict[str, str | list[str]] | None = None
+    entry: PluginEntry,
+    name: str,
+    payload: dict[str, Any],
+    variables: Variables | None = None,
+    *,
+    channel: Channel = "sdk",
+    approver: Any = None,
 ) -> BaseModel:
-    return invoke(build_tool(entry, variables), name, payload)
+    return invoke(build_tool(entry, variables, channel=channel, approver=approver), name, payload)
+
+
+def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None) -> ToolContext:
+    """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings."""
+    config = load_config() if config is None else config
+    return ToolContext(
+        plugin_id=plugin_id,
+        permissions=parent.permissions,
+        dry_run=parent.dry_run,
+        settings=_plugin_settings(config, plugin_id),
+        channel=parent.channel,
+        approver=parent.approver,
+        **_plugin_dirs(plugin_variables(config, plugin_id)),
+    )

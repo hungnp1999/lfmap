@@ -3,23 +3,31 @@
 import inspect
 import typing
 from collections.abc import Callable
-from typing import Any, ClassVar
+from pathlib import Path
+from typing import Any, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from lfmap_core.errors import ToolError
 
 OPERATION_ATTR = "__lfmap_operation__"
 
+Channel = Literal["sdk", "cli", "mcp", "rest", "job"]
+
 
 class ToolContext(BaseModel):
-    """Injected by the runtime: permissions, logger, config, cancellation."""
+    """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     plugin_id: str
     dry_run: bool = False
     permissions: Any = None
+    data_dir: Path | None = None
+    temp_dir: Path | None = None
+    settings: dict[str, Any] = Field(default_factory=dict)
+    channel: Channel = "sdk"
+    approver: Any = None
 
 
 class OperationSpec(BaseModel):
