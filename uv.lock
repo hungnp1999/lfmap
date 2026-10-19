@@ -579,7 +579,7 @@ wheels = [
 
 [[package]]
 name = "lfmap-core"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/lfmap-core" }
 dependencies = [
     { name = "mcp" },
