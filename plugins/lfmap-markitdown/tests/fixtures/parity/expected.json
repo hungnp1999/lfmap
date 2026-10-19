@@ -1,0 +1,120 @@
+{
+  "markitdowntool_version": "2.4.0",
+  "recorded_from": "MarkitdownTool source at tag v2.4.0 (98603d4), integration_service.classify",
+  "files": [
+    {
+      "name": "broken.pdf",
+      "supported": true,
+      "needs_ocr": true,
+      "markdown_eligible": false,
+      "reason_code": "garbled_text",
+      "text_quality": 0.2,
+      "low_quality_pages": [
+        1
+      ]
+    },
+    {
+      "name": "data.xyz",
+      "supported": false,
+      "needs_ocr": false,
+      "markdown_eligible": false,
+      "reason_code": "unsupported_format",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "Get-Expected.ps1",
+      "supported": false,
+      "needs_ocr": false,
+      "markdown_eligible": false,
+      "reason_code": "unsupported_format",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "good.pdf",
+      "supported": true,
+      "needs_ocr": false,
+      "markdown_eligible": true,
+      "reason_code": "",
+      "text_quality": 1.0,
+      "low_quality_pages": []
+    },
+    {
+      "name": "list.xlsx",
+      "supported": true,
+      "needs_ocr": false,
+      "markdown_eligible": true,
+      "reason_code": "",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "make_fixtures.py",
+      "supported": false,
+      "needs_ocr": false,
+      "markdown_eligible": false,
+      "reason_code": "unsupported_format",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "mixed.pdf",
+      "supported": true,
+      "needs_ocr": true,
+      "markdown_eligible": false,
+      "reason_code": "garbled_text",
+      "text_quality": 0.7,
+      "low_quality_pages": [
+        2
+      ]
+    },
+    {
+      "name": "old.doc",
+      "supported": false,
+      "needs_ocr": false,
+      "markdown_eligible": false,
+      "reason_code": "office_gui_only",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "page.html",
+      "supported": true,
+      "needs_ocr": false,
+      "markdown_eligible": true,
+      "reason_code": "",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "report.docx",
+      "supported": true,
+      "needs_ocr": false,
+      "markdown_eligible": true,
+      "reason_code": "",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "scan.pdf",
+      "supported": true,
+      "needs_ocr": true,
+      "markdown_eligible": false,
+      "reason_code": "needs_ocr",
+      "text_quality": null,
+      "low_quality_pages": []
+    },
+    {
+      "name": "tcvn3.pdf",
+      "supported": true,
+      "needs_ocr": true,
+      "markdown_eligible": false,
+      "reason_code": "garbled_text",
+      "text_quality": 0.1,
+      "low_quality_pages": [
+        1
+      ]
+    }
+  ]
+}

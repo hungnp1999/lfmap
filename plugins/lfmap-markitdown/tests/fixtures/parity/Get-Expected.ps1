@@ -28,6 +28,9 @@ try {
 }
 
 $result = $raw | ConvertFrom-Json
+if ([version]$version -lt [version]'2.4.0') {
+    throw "MarkitdownTool $version predates the text-layer quality checks; install 2.4.0 or later."
+}
 $files = foreach ($file in $result.files) {
     [ordered]@{
         name              = Split-Path $file.path -Leaf
@@ -36,10 +39,14 @@ $files = foreach ($file in $result.files) {
         markdown_eligible = $file.markdown_eligible
         reason_code       = $file.reason_code
         text_quality      = $file.text_quality
-        low_quality_pages = @($file.low_quality_pages)
+        low_quality_pages = @($file.low_quality_pages | Where-Object { $null -ne $_ })
     }
 }
-$expected = [ordered]@{ markitdowntool_version = $version; files = @($files) }
+$expected = [ordered]@{
+    markitdowntool_version = $version
+    recorded_from          = "markitdowntool.exe classify --json"
+    files                  = @($files)
+}
 $target = Join-Path $folder 'expected.json'
 $expected | ConvertTo-Json -Depth 5 | Set-Content -Path $target -Encoding utf8NoBOM
 Write-Host "Wrote $target ($(@($files).Count) files, MarkitdownTool $version)"
