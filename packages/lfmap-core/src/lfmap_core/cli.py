@@ -13,11 +13,11 @@ from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
 from lfmap_core import grants
-from lfmap_core.approval import Gate, Policy, audit, base_tier
-from lfmap_core.config import load_config
+from lfmap_core.approval import Gate, Policy, audit, audit_path, base_tier
+from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
 from lfmap_core.registry import PluginEntry, Registry
-from lfmap_core.runtime import run_operation
+from lfmap_core.runtime import build_tool, run_operation
 from lfmap_core.tool import OperationSpec
 
 _FLAT = (str, int, float, bool, Path)
@@ -63,7 +63,10 @@ def _operation_command(entry: PluginEntry, spec: OperationSpec):
             typer.confirm if _interactive() else None,
         )
         gate(base_tier(side_effects), "side_effects")
-        _print_output(run_operation(entry, spec.name, payload, channel="cli", approver=gate), as_json)
+        _print_output(
+            run_operation(entry, spec.name, payload, channel="cli", approver=gate, explicit_read=_interactive()),
+            as_json,
+        )
 
     params = []
     if flat:
@@ -119,9 +122,13 @@ def build_app(registry: Registry) -> typer.Typer:
     plugins_app = typer.Typer(help="Inspect installed plugins.")
     serve_app = typer.Typer(help="Run adapters as servers.")
     approvals_app = typer.Typer(help="Time-limited approvals (interactive terminal only).")
+    config_app = typer.Typer(help="Manage configuration.")
+    audit_app = typer.Typer(help="Audit logs.")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
+    app.add_typer(config_app, name="config")
+    app.add_typer(audit_app, name="audit")
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
     def require_person(action: str, key: str) -> tuple[str, str]:
@@ -196,6 +203,76 @@ def build_app(registry: Registry) -> typer.Typer:
         from lfmap_core.mcp_adapter import build_server
 
         build_server(registry, plugins or [], approve or []).run()
+
+    @plugins_app.command("health")
+    def plugins_health(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Check the health of all plugins."""
+        results = []
+        for entry in registry.all():
+            try:
+                health = build_tool(entry).health()
+                results.append({"id": entry.id, **health})
+            except ToolError as error:
+                results.append({"id": entry.id, "ok": False, "error": f"{error.code}: {error.message}"})
+        if json_output:
+            typer.echo(json.dumps(results, indent=2))
+            return
+        for result in results:
+            typer.echo(f"{result['id']}  {'ok' if result.get('ok', False) else 'FAIL'}  {result.get('error', '')}")
+
+    @config_app.command("path")
+    def config_path_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Show the configuration path and plugin permissions."""
+        config = str(config_path())
+        plugins = []
+        for entry in registry.all():
+            perms = build_tool(entry).ctx.permissions
+            plugins.append({"id": entry.id, "read": perms.read_roots, "write": perms.write_roots})
+        if json_output:
+            typer.echo(json.dumps({"config": config, "plugins": plugins}, indent=2))
+            return
+        typer.echo(config)
+        for plugin in plugins:
+            typer.echo(f"{plugin['id']}  read: {', '.join(plugin['read'])}  write: {', '.join(plugin['write'])}")
+
+    @config_app.command("add-folder")
+    def config_add_folder(
+        folder: Annotated[str, typer.Argument(metavar="FOLDER")],
+        name: Annotated[str, typer.Option("--as", help="Name of the folder in the config.")],
+    ) -> None:
+        """Add a folder to the configuration."""
+        if not _interactive():
+            raise ToolError("permission_denied", "config add-folder only works in an interactive terminal")
+        root = add_folder(name, folder)
+        audit({"channel": "cli", "decision": "grant", "reason": f"add-folder {name}", "target": root})
+        typer.echo(root)
+
+    @audit_app.command("tail")
+    def audit_tail(
+        n: Annotated[int, typer.Option("-n", help="Number of lines to show.")] = 20,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Show the last N lines of the audit log."""
+        try:
+            with audit_path().open(encoding="utf-8") as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            lines = []
+        records = [json.loads(line) for line in lines[-n:] if line.strip()] if n > 0 else []
+        if json_output:
+            typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
+            return
+        for record in records:
+            fields = [
+                record.get("time"),
+                record.get("channel"),
+                f"{record.get('plugin')}.{record.get('operation')}" if record.get("plugin") else None,
+                record.get("tier"),
+                record.get("decision"),
+                record.get("reason"),
+                record.get("target"),
+            ]
+            typer.echo("  ".join(str(field) for field in fields if field is not None))
 
     for entry in registry.all():
         if not entry.manifest.adapters.cli:

@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 from lfmap_core.errors import ToolError
@@ -41,22 +42,47 @@ def _expand(pattern: str, variables: dict[str, list[str]]) -> list[str]:
 
 
 class PermissionManager:
-    def __init__(self, read_roots: list[str], write_roots: list[str], network: bool = False) -> None:
+    def __init__(
+        self,
+        read_roots: list[str],
+        write_roots: list[str],
+        network: bool = False,
+        explicit_read: bool = False,
+        on_outside_read: Callable[[str], None] | None = None,
+    ) -> None:
+        """`explicit_read`: a person typed the paths at an interactive terminal, so local reads outside
+        the roots are allowed (never network paths, never writes); `on_outside_read` audits each one."""
         self.write_roots = list(write_roots)
         self.read_roots = list(read_roots) + self.write_roots
         self.network = network
+        self.explicit_read = explicit_read
+        self.on_outside_read = on_outside_read
 
     @classmethod
-    def from_manifest(cls, perms: Permissions, variables: dict[str, str | list[str]]) -> "PermissionManager":
+    def from_manifest(
+        cls,
+        perms: Permissions,
+        variables: dict[str, str | list[str]],
+        *,
+        explicit_read: bool = False,
+        on_outside_read: Callable[[str], None] | None = None,
+    ) -> "PermissionManager":
         values = {name: [v] if isinstance(v, str) else list(v) for name, v in variables.items()}
         return cls(
             [root for p in perms.fs_read for root in _expand(p, values)],
             [root for p in perms.fs_write for root in _expand(p, values)],
             perms.network,
+            explicit_read=explicit_read,
+            on_outside_read=on_outside_read,
         )
 
     def require_read(self, value: str | os.PathLike[str]) -> Path:
-        return self._require(value, self.read_roots, "read")
+        try:
+            return self._require(value, self.read_roots, "read")
+        except ToolError:
+            if not self.explicit_read:
+                raise
+            return self._typed_read(value)
 
     def require_write(self, value: str | os.PathLike[str]) -> Path:
         return self._require(value, self.write_roots, "write")
@@ -90,3 +116,14 @@ class PermissionManager:
         raise ToolError(
             "permission_denied", f"Path resolves outside the folders this plugin may {access}", {"path": text}
         )
+
+    def _typed_read(self, value: str | os.PathLike[str]) -> Path:
+        text = os.fspath(value)
+        if _is_remote(text):
+            raise ToolError("permission_denied", "Network and device paths are refused", {"path": text})
+        resolved = os.path.realpath(os.path.abspath(os.path.expanduser(text)))
+        if _is_remote(resolved):
+            raise ToolError("permission_denied", "Path resolves to a network path", {"path": text})
+        if self.on_outside_read:
+            self.on_outside_read(resolved)
+        return Path(resolved)
