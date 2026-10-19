@@ -18,7 +18,7 @@
 - `lfmap plugins health`, `lfmap config path` (config file and each plugin's expanded read/write roots), `lfmap config add-folder FOLDER --as documents|exports|knowledge` (interactive terminal only, network paths refused, edits one line so comments stay, audited) and `lfmap audit tail [-n N] [--json]` (TC-C5).
 - `ToolContext.require_approval(reason, detail)` lets a plugin escalate a call to T2 (overwrite, rename, delete) or T3 (`external`) before acting.
 - `lfmap approvals grant|revoke|list`: time-limited approvals in `%LOCALAPPDATA%\lfmap\grants.json` (T3 at most 24 hours, T1–T2 at most 7 days), from an interactive terminal only; every grant and revoke is audited.
-- Plugin `lfmap-markitdown` 0.1.0 (Roadmap 1.1, in progress): manifest, schemas and formats (TC-M1) and the text-layer quality checks ported from MarkitdownTool (TC-M2); operations are stubs until TC-M3/M4. Reviewed license exceptions for `numpy`, `pillow` (MIT-CMU) and `pypdfium2` in `scripts/check_licenses.py`.
+- Plugin `lfmap-markitdown` 0.1.0 (Roadmap 1.1, in progress): manifest, schemas and formats (TC-M1) and the text-layer quality checks ported from MarkitdownTool (TC-M2); MarkItDown backend, `classify` and `convert` (TC-M3, TC-M4), OCR in the `ocr` extra without Ghostscript, `info`, `health` and `export` (TC-M5 to TC-M7). Reviewed license exceptions for `numpy`, `pillow` (MIT-CMU) and `pypdfium2` in `scripts/check_licenses.py`.
 
 ### Changed
 

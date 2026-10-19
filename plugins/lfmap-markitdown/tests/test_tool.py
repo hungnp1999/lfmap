@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_markitdown.schemas import ClassifyInput, ConvertInput
+from lfmap_markitdown.backends import ocr
+from lfmap_markitdown.schemas import ClassifyInput, ConvertInput, InfoInput
 from lfmap_markitdown.tool import MarkitdownTool
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -48,7 +49,12 @@ def test_unsupported_formats(tool: MarkitdownTool, root: Path, name: str, reason
     assert (error.code, error.details["reason_code"]) == ("invalid_input", reason)
 
 
-def test_scanned_pdf_needs_ocr(tool: MarkitdownTool, root: Path) -> None:
+@pytest.fixture
+def no_ocr(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ocr, "find_tesseract", lambda: None)
+
+
+def test_scanned_pdf_needs_ocr(tool: MarkitdownTool, root: Path, no_ocr: None) -> None:
     path = _blank_pdf(root / "scan.pdf")
     result = tool.classify(ClassifyInput(path=str(path)))
     assert (result.needs_ocr, result.markdown_eligible, result.reason_code) == (True, False, "needs_ocr")
@@ -58,7 +64,7 @@ def test_scanned_pdf_needs_ocr(tool: MarkitdownTool, root: Path) -> None:
     assert (error.code, error.details["reason_code"]) == ("backend_unavailable", "ocr_unavailable")
 
 
-def test_image_needs_ocr(tool: MarkitdownTool, root: Path) -> None:
+def test_image_needs_ocr(tool: MarkitdownTool, root: Path, no_ocr: None) -> None:
     (root / "a.png").write_bytes(b"png")
     result = tool.classify(ClassifyInput(path=str(root / "a.png")))
     assert (result.supported, result.needs_ocr, result.ocr_available) == (True, True, False)
@@ -94,3 +100,41 @@ def test_too_large(tool: MarkitdownTool, root: Path) -> None:
     tool.ctx.settings["max_file_bytes"] = 10
     error = _error(lambda: tool.convert(ConvertInput(path=str(root / "a.txt"))))
     assert (error.code, error.details["reason_code"]) == ("invalid_input", "too_large")
+
+
+def test_force_ocr_without_ocr_flag(tool: MarkitdownTool, root: Path) -> None:
+    path = builders.make_text_pdf(root / "a.pdf", "Inspection record for the pressure gauge")
+    error = _error(lambda: tool.convert(ConvertInput(path=str(path), force_ocr=True)))
+    assert error.details["reason_code"] == "needs_ocr"
+
+
+def test_force_ocr_is_ignored_for_docx(tool: MarkitdownTool, root: Path) -> None:
+    path = builders.make_docx(root / "report.docx", "Calibration report ABC")
+    assert tool.convert(ConvertInput(path=str(path), force_ocr=True)).stage == "markdown"
+
+
+def test_ocr_languages_come_from_settings(tool: MarkitdownTool) -> None:
+    assert tool._languages("") == ["eng"]
+    tool.ctx.settings["ocr_languages"] = "vie+eng"
+    assert tool._languages("") == ["vie", "eng"]
+    assert tool._languages("deu") == ["deu"]
+
+
+def test_info_and_health(tool: MarkitdownTool, no_ocr: None) -> None:
+    info = tool.info(InfoInput())
+    assert ".pdf" in info.formats and ".doc" not in info.formats
+    assert (info.markitdown_version, info.plugin_version) == ("0.1.8", "0.1.0")
+    assert (info.ocr_available, info.tesseract_path, info.ocr_languages) == (False, None, [])
+    assert tool.health() == {"ok": True, "markitdown": "0.1.8", "ocr": False, "tesseract": None}
+
+
+@pytest.mark.skipif(not ocr.ocr_available(), reason="needs the ocr extra and Tesseract")
+def test_convert_scanned_image_with_ocr(tool: MarkitdownTool, root: Path) -> None:
+    from PIL import Image, ImageDraw, ImageFont
+
+    image = Image.new("RGB", (1400, 300), "white")
+    ImageDraw.Draw(image).text((60, 100), "INSPECTION PASSED", fill="black", font=ImageFont.load_default(size=96))
+    image.save(root / "scan.png", dpi=(300, 300))
+    result = tool.convert(ConvertInput(path=str(root / "scan.png"), ocr=True))
+    assert result.stage == "ocr_markdown" and "INSPECTION" in result.markdown.upper()
+    assert list((root / "tmp").iterdir()) == []
