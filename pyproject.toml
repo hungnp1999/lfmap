@@ -3,7 +3,7 @@ name = "lfmap-workspace"
 version = "0.0.0"
 description = "LFMAP monorepo root (uv workspace, no code)."
 requires-python = ">=3.12,<3.15"
-dependencies = ["lfmap-core", "lfmap-echo"]
+dependencies = ["lfmap-core", "lfmap-echo", "lfmap-markitdown"]
 
 [dependency-groups]
 dev = ["pytest>=9", "ruff>=0.17", "pre-commit>=4"]
@@ -14,6 +14,7 @@ package = false
 [tool.uv.sources]
 lfmap-core = { workspace = true }
 lfmap-echo = { workspace = true }
+lfmap-markitdown = { workspace = true }
 
 [tool.uv.workspace]
 members = ["packages/*", "plugins/*"]

@@ -1,0 +1,52 @@
+[plugin]
+id = "markitdown"
+name = "MarkitdownTool"
+version = "0.1.0"
+description = "Convert local documents (PDF, Office OOXML, HTML, EPUB, CSV) to Markdown."
+license = "Apache-2.0"
+authors = ["Hung Nguyen"]
+min_core_version = "0.1.0"
+
+[plugin.entrypoint]
+module = "lfmap_markitdown.tool"
+class = "MarkitdownTool"
+
+[[operations]]
+name = "classify"
+input = "lfmap_markitdown.schemas:ClassifyInput"
+output = "lfmap_markitdown.schemas:ClassifyOutput"
+side_effects = "none"
+
+[[operations]]
+name = "convert"
+input = "lfmap_markitdown.schemas:ConvertInput"
+output = "lfmap_markitdown.schemas:ConvertOutput"
+side_effects = "none"
+
+[[operations]]
+name = "export"
+input = "lfmap_markitdown.schemas:ExportInput"
+output = "lfmap_markitdown.schemas:ExportOutput"
+side_effects = "local_write"
+
+[[operations]]
+name = "info"
+input = "lfmap_markitdown.schemas:InfoInput"
+output = "lfmap_markitdown.schemas:InfoOutput"
+side_effects = "none"
+
+[permissions]
+fs_read = ["${documents}"]
+fs_write = ["${exports}"]
+network = false
+exec = ["tesseract"]
+cloud_ai = false
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = false
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0", "MPL-2.0"]
