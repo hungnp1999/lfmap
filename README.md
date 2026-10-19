@@ -12,6 +12,7 @@ Status: **Phase 0 (foundation)**. Only the reference plugin `echo` exists.
 | --- | --- |
 | `packages/lfmap-core` | `Tool`, `@operation`, `ToolError`, `lfmap.toml` manifest, plugin discovery, Permission Manager, generated CLI and MCP adapters |
 | `plugins/lfmap-echo` | Reference plugin with one operation, `say` |
+| `docs/phase0/` | Phase 0 acceptance documents (Vietnamese): architecture, functional spec, test cases, user guide, runbook |
 | `scripts/check_licenses.py` | CI check: runtime dependencies must use a license the plugin manifests allow |
 
 ## Quick start (Windows, PowerShell 7)
