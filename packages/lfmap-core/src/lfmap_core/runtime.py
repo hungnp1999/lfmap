@@ -1,10 +1,12 @@
 """Building tools and contexts for adapters and SDK callers."""
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
+from lfmap_core.approval import audit
 from lfmap_core.config import load_config, plugin_variables
 from lfmap_core.errors import ToolError
 from lfmap_core.permissions import PermissionManager
@@ -31,12 +33,29 @@ def _plugin_dirs(variables: Variables) -> dict[str, Path | None]:
     return {key: Path(variables[key][0]) if variables.get(key) else None for key in ("data_dir", "temp_dir")}
 
 
+def _outside_read_audit(plugin_id: str, channel: Channel) -> Callable[[str], None]:
+    def audit_func(path: str) -> None:
+        audit(
+            {
+                "channel": channel,
+                "plugin": plugin_id,
+                "tier": "T0",
+                "decision": "allow",
+                "reason": "read_outside_roots",
+                "target": path,
+            }
+        )
+
+    return audit_func
+
+
 def build_tool(
     entry: PluginEntry,
     variables: Variables | None = None,
     *,
     channel: Channel = "sdk",
     approver: Any = None,
+    explicit_read: bool = False,
     config: dict | None = None,
 ) -> Tool:
     """Variables and settings default to the user's config.toml, never to anything the caller sends."""
@@ -45,7 +64,12 @@ def build_tool(
         variables = plugin_variables(config, entry.id)
     ctx = ToolContext(
         plugin_id=entry.id,
-        permissions=PermissionManager.from_manifest(entry.manifest.permissions, variables),
+        permissions=PermissionManager.from_manifest(
+            entry.manifest.permissions,
+            variables,
+            explicit_read=explicit_read,
+            on_outside_read=_outside_read_audit(entry.id, channel),
+        ),
         settings=_plugin_settings(config, entry.id),
         channel=channel,
         approver=approver,
@@ -62,8 +86,11 @@ def run_operation(
     *,
     channel: Channel = "sdk",
     approver: Any = None,
+    explicit_read: bool = False,
 ) -> BaseModel:
-    return invoke(build_tool(entry, variables, channel=channel, approver=approver), name, payload)
+    return invoke(
+        build_tool(entry, variables, channel=channel, approver=approver, explicit_read=explicit_read), name, payload
+    )
 
 
 def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None) -> ToolContext:

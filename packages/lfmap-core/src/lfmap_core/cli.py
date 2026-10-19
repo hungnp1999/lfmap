@@ -63,7 +63,10 @@ def _operation_command(entry: PluginEntry, spec: OperationSpec):
             typer.confirm if _interactive() else None,
         )
         gate(base_tier(side_effects), "side_effects")
-        _print_output(run_operation(entry, spec.name, payload, channel="cli", approver=gate), as_json)
+        _print_output(
+            run_operation(entry, spec.name, payload, channel="cli", approver=gate, explicit_read=_interactive()),
+            as_json,
+        )
 
     params = []
     if flat:
