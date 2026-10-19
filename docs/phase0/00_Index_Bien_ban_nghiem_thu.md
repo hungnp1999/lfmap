@@ -57,7 +57,7 @@ Quy ước mã dùng xuyên suốt: `BP-xx` quy trình, `FR-xx`/`NFR-xx` yêu c�
 
 ## 4. Kết luận
 
-Phase 0 **đạt Exit criteria** và đủ điều kiện nghiệm thu. Increment: `lfmap-core` 0.1.0 + `lfmap-echo` 0.1.0 tại `f63f0ee`.
+Phase 0 **đạt Exit criteria** và **đã được nghiệm thu** (Hùng, 2026-10-19). Increment: `lfmap-core` 0.1.0 + `lfmap-echo` 0.1.0 tại `f63f0ee`.
 
 Đề xuất: nghiệm thu Phase 0; giữ nguyên quyết định đã chuyển sang core 0.2 / Phase 1 (đã bắt đầu từ 2026-10-19).
 
@@ -65,5 +65,5 @@ Phase 0 **đạt Exit criteria** và đủ điều kiện nghiệm thu. Incremen
 
 | Vai trò | Người | Quyết định | Ngày |
 |---|---|---|---|
-| Product Owner | Hùng | ☐ Nghiệm thu ☐ Nghiệm thu có điều kiện ☐ Không nghiệm thu | |
+| Product Owner | Hùng | ☑ Nghiệm thu (phê duyệt trong project thread "Phase 0 docs") | 2026-10-19 |
 | Lập hồ sơ / Reviewer | Claude (Managing Agent) | Đề nghị nghiệm thu | 2026-10-19 |
