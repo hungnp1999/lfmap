@@ -50,6 +50,8 @@ class PermissionManager:
         explicit_read: bool = False,
         on_outside_read: Callable[[str], None] | None = None,
     ) -> None:
+        """`explicit_read`: a person typed the paths at an interactive terminal, so local reads outside
+        the roots are allowed (never network paths, never writes); `on_outside_read` audits each one."""
         self.write_roots = list(write_roots)
         self.read_roots = list(read_roots) + self.write_roots
         self.network = network
@@ -121,8 +123,7 @@ class PermissionManager:
             raise ToolError("permission_denied", "Network and device paths are refused", {"path": text})
         resolved = os.path.realpath(os.path.abspath(os.path.expanduser(text)))
         if _is_remote(resolved):
-            raise ToolError("permission_denied", "Network and device paths are refused", {"path": resolved})
-        if resolved not in self.read_roots:
-            if self.on_outside_read:
-                self.on_outside_read(resolved)
+            raise ToolError("permission_denied", "Path resolves to a network path", {"path": text})
+        if self.on_outside_read:
+            self.on_outside_read(resolved)
         return Path(resolved)

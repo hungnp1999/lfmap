@@ -58,7 +58,10 @@ def build_tool(
     explicit_read: bool = False,
     config: dict | None = None,
 ) -> Tool:
-    """Variables and settings default to the user's config.toml, never to anything the caller sends."""
+    """Variables and settings default to the user's config.toml, never to anything the caller sends.
+
+    Only the interactive CLI sets `explicit_read`; reads outside the roots are then audited.
+    """
     config = load_config() if config is None else config
     if variables is None:
         variables = plugin_variables(config, entry.id)
