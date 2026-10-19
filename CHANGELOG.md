@@ -11,6 +11,7 @@
 - CI on Windows with a runtime dependency license check, and CodeQL.
 - User config `%LOCALAPPDATA%\lfmap\config.toml` (`LFMAP_CONFIG` overrides): `[paths]` defines the folders behind `${name}` variables in `[permissions]`; built-in `${data_dir}` and `${temp_dir}` per plugin.
 - `lfmap serve mcp --approve <plugin>.<operation>`; MCP tools carry read-only and open-world hints.
+- `ToolContext` gains `data_dir`, `temp_dir`, `settings` (from `[plugins.<id>.settings]`), `channel` and `approver`; `build_tool` and `run_operation` take `channel` and `approver`; new `runtime.context_for` builds a context for calling another plugin in-process with the caller's permissions.
 
 ### Changed
 
