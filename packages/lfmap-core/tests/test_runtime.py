@@ -47,3 +47,15 @@ def test_context_for(user_dirs, registry):
     assert ctx.permissions is parent.permissions
     assert ctx.channel == "mcp"
     assert ctx.data_dir.name == "other"
+
+
+def test_build_tool_plugin_section_not_a_table(user_dirs, registry):
+    (user_dirs / "config.toml").write_text('[plugins]\nfake-plugin = "x"\n', encoding="utf-8")
+    with pytest.raises(ToolError) as excinfo:
+        build_tool(registry.get("fake-plugin"))
+    assert excinfo.value.code == "invalid_input"
+
+
+def test_context_for_keeps_dry_run(user_dirs, registry):
+    parent = build_tool(registry.get("fake-plugin")).ctx.model_copy(update={"dry_run": True})
+    assert context_for("other", parent).dry_run is True

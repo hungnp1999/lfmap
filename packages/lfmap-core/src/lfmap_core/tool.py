@@ -12,6 +12,8 @@ from lfmap_core.errors import ToolError
 
 OPERATION_ATTR = "__lfmap_operation__"
 
+Channel = Literal["sdk", "cli", "mcp", "rest", "job"]
+
 
 class ToolContext(BaseModel):
     """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver."""
@@ -24,7 +26,7 @@ class ToolContext(BaseModel):
     data_dir: Path | None = None
     temp_dir: Path | None = None
     settings: dict[str, Any] = Field(default_factory=dict)
-    channel: Literal["sdk", "cli", "mcp", "rest", "job"] = "sdk"
+    channel: Channel = "sdk"
     approver: Any = None
 
 
