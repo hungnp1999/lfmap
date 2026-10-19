@@ -14,6 +14,7 @@
 - `ToolContext` carries the plugin's `data_dir`, `temp_dir`, `settings` (from `[plugins.<id>.settings]` in the user config), the calling `channel` and an `approver` hook. `context_for` builds the context for an in-process call to another plugin with no more rights than the caller.
 - `lfmap_core.approval`: risk tiers T0–T3 (ADR-017), the `[approval]` policy in `config.toml`, the approval decision table and an append-only `audit.jsonl`. T3 can never be pre-approved or relaxed below "ask", and only an interactive CLI may ask for it. Wired into the CLI and MCP adapters (see Changed).
 - Interactive CLI reads (TC-C1, TC-C3): a path a person types at an interactive terminal may be read outside the configured roots; each such read writes a `read_outside_roots` audit line. Network and device paths are still refused, writes never widen, and MCP or non-interactive CLI calls stay inside the roots.
+- `lfmap plugins health`, `lfmap config path` (config file and each plugin's expanded read/write roots), `lfmap config add-folder FOLDER --as documents|exports|knowledge` (interactive terminal only, network paths refused, edits one line so comments stay, audited) and `lfmap audit tail [-n N] [--json]` (TC-C5).
 - `ToolContext.require_approval(reason, detail)` lets a plugin escalate a call to T2 (overwrite, rename, delete) or T3 (`external`) before acting.
 - `lfmap approvals grant|revoke|list`: time-limited approvals in `%LOCALAPPDATA%\lfmap\grants.json` (T3 at most 24 hours, T1–T2 at most 7 days), from an interactive terminal only; every grant and revoke is audited.
 

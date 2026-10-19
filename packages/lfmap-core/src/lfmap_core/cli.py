@@ -258,7 +258,7 @@ def build_app(registry: Registry) -> typer.Typer:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = []
-        records = [json.loads(line) for line in lines[-n:]]
+        records = [json.loads(line) for line in lines[-n:] if line.strip()] if n > 0 else []
         if json_output:
             typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
             return
