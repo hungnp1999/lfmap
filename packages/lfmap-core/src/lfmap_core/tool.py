@@ -29,6 +29,15 @@ class ToolContext(BaseModel):
     channel: Channel = "sdk"
     approver: Any = None
 
+    def require_approval(self, reason: str, detail: str = "") -> None:
+        """Escalate this call before acting: T3 for reason "external", otherwise T2 (overwrite, rename, delete).
+
+        Raises ToolError permission_denied when refused. Without an approver (plain SDK use) the call is the
+        user's own code and runs.
+        """
+        if self.approver is not None:
+            self.approver("T3" if reason == "external" else "T2", reason, detail)
+
 
 class OperationSpec(BaseModel):
     name: str

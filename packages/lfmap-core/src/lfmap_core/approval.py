@@ -7,12 +7,15 @@ asked; permission roots never widen.
 """
 
 import json
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from lfmap_core import grants
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
 from lfmap_core.manifest import SideEffects
@@ -104,3 +107,57 @@ def audit(record: dict[str, Any], path: Path | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8", newline="\n") as file:
         file.write(json.dumps(line, ensure_ascii=False) + "\n")
+
+
+Asker = Callable[[str], bool]
+
+
+def _hint(key: str, tier: Tier, channel: Channel) -> str:
+    grant = f"run `lfmap approvals grant {key} --tier {tier} --for 1h` in an interactive terminal"
+    if tier == "T3":
+        return grant if channel != "cli" else f"run the command in an interactive terminal, or {grant}"
+    if channel == "cli":
+        return "pass --yes or run the command in an interactive terminal"
+    if channel == "mcp":
+        return f"start the server with --approve {key}, use a client that supports elicitation, or {grant}"
+    return grant
+
+
+@dataclass
+class Gate:
+    """The approver an adapter attaches to `ToolContext.approver` for one call.
+
+    `ask` puts a yes/no question to the person (terminal prompt, MCP elicitation); None when nobody can answer.
+    """
+
+    plugin: str
+    operation: str
+    channel: Channel
+    policy: Policy
+    preapproved: frozenset[str] = frozenset()
+    ask: Asker | None = None
+
+    def __call__(self, tier: Tier, reason: str, target: str = "") -> None:
+        if tier == "T0":
+            return
+        key = f"{self.plugin}.{self.operation}"
+        granted = grants.active(key, tier)
+        decision = decide(
+            self.policy,
+            self.plugin,
+            self.operation,
+            tier,
+            self.channel,
+            set(self.preapproved),
+            self.ask is not None,
+            granted=granted,
+        )
+        if decision == "ask":
+            question = f"Allow {key} ({tier}, {reason})" + (f" on {target}" if target else "") + "?"
+            decision = "allow" if self.ask and self.ask(question) else "deny"
+        if decision == "deny" or self.policy.action(self.plugin, self.operation, tier) != "allow":
+            record = {"channel": self.channel, "plugin": self.plugin, "operation": self.operation, "tier": tier}
+            audit({**record, "decision": decision, "reason": reason, **({"target": target} if target else {})})
+        if decision == "deny":
+            details = {"operation": key, "tier": tier, "reason": reason, "hint": _hint(key, tier, self.channel)}
+            raise ToolError("permission_denied", f"{key} needs approval ({tier}, {reason})", details)
