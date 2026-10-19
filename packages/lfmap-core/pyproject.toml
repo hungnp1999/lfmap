@@ -1,6 +1,6 @@
 [project]
 name = "lfmap-core"
-version = "0.1.0"
+version = "0.2.0"
 description = "LFMAP core: Tool base, manifest, discovery, permissions and generated adapters."
 readme = "README.md"
 license = "Apache-2.0"

@@ -4,6 +4,8 @@
 
 ### Added
 
+- `lfmap-core` version 0.2.0: user config, risk-tiered approvals, audit log, grants and the plugin context fields listed below (Phase 1 prerequisites TC-C1 to TC-C5).
+
 - Phase 0 acceptance documentation in `docs/phase0/` (architecture, business processes, functional spec, test cases and report, user guide, runbook, sprint review), in Vietnamese, describing the code as of `f63f0ee`.
 - uv workspace (Python 3.12), ruff, pytest, pre-commit.
 - `lfmap-core` 0.1.0: `Tool`, `@operation`, `invoke`, `ToolError`, `lfmap.toml` manifest schema and loader, entry-point discovery (`Registry`), Permission Manager (`fs_read`, `fs_write`, `network`; network paths refused).
