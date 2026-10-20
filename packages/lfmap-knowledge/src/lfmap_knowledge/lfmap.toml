@@ -1,0 +1,70 @@
+[plugin]
+id = "knowledge"
+name = "LFMAP Knowledge"
+version = "0.1.0"
+description = "Catalog and search local files; give agents cited context without rescanning disks."
+license = "Apache-2.0"
+authors = ["Hung Nguyen"]
+min_core_version = "0.2.0"
+
+[plugin.entrypoint]
+module = "lfmap_knowledge.tool"
+class = "KnowledgeTool"
+
+[permissions]
+fs_read = ["${knowledge}"]
+fs_write = ["${data_dir}"]
+network = true
+exec = []
+cloud_ai = false
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = false
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0", "MPL-2.0"]
+
+[[operations]]
+name = "status"
+input = "lfmap_knowledge.schemas:StatusInput"
+output = "lfmap_knowledge.schemas:StatusOutput"
+side_effects = "none"
+
+[[operations]]
+name = "reindex"
+input = "lfmap_knowledge.schemas:ReindexInput"
+output = "lfmap_knowledge.schemas:ReindexOutput"
+side_effects = "none"
+
+[[operations]]
+name = "search_files"
+input = "lfmap_knowledge.schemas:SearchFilesInput"
+output = "lfmap_knowledge.schemas:SearchFilesOutput"
+side_effects = "none"
+
+[[operations]]
+name = "get_file"
+input = "lfmap_knowledge.schemas:GetFileInput"
+output = "lfmap_knowledge.schemas:GetFileOutput"
+side_effects = "none"
+
+[[operations]]
+name = "search"
+input = "lfmap_knowledge.schemas:SearchInput"
+output = "lfmap_knowledge.schemas:SearchOutput"
+side_effects = "none"
+
+[[operations]]
+name = "get_context"
+input = "lfmap_knowledge.schemas:GetContextInput"
+output = "lfmap_knowledge.schemas:GetContextOutput"
+side_effects = "none"
+
+[[operations]]
+name = "related"
+input = "lfmap_knowledge.schemas:RelatedInput"
+output = "lfmap_knowledge.schemas:RelatedOutput"
+side_effects = "none"

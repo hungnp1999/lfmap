@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # Workspace packages are Apache-2.0 by ADR-010; listed here so a missing metadata field cannot hide them.
-WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-markitdown", "lfmap-workspace"}
+WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-knowledge", "lfmap-markitdown", "lfmap-workspace"}
 # Reviewed exceptions: name -> reason. Keep in sync with 04_License_Register.md.
 EXCEPTIONS: dict[str, str] = {
     "cffi": "MIT-0 (MIT without the attribution clause), more permissive than MIT",
@@ -39,21 +39,25 @@ ALIASES = {
 
 def allowed_licenses() -> set[str]:
     allowed: set[str] = set()
-    for manifest in ROOT.glob("plugins/*/src/*/lfmap.toml"):
+    for manifest in [*ROOT.glob("plugins/*/src/*/lfmap.toml"), *ROOT.glob("packages/*/src/*/lfmap.toml")]:
         data = tomllib.loads(manifest.read_text(encoding="utf-8"))
         allowed.update(data.get("dependencies", {}).get("licenses", {}).get("allowed", []))
     return allowed
+
+
+def _split(expression: str) -> set[str]:
+    return {part.strip() for part in re.split(r"\s+(?:OR|AND)\s+|[()]", expression) if part.strip()}
 
 
 def licenses_of(dist: Distribution) -> set[str]:
     meta = dist.metadata
     expression = meta.get("License-Expression")
     if expression:
-        return {part for part in re.split(r"\s+(?:OR|AND)\s+|[()]", expression) if part.strip()}
+        return _split(expression)
     found = {c.rsplit("::", 1)[1].strip() for c in meta.get_all("Classifier") or [] if c.startswith("License ::")}
     found.discard("OSI Approved")
     if not found and meta.get("License") and len(meta["License"]) < 60:
-        found = {meta["License"].strip()}
+        found = _split(meta["License"])
     return {ALIASES.get(name.upper(), name) for name in found}
 
 
