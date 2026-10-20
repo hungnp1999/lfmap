@@ -144,8 +144,8 @@ bảng vectors thiếu (người dùng xóa vectors/) → coi như mọi content
 from lfmap_core.runtime import context_for
 from lfmap_markitdown.tool import MarkitdownTool
 from lfmap_markitdown.schemas import ConvertInput
-out = MarkitdownTool(context_for("markitdown", parent=self.ctx)).convert(
-    ConvertInput(path=str(path), ocr=settings.ocr))
+
+out = MarkitdownTool(context_for("markitdown", parent=self.ctx)).convert(ConvertInput(path=str(path), ocr=settings.ocr))
 ```
 `extractor_version` = `f"markitdown/{out.backend_version}/{plugin_version}"`: nâng markitdown thì `reindex` tự trích lại (theo KI doc §3).
 
@@ -164,12 +164,14 @@ out = MarkitdownTool(context_for("markitdown", parent=self.ctx)).convert(
 ```python
 class Embedder(Protocol):
     model: str
+
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
-class VectorStore(Protocol):            # ADR-013: interface để Phase 3 thay bằng Qdrant server
+
+class VectorStore(Protocol):  # ADR-013: interface để Phase 3 thay bằng Qdrant server
     def upsert(self, chunk_ids: list[int], content_hashes: list[str], vectors: list[list[float]]) -> None: ...
     def delete_content(self, content_hash: str) -> None: ...
-    def search(self, vector: list[float], limit: int) -> list[tuple[int, float]]: ...   # (chunk_id, score)
+    def search(self, vector: list[float], limit: int) -> list[tuple[int, float]]: ...  # (chunk_id, score)
     def vector_of(self, chunk_ids: list[int]) -> list[list[float]]: ...
     def drop(self) -> None: ...
 ```
@@ -189,10 +191,12 @@ class Citation(BaseModel):
     char_start: int
     char_end: int
 
+
 class ContextChunk(BaseModel):
     text: str
     citation: Citation
     score: float
+
 
 class GetContextOutput(BaseModel):
     question: str
