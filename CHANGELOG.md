@@ -4,7 +4,7 @@
 
 ### Added
 
-- `lfmap-knowledge` 0.1.0 skeleton: schemas for the seven operations, manifest and stub tool (TC-K1); the license check now covers `packages/*` manifests and splits `AND` in a plain License field (tqdm `MPL-2.0 AND MIT`).
+- `lfmap-knowledge` 0.1.0 skeleton: schemas for the seven operations, manifest and stub tool (TC-K1), catalog store (TC-K2) and scanner (TC-K3); the license check now covers `packages/*` manifests and splits `AND` in a plain License field (tqdm `MPL-2.0 AND MIT`).
 - `lfmap-core` version 0.2.0: user config, risk-tiered approvals, audit log, grants and the plugin context fields listed below (Phase 1 prerequisites TC-C1 to TC-C5).
 
 - Phase 0 acceptance documentation in `docs/phase0/` (architecture, business processes, functional spec, test cases and report, user guide, runbook, sprint review), in Vietnamese, describing the code as of `f63f0ee`.
