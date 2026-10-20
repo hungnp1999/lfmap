@@ -1,0 +1,19 @@
+[project]
+name = "lfmap-knowledge"
+version = "0.1.0"
+description = "LFMAP knowledge: catalog and search local files, give agents cited context."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = ["lfmap-core", "lfmap-markitdown", "lancedb==0.40.0"]
+
+[project.entry-points."lfmap.plugins"]
+knowledge = "lfmap_knowledge.tool:KnowledgeTool"
+
+[tool.uv.sources]
+lfmap-core = { workspace = true }
+lfmap-markitdown = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
