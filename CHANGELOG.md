@@ -4,6 +4,7 @@
 
 ### Added
 
+- Claude Code cloud sessions run `uv sync` at start (`.claude/hooks/session-start.sh`); the hook does nothing on local machines.
 - `lfmap-knowledge` 0.1.0 skeleton: schemas for the seven operations, manifest and stub tool (TC-K1), catalog store (TC-K2) and scanner (TC-K3); the license check now covers `packages/*` manifests and splits `AND` in a plain License field (tqdm `MPL-2.0 AND MIT`).
 - `lfmap-core` version 0.2.0: user config, risk-tiered approvals, audit log, grants and the plugin context fields listed below (Phase 1 prerequisites TC-C1 to TC-C5).
 - Handoff plans for `lfmap-knowledge` TC-K4 to TC-K14 and scheduled jobs TC-J1 to TC-J4 (`docs/handoff/`), with in-repo copies of their specs (`docs/specs/`).
