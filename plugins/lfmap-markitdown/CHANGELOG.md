@@ -14,3 +14,8 @@
 - Parity fixtures (synthetic, < 2 MB), `Get-Expected.ps1` to record MarkitdownTool's classification on Windows, and `test_parity.py`, skipped until `expected.json` is recorded (TC-M8, part 1).
 - `expected.json` recorded from MarkitdownTool 2.4.0 (`integration_service.classify` at tag v2.4.0); the parity test now runs and matches on all fixtures. `Get-Expected.ps1` refuses MarkitdownTool older than 2.4.0 (no text-layer checks) and no longer turns a missing `low_quality_pages` into `[null]` (TC-M8).
 - Verified on Windows over a real MCP stdio round trip: info, classify, convert, a read outside the roots refused, export creating files (T1, audited), and overwrite refused without approval (T2, audited) (TC-M9).
+- Offline test: info, classify, convert and export run with sockets blocked (spec §8).
+
+### Changed
+
+- Manifest `min_core_version` raised to 0.2.0: the plugin needs settings, temp folders and approvals from lfmap-core 0.2.
