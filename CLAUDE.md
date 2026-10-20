@@ -1,10 +1,17 @@
 # CLAUDE.md
 
-Guidance for Claude Code sessions working on LFMAP. Design sources of truth live outside the repo (ADRs, Plugin Contract, Roadmap); follow them and flag conflicts instead of silently picking one side.
+Guidance for Claude Code sessions working on LFMAP.
+
+## Working from handoffs
+
+- Work starts from a handoff file `docs/handoff/YYYY-MM-DD-*.md` and the spec it links (`docs/specs/`). Together they carry the decisions already made (ADRs, Plugin Contract, Roadmap live outside the repo).
+- Do one task at a time and meet its completion criteria. If the handoff conflicts with the code, an ADR or this file, stop and ask; do not pick a side silently.
+- "Cập nhật tài liệu dự án" items: list them in the PR body; do not create ROADMAP/DECISIONS files here.
+- Handoff files are in Vietnamese; keep them so.
 
 ## Conventions
 
-- Talk to the maintainer in **Vietnamese**. Code, comments, docstrings, commit messages, PR text, README and CHANGELOG in **English**.
+- Talk to the maintainer in **Vietnamese**. Code, comments, docstrings, commit messages, PR text, README, CHANGELOG and specs in **English**.
 - Standard library first, small functions, few comments, type hints everywhere.
 - Business logic lives in a plugin's `Tool` class; adapters (CLI, MCP, later REST) stay generic and are generated in `lfmap-core`. Never write plugin-specific code in an adapter.
 - New dependency: check its license first. Runtime licenses must be in a manifest's `allowed` list (`scripts/check_licenses.py` enforces it); reviewed exceptions go in `EXCEPTIONS` there and in the License Register.
