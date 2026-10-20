@@ -29,14 +29,20 @@ class ToolContext(BaseModel):
     channel: Channel = "sdk"
     approver: Any = None
 
-    def require_approval(self, reason: str, detail: str = "") -> None:
+    def require_approval(self, reason: str, detail: str = "", *, destination: str = "", data: str = "normal") -> None:
         """Escalate this call before acting: T3 for reason "external", otherwise T2 (overwrite, rename, delete).
 
-        Raises ToolError permission_denied when refused. Without an approver (plain SDK use) the call is the
-        user's own code and runs.
+        For data sent out, `destination` (host or service) and `data` (normal, private, secret) let a
+        preapproved destination in config.toml cover the call. Raises ToolError permission_denied when refused.
+        Without an approver (plain SDK use) the call is the user's own code and runs.
         """
-        if self.approver is not None:
-            self.approver("T3" if reason == "external" else "T2", reason, detail)
+        if self.approver is None:
+            return
+        tier = "T3" if reason == "external" else "T2"
+        if destination:
+            self.approver(tier, reason, detail, destination=destination, data=data)
+        else:
+            self.approver(tier, reason, detail)
 
 
 class OperationSpec(BaseModel):
