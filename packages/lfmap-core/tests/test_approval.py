@@ -1,9 +1,11 @@
 import json
+from datetime import date, timedelta
 
 import pytest
 
-from lfmap_core.approval import Policy, audit, audit_path, base_tier, decide, raise_tier
+from lfmap_core.approval import Gate, Policy, audit, audit_path, base_tier, decide, raise_tier
 from lfmap_core.errors import ToolError
+from lfmap_core.tool import ToolContext
 
 DEFAULT = Policy()
 
@@ -104,3 +106,59 @@ def test_audit_refuses_unknown_fields(user_dirs):
     with pytest.raises(ValueError):
         audit({"plugin": "p", "content": "secret text"})
     assert not audit_path().exists()
+
+
+def _policy(days: int, data: str = "normal") -> Policy:
+    expires = date.today() + timedelta(days=days)
+    return Policy.from_config({"approval": {"destinations": {"API.example.com": {"data": data, "expires": expires}}}})
+
+
+def test_destination_allows_up_to_its_data_level():
+    assert _policy(30).destination_allows("api.example.com", "normal")
+    assert not _policy(30).destination_allows("api.example.com", "private")
+    assert _policy(30, "private").destination_allows("api.example.com", "private")
+    assert not _policy(30, "private").destination_allows("api.example.com", "secret")
+    assert not _policy(30).destination_allows("other.example.com", "normal")
+
+
+def test_expired_destination_counts_as_none():
+    assert not _policy(1).destination_allows("api.example.com", "normal", today=date.today() + timedelta(days=2))
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [{"expires": date.today() + timedelta(days=91)}, {"data": "secret", "expires": date.today()}, {"data": "normal"}],
+)
+def test_invalid_destination(entry):
+    with pytest.raises(ToolError) as excinfo:
+        Policy.from_config({"approval": {"destinations": {"api.example.com": entry}}})
+    assert excinfo.value.code == "invalid_input"
+
+
+def test_gate_t3_preapproved_destination(user_dirs):
+    gate = Gate("p", "op", "mcp", _policy(30))
+    gate("T3", "external", destination="api.example.com")
+    record = json.loads(audit_path().read_text(encoding="utf-8"))
+    assert record["decision"] == "allow"
+    assert record["target"] == "api.example.com"
+    with pytest.raises(ToolError) as excinfo:
+        gate("T3", "external", destination="api.example.com", data="private")
+    assert "[approval.destinations]" in excinfo.value.details["hint"]
+
+
+def test_policy_deny_beats_destination(user_dirs):
+    expires = date.today() + timedelta(days=30)
+    config = {"approval": {"T3": "deny", "destinations": {"api.example.com": {"expires": expires}}}}
+    with pytest.raises(ToolError):
+        Gate("p", "op", "mcp", Policy.from_config(config))("T3", "external", destination="api.example.com")
+
+
+def test_require_approval_passes_destination():
+    calls = []
+    ctx = ToolContext(plugin_id="p", approver=lambda *args, **kwargs: calls.append((args, kwargs)))
+    ctx.require_approval("external", "doc.md", destination="api.example.com", data="private")
+    ctx.require_approval("overwrite", "out.txt")
+    assert calls == [
+        (("T3", "external", "doc.md"), {"destination": "api.example.com", "data": "private"}),
+        (("T2", "overwrite", "out.txt"), {}),
+    ]
