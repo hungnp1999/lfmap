@@ -181,8 +181,6 @@ uv run lfmap jobs register --dry-run
 
 Chưa chạy `register` thật cho tới khi xong J4 (doctor).
 
-## 5. Câu hỏi để lại cho J3 (không chặn đêm nay)
+## 5. Đã chốt cho J3
 
-- `lfmap approvals list` hiện đang liệt kê grants (TC-C4b). Spec J3 dùng chính tên này cho hàng đợi đề xuất. Cần chốt trước J3:
-  - Phương án gợi ý: `lfmap approvals pending` cho hàng đợi.
-  - Phương án khác: đổi lệnh grants thành `approvals grants`.
+- Hàng đợi đề xuất của job dùng lệnh `lfmap approvals pending` (Hùng đồng ý 2026-10-21). Lệnh `lfmap approvals list` giữ nguyên, tiếp tục liệt kê grants như hiện nay.

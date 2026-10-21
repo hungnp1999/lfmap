@@ -74,7 +74,7 @@ Files are UTF-8; tests must pass on Windows and must not touch the real Task Sch
 - Việc cần làm:
   - Với `channel == "job"`: T0 → allow; T1 → allow + audit nếu `job.max_tier >= 1`, không thì như T2; T2/T3 → không chạy mà ghi đề xuất. Không bao giờ elicit, bỏ qua `preapproved`.
   - Đề xuất là file JSON `%LOCALAPPDATA%\lfmap\approvals\pending\<utc-ts>-<job>-<uuid8>.json`: `id`, `created`, `expires` (mặc định +7 ngày, đọc `config.toml` `[jobs] approval_ttl_days`), `job`, `plugin`, `operation`, `input`, `tier`, `reason`, `detail`. Nếu operation hỗ trợ `dry_run` thì gọi với `ctx.dry_run=True` và lưu `preview` (output dạng JSON, cắt 8000 ký tự). Kết quả lệnh job: `ToolError("permission_denied", "Queued for approval", {"approval_id": ...})`, exit 1.
-  - `lfmap approvals list [--json]`: đề xuất còn hạn. Hết hạn → chuyển sang `approvals\expired\`.
+  - `lfmap approvals pending [--json]` (chốt 2026-10-21; `approvals list` vẫn là danh sách grants): đề xuất còn hạn. Hết hạn → chuyển sang `approvals\expired\`.
   - `lfmap approvals approve <id>`: chỉ chạy ở CLI tương tác (`sys.stdin.isatty()`, không thì `permission_denied`); in tóm tắt, hỏi xác nhận, chạy lại đúng `plugin/operation/input` với `channel="cli"` và approver cho phép đúng một lần ở tầng đã ghi; ghi audit; chuyển file sang `approvals\done\`.
   - `lfmap approvals reject <id>`: chuyển sang `approvals\rejected\`, ghi audit.
   - Không lộ `approve` qua MCP (agent không được tự duyệt). `list` qua MCP để sau.
