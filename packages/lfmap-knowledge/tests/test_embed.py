@@ -1,0 +1,133 @@
+import json
+import threading
+from collections.abc import Iterator
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+import pytest
+
+from lfmap_core import ToolError
+from lfmap_core.permissions import PermissionManager
+from lfmap_knowledge.embed import BATCH_SIZE, OllamaEmbedder, check_loopback
+
+
+class _Ollama(BaseHTTPRequestHandler):
+    def _reply(self, body: dict) -> None:
+        data = json.dumps(body).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_GET(self) -> None:
+        self.server.requests.append(("GET", self.path, None))
+        self._reply({"models": []})
+
+    def do_POST(self) -> None:
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        self.server.requests.append(("POST", self.path, body))
+        self._reply({"embeddings": [[float(text.split()[-1]), 0.5] for text in body["input"]]})
+
+    def log_message(self, *args) -> None:
+        pass
+
+
+class _Server:
+    def __init__(self) -> None:
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Ollama)
+        self.httpd.requests = []
+        self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}"
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.thread.start()
+
+    @property
+    def requests(self) -> list:
+        return self.httpd.requests
+
+    def stop(self) -> None:
+        if self.thread.is_alive():
+            self.httpd.shutdown()
+            self.httpd.server_close()
+            self.thread.join()
+
+
+@pytest.fixture
+def server() -> Iterator[_Server]:
+    running = _Server()
+    yield running
+    running.stop()
+
+
+@pytest.fixture
+def net() -> PermissionManager:
+    return PermissionManager([], [], network=True)
+
+
+def _embedder(server: _Server, perms: PermissionManager) -> OllamaEmbedder:
+    return OllamaEmbedder(server.url, "nomic-embed-text", perms, timeout=5)
+
+
+@pytest.mark.parametrize(
+    "url", ["http://10.0.0.5:11434", "http://example.com", "ftp://127.0.0.1", "http://u:p@127.0.0.1"]
+)
+def test_non_loopback_is_refused(url: str, net: PermissionManager):
+    with pytest.raises(ToolError) as caught:
+        check_loopback(url)
+    assert caught.value.code == "invalid_input"
+    with pytest.raises(ToolError):
+        OllamaEmbedder(url, "m", net)
+
+
+def test_loopback_is_accepted(net: PermissionManager):
+    assert check_loopback("http://127.0.0.1:11434/") == "http://127.0.0.1:11434"
+    assert check_loopback("http://localhost:1") == "http://localhost:1"
+    assert check_loopback("http://[::1]:1") == "http://[::1]:1"
+    assert OllamaEmbedder("http://localhost:1", "m", net).model == "m"
+
+
+def test_embed_in_batches(server: _Server, net: PermissionManager):
+    texts = [f"câu {i}" for i in range(70)]
+    vectors = _embedder(server, net).embed(texts)
+    assert vectors == [[float(i), 0.5] for i in range(70)]
+    assert BATCH_SIZE == 32
+    assert [len(body["input"]) for _, _, body in server.requests] == [32, 32, 6]
+    assert all(method == "POST" and path == "/api/embed" for method, path, _ in server.requests)
+    assert all(body["model"] == "nomic-embed-text" for _, _, body in server.requests)
+
+
+def test_empty_list_makes_no_request(server: _Server, net: PermissionManager):
+    assert _embedder(server, net).embed([]) == []
+    assert server.requests == []
+
+
+def test_server_down(server: _Server, net: PermissionManager):
+    embedder = _embedder(server, net)
+    server.stop()
+    with pytest.raises(ToolError) as caught:
+        embedder.embed(["câu 1"])
+    assert caught.value.code == "backend_unavailable"
+    assert caught.value.details["reason"] == "ollama_unreachable"
+
+
+def test_network_permission_required(server: _Server):
+    with pytest.raises(ToolError) as caught:
+        _embedder(server, PermissionManager([], [])).embed(["câu 1"])
+    assert caught.value.code == "permission_denied"
+    assert server.requests == []
+
+
+def test_ping(server: _Server, net: PermissionManager):
+    embedder = _embedder(server, net)
+    assert embedder.ping() is True
+    assert server.requests[0][:2] == ("GET", "/api/tags")
+    server.stop()
+    assert embedder.ping() is False
+
+
+def test_proxy_variables_are_ignored(server: _Server, net: PermissionManager, monkeypatch: pytest.MonkeyPatch):
+    for name in ("NO_PROXY", "no_proxy"):
+        monkeypatch.delenv(name, raising=False)
+    for name in ("HTTP_PROXY", "http_proxy"):
+        monkeypatch.setenv(name, "http://203.0.113.1:9")
+    assert _embedder(server, net).embed(["câu 7"]) == [[7.0, 0.5]]
+    assert len(server.requests) == 1
