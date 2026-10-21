@@ -101,3 +101,20 @@ def test_no_temp_files_left(ctx, note: Path, cache_dir: Path):
 
 def test_cache_path():
     assert cache_path(Path("c"), "abcdef") == Path("c/ab/abcdef.md")
+
+
+def test_broken_sidecar_extracts_again(ctx, note: Path, cache_dir: Path, calls: list[str]):
+    _extract(ctx, note, cache_dir)
+    cache_path(cache_dir, HASH).with_suffix(".json").write_text("{not json", encoding="utf-8")
+    result = _extract(ctx, note, cache_dir)
+    assert len(calls) == 2
+    assert result.from_cache is False
+
+
+def test_cached_markdown_keeps_line_endings(ctx, root: Path, cache_dir: Path):
+    path = root / "crlf.md"
+    path.write_bytes("# Báo cáo\r\n\r\nDoanh thu.\r\n".encode())
+    first = _extract(ctx, path, cache_dir)
+    second = _extract(ctx, path, cache_dir)
+    assert second.from_cache is True
+    assert second.markdown == first.markdown

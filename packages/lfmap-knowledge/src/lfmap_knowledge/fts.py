@@ -1,3 +1,5 @@
+"""Keyword search over chunks with a contentless FTS5 table and Vietnamese folding."""
+
 import sqlite3
 from collections.abc import Iterable
 
@@ -5,78 +7,39 @@ from lfmap_core import ToolError
 
 
 def fold(s: str) -> str:
-    """
-    Convert the string to a casefolded form and replace 'đ' with 'd'.
-
-    :param s: The input string.
-    :return: The processed string.
-    """
+    """Casefold and map đ to d; FTS5 remove_diacritics 2 strips the remaining accents."""
     return s.casefold().replace("đ", "d")
 
 
 def fts_query(user_text: str) -> str:
-    """
-    Process the user input to create a valid FTS5 query.
-
-    :param user_text: The user-provided search query.
-    :return: A string representing the FTS5 query.
-    :raises ToolError: If the query is invalid.
-    """
-    words = user_text.split()
-    processed_words = []
-
-    for word in words:
-        # Remove quotes inside each word
-        word = word.replace('"', "")
-        # Drop empty words
-        if word:
-            processed_words.append(f'"{fold(word)}"')
-
-    if not processed_words:
-        raise ToolError("invalid_input", "Query is empty")
-
-    return " ".join(processed_words)
+    """Quote each folded word so FTS5 operators (AND, NEAR, *, -) in user text are plain words."""
+    words = [word.replace('"', "") for word in fold(user_text).split()]
+    quoted = [f'"{word}"' for word in words if word]
+    if not quoted:
+        raise ToolError("invalid_input", "Search query is empty")
+    return " ".join(quoted)
 
 
 def index_chunks(conn: sqlite3.Connection, rows: Iterable[tuple[int, str]]) -> None:
-    """
-    Index chunks of text into the FTS5 table.
-
-    :param conn: The SQLite connection.
-    :param rows: An iterable of (chunk_id, text) tuples.
-    """
-    cursor = conn.cursor()
-    for chunk_id, text in rows:
-        cursor.execute("INSERT INTO chunks_fts(rowid, folded) VALUES (?, ?)", (chunk_id, fold(text)))
+    """Add (chunk_id, text) rows to chunks_fts; the caller commits."""
+    conn.executemany(
+        "INSERT INTO chunks_fts(rowid, folded) VALUES (?, ?)", ((chunk_id, fold(text)) for chunk_id, text in rows)
+    )
 
 
 def delete_content(conn: sqlite3.Connection, content_hash: str) -> None:
-    """
-    Mark chunks associated with a content hash for deletion in the FTS5 table.
-
-    :param conn: The SQLite connection.
-    :param content_hash: The hash of the content to be deleted.
-    """
-    cursor = conn.cursor()
-    cursor.execute("SELECT chunk_id, text FROM chunks WHERE content_hash = ?", (content_hash,))
-    for chunk_id, text in cursor.fetchall():
-        cursor.execute(
-            "INSERT INTO chunks_fts(chunks_fts, rowid, folded) VALUES('delete', ?, ?)", (chunk_id, fold(text))
-        )
+    """Remove the FTS rows of one content hash; run before its chunks rows are deleted."""
+    rows = conn.execute("SELECT chunk_id, text FROM chunks WHERE content_hash = ?", (content_hash,)).fetchall()
+    conn.executemany(
+        "INSERT INTO chunks_fts(chunks_fts, rowid, folded) VALUES ('delete', ?, ?)",
+        ((chunk_id, fold(text)) for chunk_id, text in rows),
+    )
 
 
 def keyword_search(conn: sqlite3.Connection, query: str, limit: int) -> list[tuple[int, float]]:
-    """
-    Perform a keyword search using the FTS5 table.
-
-    :param conn: The SQLite connection.
-    :param query: The search query.
-    :param limit: The maximum number of results to return.
-    :return: A list of tuples containing chunk IDs and their BM25 scores.
-    """
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT rowid, bm25(chunks_fts) AS score FROM chunks_fts WHERE chunks_fts MATCH ? ORDER BY score LIMIT ?",
+    """Best matches first as (chunk_id, score); score is -bm25, so higher is better."""
+    rows = conn.execute(
+        "SELECT rowid, bm25(chunks_fts) AS rank FROM chunks_fts WHERE chunks_fts MATCH ? ORDER BY rank LIMIT ?",
         (fts_query(query), limit),
-    )
-    return [(int(chunk_id), -float(score)) for chunk_id, score in cursor.fetchall()]
+    ).fetchall()
+    return [(int(chunk_id), -float(rank)) for chunk_id, rank in rows]

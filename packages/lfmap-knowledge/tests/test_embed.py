@@ -131,3 +131,16 @@ def test_proxy_variables_are_ignored(server: _Server, net: PermissionManager, mo
         monkeypatch.setenv(name, "http://203.0.113.1:9")
     assert _embedder(server, net).embed(["câu 7"]) == [[7.0, 0.5]]
     assert len(server.requests) == 1
+
+
+def test_wrong_vector_count_is_an_error(server: _Server, net: PermissionManager, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(_Ollama, "do_POST", lambda self: self._reply({"embeddings": [[1.0]]}))
+    with pytest.raises(ToolError) as caught:
+        _embedder(server, net).embed(["a", "b"])
+    assert caught.value.code == "backend_unavailable"
+    assert caught.value.details["reason"] == "ollama_bad_response"
+
+
+def test_ping_without_network_permission_makes_no_request(server: _Server):
+    assert _embedder(server, PermissionManager([], [])).ping() is False
+    assert server.requests == []
