@@ -4,6 +4,7 @@
 
 ### Added
 
+- Scheduled jobs (Roadmap 1.8, ADR-018, TC-J1 and TC-J2): `%LOCALAPPDATA%\lfmap\jobs.toml` (`LFMAP_JOBS` overrides) declares jobs with a daily, weekly or every-N-minutes schedule. `lfmap jobs list`, `lfmap jobs run <id>` (channel `job`; until TC-J3 anything above T0 is refused and audited) and `lfmap jobs register [--dry-run]`, which creates or deletes Windows Task Scheduler tasks in `\LFMAP\` only. `scripts/Invoke-LfmapJob.ps1` runs a job, keeps its exit code and appends a line to `%LOCALAPPDATA%\lfmap\logs\jobs-YYYY-MM-DD.jsonl`. See `docs/jobs.md`.
 - Claude Code cloud sessions run `uv sync` at start (`.claude/hooks/session-start.sh`); the hook does nothing on local machines.
 - `lfmap-knowledge` 0.1.0 skeleton: schemas for the seven operations, manifest and stub tool (TC-K1), catalog store (TC-K2) and scanner (TC-K3); the license check now covers `packages/*` manifests and splits `AND` in a plain License field (tqdm `MPL-2.0 AND MIT`).
 - `lfmap-core` version 0.2.0: user config, risk-tiered approvals, audit log, grants and the plugin context fields listed below (Phase 1 prerequisites TC-C1 to TC-C5).

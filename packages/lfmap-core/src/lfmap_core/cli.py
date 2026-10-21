@@ -1,7 +1,8 @@
-"""`lfmap` command line: plugin listing, generated operation commands and `serve mcp`."""
+"""`lfmap` command line: plugin listing, generated operation commands, `serve mcp` and scheduled jobs."""
 
 import inspect
 import json
+import subprocess
 import sys
 import types
 import typing
@@ -12,7 +13,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import grants
+from lfmap_core import grants, jobs
 from lfmap_core.approval import Gate, Policy, audit, audit_path, base_tier
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -124,11 +125,13 @@ def build_app(registry: Registry) -> typer.Typer:
     approvals_app = typer.Typer(help="Time-limited approvals (interactive terminal only).")
     config_app = typer.Typer(help="Manage configuration.")
     audit_app = typer.Typer(help="Audit logs.")
+    jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
     app.add_typer(config_app, name="config")
     app.add_typer(audit_app, name="audit")
+    app.add_typer(jobs_app, name="jobs")
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
     def require_person(action: str, key: str) -> tuple[str, str]:
@@ -273,6 +276,56 @@ def build_app(registry: Registry) -> typer.Typer:
                 record.get("target"),
             ]
             typer.echo("  ".join(str(field) for field in fields if field is not None))
+
+    @jobs_app.command("list")
+    def jobs_list(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """List the jobs in jobs.toml."""
+        rows = [
+            {
+                "id": job.id,
+                "operation": f"{job.plugin}.{job.operation}",
+                "schedule": job.schedule.describe(),
+                "enabled": job.enabled,
+            }
+            for job in jobs.load_jobs()
+        ]
+        if json_output:
+            typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
+            return
+        for row in rows:
+            state = "enabled" if row["enabled"] else "disabled"
+            typer.echo(f"{row['id']}  {row['operation']}  {row['schedule']}  {state}")
+
+    @jobs_app.command("run")
+    def jobs_run(
+        job_id: Annotated[str, typer.Argument(metavar="ID")],
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Run one job now, as Task Scheduler would."""
+        _print_output(jobs.run_job(registry, job_id), json_output)
+
+    @jobs_app.command("register")
+    def jobs_register(
+        dry_run: Annotated[bool, typer.Option("--dry-run", help="Print the schtasks commands only.")] = False,
+        repo: Annotated[Path | None, typer.Option("--repo", help="Repository root; default this checkout.")] = None,
+        uv: Annotated[Path | None, typer.Option("--uv", help="Path to uv.exe; default PATH, then WinGet.")] = None,
+    ) -> None:
+        """Create or update a task in \\LFMAP\\ for each enabled job; delete the tasks of the others."""
+        repo = repo or jobs.repo_root()
+        uv = uv or jobs.find_uv()
+        job_list = jobs.load_jobs()
+        try:
+            existing = jobs.existing_tasks()
+        except ToolError as error:
+            if not dry_run or error.code != "backend_unavailable":
+                raise
+            typer.echo(f"Warning: {error.message}; assuming no task is registered yet", err=True)
+            existing = set()
+        script = repo / "scripts" / "Invoke-LfmapJob.ps1"
+        for command in jobs.register_commands(job_list, existing, repo, uv, script):
+            typer.echo(subprocess.list2cmdline(command))
+            if not dry_run:
+                jobs._schtasks(command)
 
     for entry in registry.all():
         if not entry.manifest.adapters.cli:
