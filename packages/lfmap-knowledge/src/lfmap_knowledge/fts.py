@@ -1,0 +1,82 @@
+import sqlite3
+from collections.abc import Iterable
+
+from lfmap_core import ToolError
+
+
+def fold(s: str) -> str:
+    """
+    Convert the string to a casefolded form and replace 'đ' with 'd'.
+
+    :param s: The input string.
+    :return: The processed string.
+    """
+    return s.casefold().replace("đ", "d")
+
+
+def fts_query(user_text: str) -> str:
+    """
+    Process the user input to create a valid FTS5 query.
+
+    :param user_text: The user-provided search query.
+    :return: A string representing the FTS5 query.
+    :raises ToolError: If the query is invalid.
+    """
+    words = user_text.split()
+    processed_words = []
+
+    for word in words:
+        # Remove quotes inside each word
+        word = word.replace('"', "")
+        # Drop empty words
+        if word:
+            processed_words.append(f'"{fold(word)}"')
+
+    if not processed_words:
+        raise ToolError("invalid_input", "Query is empty")
+
+    return " ".join(processed_words)
+
+
+def index_chunks(conn: sqlite3.Connection, rows: Iterable[tuple[int, str]]) -> None:
+    """
+    Index chunks of text into the FTS5 table.
+
+    :param conn: The SQLite connection.
+    :param rows: An iterable of (chunk_id, text) tuples.
+    """
+    cursor = conn.cursor()
+    for chunk_id, text in rows:
+        cursor.execute("INSERT INTO chunks_fts(rowid, folded) VALUES (?, ?)", (chunk_id, fold(text)))
+
+
+def delete_content(conn: sqlite3.Connection, content_hash: str) -> None:
+    """
+    Mark chunks associated with a content hash for deletion in the FTS5 table.
+
+    :param conn: The SQLite connection.
+    :param content_hash: The hash of the content to be deleted.
+    """
+    cursor = conn.cursor()
+    cursor.execute("SELECT chunk_id, text FROM chunks WHERE content_hash = ?", (content_hash,))
+    for chunk_id, text in cursor.fetchall():
+        cursor.execute(
+            "INSERT INTO chunks_fts(chunks_fts, rowid, folded) VALUES('delete', ?, ?)", (chunk_id, fold(text))
+        )
+
+
+def keyword_search(conn: sqlite3.Connection, query: str, limit: int) -> list[tuple[int, float]]:
+    """
+    Perform a keyword search using the FTS5 table.
+
+    :param conn: The SQLite connection.
+    :param query: The search query.
+    :param limit: The maximum number of results to return.
+    :return: A list of tuples containing chunk IDs and their BM25 scores.
+    """
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT rowid, bm25(chunks_fts) AS score FROM chunks_fts WHERE chunks_fts MATCH ? ORDER BY score LIMIT ?",
+        (fts_query(query), limit),
+    )
+    return [(int(chunk_id), -float(score)) for chunk_id, score in cursor.fetchall()]
