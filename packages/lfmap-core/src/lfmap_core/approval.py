@@ -24,6 +24,7 @@ from lfmap_core.tool import Channel
 Tier = Literal["T0", "T1", "T2", "T3"]
 Action = Literal["allow", "audit", "ask", "deny"]
 Decision = Literal["allow", "ask", "deny"]
+JobDecision = Literal["allow", "queue", "deny"]
 DataLevel = Literal["normal", "private", "secret"]
 
 TIERS: tuple[Tier, ...] = ("T0", "T1", "T2", "T3")
@@ -110,17 +111,38 @@ def decide(
     `can_elicit` says the adapter can ask the person (interactive terminal, MCP elicitation);
     `granted` says a time-limited grant from the interactive CLI covers this call.
     Neither a pre-approval nor MCP elicitation covers T3: an agent could answer for the person.
+    A scheduled job has nobody to ask and takes no grant or pre-approval (it uses `job_decision`).
     """
     action = policy.action(plugin, op, tier)
     if action == "deny":
         return "deny"
-    if action in ("allow", "audit") or granted:
+    if action in ("allow", "audit"):
+        return "allow"
+    if channel == "job":
+        return "deny"
+    if granted:
         return "allow"
     if tier == "T3":
         return "ask" if channel == "cli" and can_elicit else "deny"
     if f"{plugin}.{op}" in preapproved:
         return "allow"
     return "ask" if can_elicit else "deny"
+
+
+def job_decision(policy: Policy, plugin: str, op: str, tier: Tier, max_tier: int) -> JobDecision:
+    """Whether a scheduled job runs a call, queues it for a person to approve, or is refused (ADR-018).
+
+    Nobody watches a job, so it never asks and ignores grants, pre-approvals and preapproved destinations.
+    `max_tier` (0 or 1, from jobs.toml) is a ceiling: the policy can only tighten it, and `deny` is never queued.
+    """
+    if tier == "T0":
+        return "allow"
+    action = policy.action(plugin, op, tier)
+    if action == "deny":
+        return "deny"
+    if tier == "T1" and max_tier >= 1 and action in ("allow", "audit"):
+        return "allow"
+    return "queue"
 
 
 def audit_path() -> Path:

@@ -19,9 +19,42 @@ max_tier = 0                      # 0 = only T0 runs; 1 = T1 runs and is audited
 enabled = true
 ```
 
-A job never runs with `--yes`. Until TC-J3 lands, a job may only run T0 operations: anything above T0 is
-refused and written to `audit.jsonl` with channel `job`, whatever `max_tier` says. TC-J3 turns T2 and T3
-calls into proposals that a person approves with `lfmap approvals`.
+A job never runs with `--yes`, never asks anyone and ignores grants, `serve mcp --approve` and preapproved
+destinations. What a call does depends on its tier (ADR-017) and the job's `max_tier`:
+
+| Tier | `max_tier = 0` | `max_tier = 1` |
+|---|---|---|
+| T0 (no side effects) | runs | runs |
+| T1 (new files) | queued for approval | runs, audited |
+| T2 (overwrite, rename, delete) | queued for approval | queued for approval |
+| T3 (external) | queued for approval | queued for approval |
+
+`[approval]` in `config.toml` can only tighten this: `deny` refuses the call without queueing it, and T1 set
+to `ask` is queued. Every decision above T0 is written to `audit.jsonl` with channel `job`.
+
+## Approving queued calls
+
+A queued call is not run. The job exits 1 with `Error [permission_denied]: Queued for approval` and writes a
+proposal to `%LOCALAPPDATA%\lfmap\approvals\pending\<id>.json` (job, plugin, operation, input, tier, reason).
+A job that keeps hitting the same call reuses its pending proposal instead of writing a new one.
+
+```powershell
+uv run lfmap approvals pending          # proposals waiting; expired ones move to approvals\expired
+uv run lfmap approvals approve <id>     # shows the proposal, asks, then runs it once
+uv run lfmap approvals reject <id>
+```
+
+- `approve` and `reject` only work in an interactive terminal, and neither is available over MCP, so an agent
+  cannot approve its own work.
+- `approve` moves the proposal to `approvals\done` before running it, so it never runs twice. It runs with the
+  job's own rights, plus whatever its recorded tier covers. If the run needs a higher tier, you are asked again.
+- `reject` moves it to `approvals\rejected`.
+- Both are audited.
+- Proposals expire after 7 days (`[jobs] approval_ttl_days` in `config.toml`, 1 to 30).
+- Proposal files are never deleted, only moved between `pending`, `done`, `rejected` and `expired`. Clean them
+  up by hand if you want to.
+
+`approvals list` still lists time-limited grants.
 
 ## Commands
 

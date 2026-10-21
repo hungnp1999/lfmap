@@ -1,7 +1,8 @@
 """Scheduled jobs (ADR-018): `%LOCALAPPDATA%\\lfmap\\jobs.toml` and the Windows Task Scheduler commands for it.
 
 Task Scheduler does the scheduling; each task runs `scripts/Invoke-LfmapJob.ps1`, which calls `lfmap jobs run`.
-Only tasks in the `\\LFMAP\\` folder are ever created or deleted.
+Only tasks in the `\\LFMAP\\` folder are ever created or deleted. A job never asks anyone: calls above its
+`max_tier` become proposals in the approval queue (`lfmap_core.approvals`).
 """
 
 import csv
@@ -15,10 +16,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from lfmap_core.approval import Gate, Policy, base_tier
-from lfmap_core.config import app_dir
+from lfmap_core.approval import Policy, base_tier
+from lfmap_core.approvals import JobApprover, ttl
+from lfmap_core.config import app_dir, load_config
 from lfmap_core.errors import ToolError
-from lfmap_core.registry import Registry
+from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import run_operation
 
 TASK_FOLDER = "\\LFMAP\\"
@@ -120,12 +122,16 @@ def load_jobs(path: Path | None = None) -> list[Job]:
         raise ToolError("invalid_input", f"{path} is invalid", {"error": str(error)}) from error
 
 
-def _approver(job: Job) -> Gate:
-    """Until TC-J3 a job may only run T0: everything above is refused and audited with channel "job".
-
-    `max_tier` is read from jobs.toml but has no effect yet.
-    """
-    return Gate(job.plugin, job.operation, "job", Policy(T1="deny", T2="deny", T3="deny"))
+def check_input(entry: PluginEntry, operation: str, payload: dict[str, Any]) -> None:
+    """Refuse input that does not match the operation before anything is queued or approved."""
+    spec = entry.tool_class.operations().get(operation)
+    if spec is None:
+        raise ToolError("not_found", f"Unknown operation {entry.id}.{operation}", {"operation": operation})
+    try:
+        spec.input_model.model_validate(payload)
+    except ValidationError as error:
+        details = {"operation": f"{entry.id}.{operation}", "errors": error.errors(include_context=False)}
+        raise ToolError("invalid_input", "Input does not match the operation schema", details) from error
 
 
 def run_job(registry: Registry, job_id: str, path: Path | None = None) -> BaseModel:
@@ -138,7 +144,9 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None) -> BaseMo
     declared = entry.manifest.operation(job.operation)
     if declared is None:
         raise ToolError("not_found", f"Unknown operation {job.plugin}.{job.operation}", {"job": job_id})
-    gate = _approver(job)
+    check_input(entry, job.operation, job.input)
+    config = load_config()
+    gate = JobApprover(job, Policy.from_config(config), ttl(config))
     gate(base_tier(declared.side_effects), "side_effects")
     return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
