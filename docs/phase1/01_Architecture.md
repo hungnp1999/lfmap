@@ -255,5 +255,5 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 | L15 | knowledge gọi markitdown bằng quyền của knowledge (`context_for`) | markitdown đọc được mọi thứ trong `${knowledge}` dù `${documents}` hẹp hơn | Đúng thiết kế spec §7.7 |
 | L16 | Job chỉ chạy trên Windows; `jobs register` (`/F`) đặt lại "Run whether user is logged on" và "Wake" | Phải đặt lại tay sau mỗi lần register | `docs/jobs.md`; `jobs doctor` cảnh báo |
 | L17 | OCR là extra Internal (LGPL); CI Windows không có Tesseract nên test OCR bị skip | OCR chỉ kiểm trên máy có Tesseract | Plugin `ocr` (PaddleOCR) Phase 2 |
-| L18 | LanceDB cảnh báo deprecation về tự chiếu cột `_distance` | Có thể vỡ khi nâng lancedb | Sửa nhỏ trong `vectors.py` |
+| L18 | LanceDB cảnh báo deprecation về tự chiếu cột `_distance` | Có thể vỡ khi nâng lancedb | Đã sửa sau mốc: PR #40 (chọn `_distance` tường minh) |
 | L19 | Hiệu năng 10.000 file và reindex lần hai < 60 s: **[CHỜ: số đo K14 từ thread "Việc trên DIEP-ANH chiều 22/10"]** | DoD knowledge chưa đóng mục này | Điền khi có số đo |

@@ -133,7 +133,7 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 |---|---|---|---|
 | A4 | Cập nhật `docs/specs/knowledge.md` (bỏ `glob`, ghi `shown_roots`) và ADR-018 (`approvals pending`) | Claude | Trước nghiệm thu |
 | A5 | Gom mọi bước cần TTY vào checklist tối duy nhất; thiết lập auto-mode Claude Code trên DIEP-ANH (`/auto-mode-setup`) | Hùng | Ca tối 22/10 |
-| A6 | Sửa cảnh báo LanceDB `_distance` (L18) | Claude Code Cloud | Đầu Phase 1b / Phase 2 |
+| A6 | Sửa cảnh báo LanceDB `_distance` (L18) | Claude Code Cloud | Xong 2026-10-22, PR #40 |
 | A7 | Cập nhật `docs/phase1/` mỗi PR của 1.2, 1.3, 1.6 thay vì cuối giai đoạn | Claude | Tiếp theo |
 
 ## 6. Việc chuyển tiếp (Product Backlog)
