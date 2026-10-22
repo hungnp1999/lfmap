@@ -97,7 +97,7 @@ class LanceVectorStore:
         rows = (
             table.search(vector, vector_column_name="vector")
             .distance_type("cosine")
-            .select(["chunk_id"])
+            .select(["chunk_id", "_distance"])
             .limit(limit)
             .to_list()
         )

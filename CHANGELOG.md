@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `lfmap-knowledge` vector search selects `_distance` explicitly, so LanceDB 0.40 no longer logs its scoring autoprojection deprecation warning to stderr on every search (seen in the K14 MCP run).
 - `lfmap jobs register` writes the full path of `pwsh` into each task (`--pwsh` overrides). With PowerShell from the Microsoft Store, Task Scheduler could not start `pwsh` by name, so every job failed with `0x80070002`, even at the lock screen. `lfmap jobs doctor` gains a `pwsh` check that also flags tasks registered with plain `pwsh`.
 
 ### Added
