@@ -15,11 +15,11 @@ from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
 from lfmap_core import approvals, grants, jobs, jobs_doctor
-from lfmap_core.approval import Gate, Policy, audit, audit_path, base_tier
+from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
 from lfmap_core.registry import PluginEntry, Registry
-from lfmap_core.runtime import build_tool, run_operation
+from lfmap_core.runtime import build_tool, call_tier, run_operation
 from lfmap_core.tool import OperationSpec
 
 _FLAT = (str, int, float, bool, Path)
@@ -48,7 +48,6 @@ def _print_output(output: BaseModel, as_json: bool) -> None:
 def _operation_command(entry: PluginEntry, spec: OperationSpec):
     fields = spec.input_model.model_fields
     flat = all(_is_flat(f.annotation) for f in fields.values())
-    side_effects = entry.manifest.operation(spec.name).side_effects
 
     def command(**kwargs: Any) -> None:
         as_json = kwargs.pop("json_output")
@@ -64,7 +63,7 @@ def _operation_command(entry: PluginEntry, spec: OperationSpec):
             frozenset({f"{entry.id}.{spec.name}"}) if assume_yes else frozenset(),
             typer.confirm if _interactive() else None,
         )
-        gate(base_tier(side_effects), "side_effects")
+        gate(call_tier(entry, spec.name, payload), "side_effects")
         _print_output(
             run_operation(entry, spec.name, payload, channel="cli", approver=gate, explicit_read=_interactive()),
             as_json,
@@ -229,7 +228,7 @@ def build_app(registry: Registry) -> typer.Typer:
         approvals.move(proposal.id, "done")
         proposal_audit(proposal, "approve")
         gate = approvals.ApprovedGate(proposal, Gate(entry.id, proposal.operation, "cli", policy, ask=typer.confirm))
-        gate(base_tier(declared.side_effects), "side_effects")
+        gate(call_tier(entry, proposal.operation, proposal.input), "side_effects")
         output = run_operation(entry, proposal.operation, proposal.input, channel="cli", approver=gate)
         _print_output(output, json_output)
 

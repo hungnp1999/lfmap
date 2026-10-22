@@ -18,6 +18,8 @@ _TYPE_OPTIONS = {"string": {"pattern", "max_length"}, "int": {"min", "max"}, "ch
 _ALL_OPTIONS = set().union(*_TYPE_OPTIONS.values())
 
 ParamType = Literal["string", "int", "switch", "choice"]
+# ADR-020: running a process is never T0; anything below T3 must be written in the allow-list.
+ScriptTier = Literal["T1", "T2", "T3"]
 
 
 def sha256_hex(data: bytes) -> str:
@@ -79,6 +81,7 @@ class ScriptEntry(BaseModel):
     description: str = ""
     timeout_s: int = Field(60, ge=1, le=3600)
     max_output_chars: int = Field(20_000, ge=1000, le=200_000)
+    tier: ScriptTier = "T3"
     params: dict[str, ParamSpec] = Field(default_factory=dict)
 
     @field_validator("sha256")

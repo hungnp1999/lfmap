@@ -24,6 +24,7 @@ class ScriptInfo(BaseModel):
     description: str = Field("", description="What the script does.")
     path: str = Field("", description="Allow-listed script path.")
     timeout_s: int = Field(0, description="Seconds before the script is stopped.")
+    tier: str = Field("", description="Approval tier of run for this script: T1, T2 or T3 (empty when invalid).")
     params: list[ParamInfo] = Field(default_factory=list, description="Parameters, in allow-list order.")
     ready: bool = Field(description="Whether run would start the script now.")
     problem: str = Field("", description="Why the script is not ready.")

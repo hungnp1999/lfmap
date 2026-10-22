@@ -22,6 +22,7 @@ name = "run"
 input = "lfmap_powershell.schemas:RunInput"
 output = "lfmap_powershell.schemas:RunOutput"
 side_effects = "external"
+min_tier = "T1"
 
 [permissions]
 fs_read = ["${scripts}"]

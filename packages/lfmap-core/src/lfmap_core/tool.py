@@ -94,6 +94,12 @@ class Tool:
         return {"ok": True}
 
     @classmethod
+    def call_tier(cls, operation: str, inp: BaseModel, settings: dict[str, Any]) -> str | None:
+        """ADR-020: the tier of one call, read from the user's settings, for operations that declare
+        `min_tier`. Core clamps it between `min_tier` and the declared tier; None keeps the declared tier."""
+        return None
+
+    @classmethod
     def operations(cls) -> dict[str, OperationSpec]:
         specs: dict[str, OperationSpec] = {}
         for method_name, function in inspect.getmembers(cls, inspect.isfunction):
