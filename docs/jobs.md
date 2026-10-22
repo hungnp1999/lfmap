@@ -63,6 +63,7 @@ uv run lfmap jobs list              # id, plugin.operation, schedule, enabled
 uv run lfmap jobs run echo-hello    # run one job now; exit 0 success, 1 ToolError, 2 other error
 uv run lfmap jobs register --dry-run
 uv run lfmap jobs register
+uv run lfmap jobs doctor           # read-only machine check; exit 1 when a check is FAIL
 ```
 
 `register` creates or updates (`/F`) a task for every enabled job and deletes the tasks of jobs that are disabled
@@ -84,6 +85,28 @@ pwsh -NoProfile -File .\scripts\Invoke-LfmapJob.ps1 -JobId echo-hello; $LASTEXIT
 pwsh -NoProfile -File .\scripts\Invoke-LfmapJob.ps1 -JobId khong-co;   $LASTEXITCODE   # 1
 Get-Content "$env:LOCALAPPDATA\lfmap\logs\jobs-$(Get-Date -Format yyyy-MM-dd).jsonl" -Tail 2
 ```
+
+## Checking the machine
+
+`uv run lfmap jobs doctor [--json]` checks, without changing anything, that this machine can run the jobs. It
+only runs `schtasks /Query` and `powercfg /query`, and asks Ollama for its version. Each line shows the check,
+`ok`, `warn` or `FAIL`, what was found and, after `->`, how to fix it. It exits 1 when any check is `FAIL`;
+`warn` never fails. `--json` prints a list of `{name, ok, detail, fix}` with `ok` `true`, `null` (warn) or `false`.
+
+| Check | `ok` | `warn` | `FAIL` |
+| --- | --- | --- | --- |
+| `uv` | uv found (same rule as the runner script) | | uv not found |
+| `jobs_file` | `jobs.toml` valid, every plugin and operation exists | no `jobs.toml` | invalid file, or a job names an unknown plugin or operation |
+| `tasks` | a task in `\LFMAP\` for each enabled job, and no other | no `schtasks`, or no job and no task | a task is missing, or a disabled or removed job still has one; run `register` |
+| `logon_mode` | every task runs whether you are logged on or not | a task runs only while you are logged on (`InteractiveToken`), or no task | |
+| `wake` | the machine never sleeps on AC power, or every task has "Wake the computer" | no task, no `schtasks`, or sleep unknown | the machine sleeps and a task does not wake it |
+| `sleep` | never sleeps on AC power | sleeps after N minutes, or `powercfg` unreadable | |
+| `ollama` | `http://localhost:11434/api/version` answers | no enabled job uses a plugin with `permissions.network = true` | needed but not answering; start Ollama |
+
+Only tasks of enabled jobs are inspected. On Linux or CI, where `schtasks` and `powercfg` do not exist, those
+checks are `warn`. A task that runs only while you are logged on still runs at the lock screen; see below to
+change it. Running `register` again resets the logon and wake settings, so `logon_mode` and `wake` go back to
+`warn` or `FAIL` until you set them again.
 
 ## Running while signed out
 
