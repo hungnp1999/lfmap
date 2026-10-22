@@ -1,6 +1,8 @@
 """Embed chunk texts with a local Ollama server; only loopback URLs are accepted."""
 
 import json
+import logging
+import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -11,7 +13,10 @@ from lfmap_core.permissions import PermissionManager
 
 BATCH_SIZE = 128  # texts per /api/embed request; setting embed_batch overrides
 MAX_BATCH_SIZE = 1024
-MAX_CONCURRENCY = 4  # parallel /api/embed requests; setting embed_concurrency, useful with OLLAMA_NUM_PARALLEL
+MAX_CONCURRENCY = 4  # parallel /api/embed requests; setting embed_concurrency
+ERROR_BODY_CHARS = 500
+
+log = logging.getLogger(__name__)
 
 
 def check_loopback(url: str) -> str:
@@ -28,6 +33,13 @@ def _bounded(name: str, value: object, high: int) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= high:
         raise ToolError("invalid_input", f"{name} must be an integer from 1 to {high}", {name: value})
     return value
+
+
+def _error_body(exc: urllib.error.HTTPError) -> str:
+    try:
+        return exc.read(ERROR_BODY_CHARS * 4).decode("utf-8", "replace")[:ERROR_BODY_CHARS]
+    except OSError:
+        return ""
 
 
 def _is_loopback_ip(host: str) -> bool:
@@ -51,6 +63,12 @@ class OllamaEmbedder:
     ) -> None:
         self.batch_size = _bounded("embed_batch", batch_size, MAX_BATCH_SIZE)
         self.concurrency = _bounded("embed_concurrency", concurrency, MAX_CONCURRENCY)
+        if self.concurrency > 1:
+            log.warning(
+                "embed_concurrency = %d: Ollama loads embedding models such as bge-m3 with one slot, so parallel"
+                " requests gain nothing and can fail with HTTP 400",
+                self.concurrency,
+            )
         self.url = check_loopback(url)
         self.model = model
         self.perms = perms
@@ -81,6 +99,14 @@ class OllamaEmbedder:
         try:
             with self._opener.open(request, timeout=self.timeout) as response:
                 data = json.load(response)
+        except urllib.error.HTTPError as exc:
+            text = _error_body(exc)
+            log.warning("Ollama /api/embed answered HTTP %d: %s", exc.code, text)
+            raise ToolError(
+                "backend_unavailable",
+                f"Ollama answered HTTP {exc.code}",
+                {"reason": f"ollama_http_{exc.code}", "body": text},
+            ) from exc
         except (OSError, ValueError) as exc:  # URLError and TimeoutError are OSError
             raise ToolError("backend_unavailable", "Ollama is not reachable", {"reason": "ollama_unreachable"}) from exc
         embeddings = data.get("embeddings") if isinstance(data, dict) else None

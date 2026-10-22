@@ -27,13 +27,14 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    ollama_url = "http://127.0.0.1:11434"   # loopback only: 127.0.0.1, ::1 or localhost
    embed_model = "bge-m3"
    embed_batch = 128                        # texts per Ollama /api/embed request, 1 to 1024
-   embed_concurrency = 1                    # parallel requests, 1 to 4; only helps with OLLAMA_NUM_PARALLEL >= 2
+   embed_concurrency = 1                    # parallel requests, 1 to 4; keep 1 for bge-m3 (see below)
 
    [plugins.knowledge.settings.sensitivity]   # default "normal"
    'D:\Contracts' = "private"
    'D:\HR' = "secret"
    ```
 
+   - `embed_concurrency` above 1 only helps when Ollama serves the model with several slots. Ollama loads bge-m3 with one slot even with `OLLAMA_NUM_PARALLEL=2`, so parallel requests gain nothing and some fail with HTTP 400 (seen on the 10k bench); a warning is logged when it is set above 1.
    - `normal` and `private`: returned on every channel. `secret`: only on `cli` and `sdk`, never over MCP.
    - Over MCP, roots that are secret or no longer in the config are hidden.
 
