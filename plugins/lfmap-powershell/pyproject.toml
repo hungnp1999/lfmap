@@ -1,0 +1,18 @@
+[project]
+name = "lfmap-powershell"
+version = "0.1.0"
+description = "LFMAP plugin: run allow-listed PowerShell 7 scripts with typed, checked parameters."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = ["lfmap-core"]
+
+[project.entry-points."lfmap.plugins"]
+powershell = "lfmap_powershell.tool:PowerShellTool"
+
+[tool.uv.sources]
+lfmap-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

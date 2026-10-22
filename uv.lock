@@ -16,6 +16,7 @@ members = [
     "lfmap-echo",
     "lfmap-knowledge",
     "lfmap-markitdown",
+    "lfmap-powershell",
     "lfmap-workspace",
 ]
 
@@ -709,6 +710,17 @@ requires-dist = [
 provides-extras = ["ocr"]
 
 [[package]]
+name = "lfmap-powershell"
+version = "0.1.0"
+source = { editable = "plugins/lfmap-powershell" }
+dependencies = [
+    { name = "lfmap-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "lfmap-core", editable = "packages/lfmap-core" }]
+
+[[package]]
 name = "lfmap-workspace"
 version = "0.0.0"
 source = { virtual = "." }
@@ -717,6 +729,7 @@ dependencies = [
     { name = "lfmap-echo" },
     { name = "lfmap-knowledge" },
     { name = "lfmap-markitdown" },
+    { name = "lfmap-powershell" },
 ]
 
 [package.dev-dependencies]
@@ -732,6 +745,7 @@ requires-dist = [
     { name = "lfmap-echo", editable = "plugins/lfmap-echo" },
     { name = "lfmap-knowledge", editable = "packages/lfmap-knowledge" },
     { name = "lfmap-markitdown", editable = "plugins/lfmap-markitdown" },
+    { name = "lfmap-powershell", editable = "plugins/lfmap-powershell" },
 ]
 
 [package.metadata.requires-dev]

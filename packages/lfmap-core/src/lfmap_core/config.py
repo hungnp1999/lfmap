@@ -15,7 +15,7 @@ from typing import Any
 from lfmap_core.errors import ToolError
 from lfmap_core.permissions import _is_remote
 
-FOLDER_NAMES = ("documents", "exports", "knowledge")
+FOLDER_NAMES = ("documents", "exports", "knowledge", "scripts")
 _SECTION = re.compile(r"^\s*\[")
 _PATHS_HEADER = re.compile(r"^\s*\[paths\]\s*(#.*)?$")
 

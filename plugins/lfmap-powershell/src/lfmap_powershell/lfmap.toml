@@ -1,0 +1,40 @@
+[plugin]
+id = "powershell"
+name = "PowerShell scripts"
+version = "0.1.0"
+description = "Run PowerShell 7 scripts that the user allow-listed in config.toml, with typed, checked parameters."
+license = "Apache-2.0"
+authors = ["Hung Nguyen"]
+min_core_version = "0.2.0"
+
+[plugin.entrypoint]
+module = "lfmap_powershell.tool"
+class = "PowerShellTool"
+
+[[operations]]
+name = "list"
+input = "lfmap_powershell.schemas:ListInput"
+output = "lfmap_powershell.schemas:ListOutput"
+side_effects = "none"
+
+[[operations]]
+name = "run"
+input = "lfmap_powershell.schemas:RunInput"
+output = "lfmap_powershell.schemas:RunOutput"
+side_effects = "external"
+
+[permissions]
+fs_read = ["${scripts}"]
+fs_write = []
+network = false
+exec = ["pwsh"]
+cloud_ai = false
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = false
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0"]
