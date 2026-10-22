@@ -231,12 +231,12 @@ def test_unknown_plugin_or_operation(user_dirs, registry, monkeypatch):
     assert run(registry, "jobs", "run", "b").exception.code == "not_found"
 
 
-def test_side_effects_above_t0_are_refused_until_j3(jobs_file, registry):
-    # TC-J2 approver refuses everything above T0, even with max_tier = 1; TC-J3 replaces it.
-    result = run(registry, "jobs", "run", "weekly-write")
-    assert result.exception.code == "permission_denied"
+def test_t1_job_with_max_tier_1_runs_and_is_audited(jobs_file, registry):
+    # TC-J3 replaced the TC-J2 approver that refused everything above T0; see test_approvals.py for the rest.
+    result = run(registry, "jobs", "run", "weekly-write", "--json")
+    assert result.exit_code == 0 and json.loads(result.output) == {"message": "a"}
     records = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
-    assert records[-1]["channel"] == "job" and records[-1]["decision"] == "deny"
+    assert records[-1]["channel"] == "job" and records[-1]["decision"] == "allow" and records[-1]["tier"] == "T1"
 
 
 def test_register_dry_run_only_queries(jobs_file, registry, monkeypatch):

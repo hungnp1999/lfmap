@@ -13,7 +13,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import grants, jobs
+from lfmap_core import approvals, grants, jobs
 from lfmap_core.approval import Gate, Policy, audit, audit_path, base_tier
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -122,7 +122,7 @@ def build_app(registry: Registry) -> typer.Typer:
     )
     plugins_app = typer.Typer(help="Inspect installed plugins.")
     serve_app = typer.Typer(help="Run adapters as servers.")
-    approvals_app = typer.Typer(help="Time-limited approvals (interactive terminal only).")
+    approvals_app = typer.Typer(help="Time-limited grants and the job approval queue (interactive terminal only).")
     config_app = typer.Typer(help="Manage configuration.")
     audit_app = typer.Typer(help="Audit logs.")
     jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
@@ -180,6 +180,65 @@ def build_app(registry: Registry) -> typer.Typer:
             return
         for row in rows:
             typer.echo(f"{row.get('operation')}  {row.get('tier')}  until {row.get('expires_at')}")
+
+    def queued_proposal(action: str, approval_id: str) -> approvals.Proposal:
+        if not _interactive():
+            raise ToolError("permission_denied", f"approvals {action} only works in an interactive terminal")
+        approvals.sweep()
+        return approvals.load(approval_id)
+
+    def proposal_audit(proposal: approvals.Proposal, decision: str) -> None:
+        record = {"channel": "cli", "plugin": proposal.plugin, "operation": proposal.operation, "tier": proposal.tier}
+        audit({**record, "decision": decision, "reason": f"proposal {proposal.id}"})
+
+    @approvals_app.command("pending")
+    def pending(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Show job proposals waiting for approval; expired ones move to approvals\\expired."""
+        proposals = approvals.pending()
+        if json_output:
+            rows = [p.model_dump(mode="json") for p in proposals]
+            typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
+            return
+        for p in proposals:
+            expires = p.expires.isoformat(timespec="minutes")
+            line = f"{p.id}  {p.job}  {p.plugin}.{p.operation}  {p.tier}  {p.reason}  until {expires}"
+            typer.echo(approvals.visible(line))
+
+    @approvals_app.command("approve")
+    def approve(
+        approval_id: Annotated[str, typer.Argument(metavar="ID")],
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Show a job proposal and, once confirmed, run it one time (interactive terminal only)."""
+        proposal = queued_proposal("approve", approval_id)
+        entry = registry.get(proposal.plugin)
+        declared = entry.manifest.operation(proposal.operation)
+        if declared is None:
+            raise ToolError("not_found", f"Unknown operation {proposal.plugin}.{proposal.operation}")
+        jobs.check_input(entry, proposal.operation, proposal.input)
+        policy = Policy.from_config(load_config())
+        key = f"{proposal.plugin}.{proposal.operation}"
+        typer.echo(f"Proposal {proposal.id} from job {proposal.job}, created {proposal.created.isoformat()}")
+        on = f" on {proposal.detail}" if proposal.detail else ""
+        typer.echo(approvals.visible(f"{key} ({proposal.tier}, {proposal.reason}){on}"))
+        typer.echo("input: " + approvals.visible(json.dumps(proposal.input, ensure_ascii=False)))
+        if not typer.confirm(f"Run {key} now with this input?"):
+            typer.echo("Not approved; the proposal stays pending")
+            return
+        approvals.move(proposal.id, "done")
+        proposal_audit(proposal, "approve")
+        gate = approvals.ApprovedGate(proposal, Gate(entry.id, proposal.operation, "cli", policy, ask=typer.confirm))
+        gate(base_tier(declared.side_effects), "side_effects")
+        output = run_operation(entry, proposal.operation, proposal.input, channel="cli", approver=gate)
+        _print_output(output, json_output)
+
+    @approvals_app.command("reject")
+    def reject(approval_id: Annotated[str, typer.Argument(metavar="ID")]) -> None:
+        """Reject a job proposal; it moves to approvals\\rejected (interactive terminal only)."""
+        proposal = queued_proposal("reject", approval_id)
+        approvals.move(proposal.id, "rejected")
+        proposal_audit(proposal, "reject")
+        typer.echo(f"Rejected {proposal.id}")
 
     @plugins_app.command("list")
     def list_plugins(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
