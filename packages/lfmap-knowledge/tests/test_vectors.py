@@ -56,6 +56,16 @@ def test_search_finds_the_same_vector_first(store):
     assert scores[0] == pytest.approx(1.0, abs=1e-4)
 
 
+def test_search_has_no_distance_deprecation_warning(store, capfd):
+    # Lance logs this deprecation from Rust straight to stderr, not through Python warnings.
+    vecs = fill(store, 20)
+    capfd.readouterr()
+    store.search(vecs[0], 3)
+    err = capfd.readouterr().err
+    if "Deprecation warning" in err:
+        pytest.fail(f"LanceDB deprecation warning on search: {err.strip()}")
+
+
 def test_upsert_replaces_by_chunk_id(store):
     fill(store)
     new = random_vectors(1, seed=99)[0]
