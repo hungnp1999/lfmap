@@ -46,7 +46,7 @@ Mã nối tiếp bộ hồ sơ Phase 0 (`docs/phase0/`): `BP-xx` quy trình, `FR
 | 1.3 | REST adapter | — | — | — | Chưa làm |
 | 1.4 | `lfmap-knowledge`: catalog, scanner, chunk, embed, LanceDB, cạnh | FR-28 … 34 | `packages/lfmap-knowledge/` | TC-401 … 414, 911, 915 | Đạt (bench 10k TC-917 đạt) |
 | 1.5 | MCP knowledge (`knowledge_search`, `knowledge_get_context`…; egress_log) | FR-33, 35 | `kn/search.py`, `kn/tool.py` | TC-412, 414, 916 | Đạt (TC-918) |
-| 1.6 | Plugin `powershell` (allow-list script) | — | `plugins/lfmap-powershell/` | Test trong PR #43 | Xong sau mốc (PR #43, `68a042f`); đặc tả `docs/specs/powershell.md`. ADR-020 (quyền theo từng script) merge ở PR #48. Hùng chốt 15:41Z: tách quyền riêng cho từng script (cần ADR sửa ADR-017, làm ở Phase 1b) |
+| 1.6 | Plugin `powershell` (allow-list script) | — | `plugins/lfmap-powershell/` | Test trong PR #43 | Xong sau mốc (PR #43, `68a042f`); đặc tả `docs/specs/powershell.md`. Hùng chốt 15:41Z tách quyền riêng cho từng script: ADR-020 (sửa ADR-017) merge ở PR #48 |
 | 1.7 | Vòng Planner → Task Card → Local Agent → Review (`qwen-loop`) | — | ngoài repo | TC-919 | Đạt (2026-10-21) |
 | 1.8 | Job theo lịch + hàng đợi phê duyệt | FR-20 … 23 | `core/{jobs,approvals,jobs_doctor}.py`, `scripts/Invoke-LfmapJob.ps1` | TC-201 … 203, 912 | Đạt (TC-912, 913, 914) |
 
@@ -62,7 +62,7 @@ Mã nối tiếp bộ hồ sơ Phase 0 (`docs/phase0/`): `BP-xx` quy trình, `FR
 
 ## 4. Kết luận và đề xuất
 
-Phần đã làm của Phase 1 (core 0.2, 1.1, 1.4, 1.5, 1.6, 1.7, 1.8) **đạt chức năng và DoD**; chỉ còn TC-918 (thư mục thật) đạt. 1.2 và 1.3 chưa làm, chuyển Phase 1b. **MVP Phase 1 đã được nghiệm thu** (§5).
+Phần đã làm của Phase 1 (core 0.2, 1.1, 1.4, 1.5, 1.6, 1.7, 1.8) **đạt chức năng và DoD**, kể cả TC-918 (thư mục thật). 1.2 và 1.3 chưa làm, chuyển Phase 1b. **MVP Phase 1 đã được nghiệm thu** (§5).
 
 Đề xuất của Managing Agent (Hùng chốt):
 
