@@ -34,7 +34,7 @@ def test_inputs_are_flat(name):
     assert "$defs" not in model.model_json_schema()
 
 
-@pytest.mark.parametrize("name", OPERATIONS)
+@pytest.mark.parametrize("name", [name for name in OPERATIONS if name not in ("status", "reindex")])
 def test_operations_not_implemented_yet(name):
     tool = KnowledgeTool(default_context("knowledge"))
     inputs = {"search": {"query": "x"}, "get_context": {"question": "x"}, "get_file": {"path": "C:/x"}}
