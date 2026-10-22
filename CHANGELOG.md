@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `lfmap-knowledge` reports an HTTP error from Ollama `/api/embed` as `embed_skipped_reason` `ollama_http_<code>` with the first 500 characters of the response body in the error details and a log warning, instead of `ollama_unreachable`. Setting `embed_concurrency` above 1 now logs a warning: Ollama serves bge-m3 with one slot even with `OLLAMA_NUM_PARALLEL=2`, so parallel requests gain nothing and some failed with HTTP 400 on the DIEP-ANH 10k bench. Default stays 1.
 - Lockfile: `certifi` 2026.10.18 → 2026.10.19 (GHSA-6q48-6c7w-9gw2, Dependabot alert #1, critical). It reaches the workspace only through `markitdown` → `requests`; lfmap converts local files and does not fetch URLs with `requests`, so the bundle was not used at runtime. License unchanged (MPL-2.0).
 - `lfmap-knowledge` can send several `/api/embed` requests at once: new setting `embed_concurrency` (1 to 4, default 1) for an Ollama started with `OLLAMA_NUM_PARALLEL` of 2 or more. Vectors keep the input order; the URL stays loopback-only.
 - `lfmap-knowledge` reindex embeds faster (second round after the DIEP-ANH 10k bench at `955fe99`: 3.75 files/s, GPU 22–52% busy). Each Ollama `/api/embed` request now carries 128 texts instead of 32 (new setting `embed_batch`, 1 to 1024), and the next batch of about 512 chunks is embedded on a worker thread while the previous one is written to LanceDB and the catalog. A failed batch and the ones after it stay pending for the next run.

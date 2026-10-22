@@ -184,3 +184,30 @@ def test_bad_concurrency_is_invalid_input(net: PermissionManager, value):
     with pytest.raises(ToolError) as err:
         OllamaEmbedder("http://localhost:1", "m", net, concurrency=value)
     assert err.value.code == "invalid_input"
+
+
+def test_http_error_is_reported_with_its_code_and_body(server: _Server, net: PermissionManager, monkeypatch):
+    def refuse(self) -> None:
+        self.rfile.read(int(self.headers["Content-Length"]))
+        data = json.dumps({"error": "input too long " + "x" * 2000}).encode()
+        self.send_response(400)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    monkeypatch.setattr(_Ollama, "do_POST", refuse)
+    with pytest.raises(ToolError) as err:
+        _embedder(server, net).embed(["t 1"])
+    assert err.value.code == "backend_unavailable"
+    assert err.value.details["reason"] == "ollama_http_400"
+    assert err.value.details["body"].startswith('{"error": "input too long')
+    assert len(err.value.details["body"]) == 500
+
+
+def test_concurrency_above_one_warns(net: PermissionManager, caplog):
+    with caplog.at_level("WARNING", logger="lfmap_knowledge.embed"):
+        OllamaEmbedder("http://localhost:1", "m", net)
+        assert caplog.records == []
+        OllamaEmbedder("http://localhost:1", "m", net, concurrency=2)
+    assert "one slot" in caplog.text
