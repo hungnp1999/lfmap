@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Sprint Review, Release Notes và Retrospective
 
-Phiên bản 1.0 · 2026-10-22
+Phiên bản 1.1 · 2026-10-22
 
 Phase 1 được coi là một Increment theo Scrum, chạy 2026-10-19 → 2026-10-22. Vai trò: **Product Owner** = Hùng; **Managing Agent** (Scrum Master / Planner / Reviewer) = Claude trong project (coordinator + thread), theo phân cấp Hùng chốt 2026-10-22; **Developers / Working Agents** = phiên Claude Code (Cloud và trên DIEP-ANH), qwen2.5-coder:14b qua `qwen-loop` (card S).
 
@@ -8,7 +8,7 @@ Phase 1 được coi là một Increment theo Scrum, chạy 2026-10-19 → 2026-
 
 "Từ một thư mục PDF/DOCX trên máy, hỏi Claude và nhận câu trả lời có trích dẫn đoạn nguồn; toàn bộ nội dung tài liệu chỉ rời máy ở mức đoạn được truy xuất" (Exit criteria Roadmap Phase 1).
 
-Kết quả: **Đạt về chức năng trên dữ liệu mẫu** (TC-916, 2026-10-22: citation, `untrusted`, root `secret` ẩn trên MCP, `egress_log` một dòng mỗi lời gọi). Hùng nghiệm thu MVP 2026-10-22 15:41Z (phương án A); thử trên thư mục PDF/DOCX thật (TC-918) đang chạy, ghi bổ sung sau. 1.6 xong sau mốc (PR #43); 1.2, 1.3 sang Phase 1b (xem §6).
+Kết quả: **Đạt về chức năng trên dữ liệu mẫu** (TC-916, 2026-10-22: citation, `untrusted`, root `secret` ẩn trên MCP, `egress_log` một dòng mỗi lời gọi). Hùng nghiệm thu MVP 2026-10-22 15:41Z (phương án A); thử trên thư mục PDF/DOCX thật (TC-918) đạt cùng ngày. 1.6 xong sau mốc (PR #43); 1.2, 1.3 sang Phase 1b (xem §6).
 
 ## 2. Sprint Backlog và kết quả
 
@@ -47,7 +47,7 @@ Kết quả: **Đạt về chức năng trên dữ liệu mẫu** (TC-916, 2026-
 | TC-K13 | edges, `related` | Claude Code Cloud | Xong | PR #33 |
 | TC-K9 | reindex, status | Claude Code Cloud | Xong | PR #36, TC-915 |
 | TC-K10, K11 | search, get_context, nối 7 operation | Claude Code Cloud | Xong | PR #38 |
-| TC-K14 | README, job reindex mẫu, thử thật | Claude + Hùng | Xong: README + job (PR #39), MCP thật (TC-916), bench 10k (TC-917); thư mục thật (TC-918) đang chạy | |
+| TC-K14 | README, job reindex mẫu, thử thật | Claude + Hùng | Xong: README + job (PR #39), MCP thật (TC-916), bench 10k (TC-917), thư mục thật (TC-918) | |
 
 ### 1.7 Vòng Planner → Task Card → Local Agent → Review
 
@@ -106,7 +106,7 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 | DoD knowledge (spec §9): MCP thật, reindex lần 2 không làm lại, top-5 như cũ sau khi xóa vectors, secret không qua MCP, không mạng ngoài loopback | ✅ | TC-409, TC-412, TC-915, TC-916, TC-407 |
 | DoD knowledge: 10.000 file, reindex lần hai < 60 s | ✅ | TC-917: 45,8 s, sau PR #44 7,2 s |
 | Exit 1.8 | ✅ | TC-912, TC-913, TC-914 |
-| Exit Phase 1 trên thư mục PDF/DOCX thật | ⏳ | TC-918 đang chạy; Hùng nghiệm thu MVP không chờ mục này |
+| Exit Phase 1 trên thư mục PDF/DOCX thật | ✅ | TC-918 |
 | Tài liệu bàn giao giai đoạn | ✅ | Bộ tài liệu này (1.0) |
 
 ## 5. Retrospective
@@ -142,7 +142,8 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 |---|---|---|
 | Docling backend | Roadmap 1.2 | Sau nghiệm thu MVP; Cloud |
 | REST adapter (OpenAPI `/docs`) | Roadmap 1.3, L7 | Sau nghiệm thu MVP; Cloud |
-| Quyền riêng theo từng script `powershell` (Hùng chốt 2026-10-22; cần ADR sửa ADR-017) | Quyết định nghiệm thu | Phase 1b |
+| Quyền riêng theo từng script `powershell` (Hùng chốt 2026-10-22) | Quyết định nghiệm thu | Xong: ADR-020, PR #48 |
+| Heading `.docx` sai, PDF không heading, `get_context` đầy ngân sách | L20, L21, L23 (TC-918) | Phase 1b |
 | `min_core_version` được core đối chiếu | L3, L9 | Backlog core |
 | `audit.jsonl` theo `LFMAP_CONFIG`; audit lần đọc bị từ chối | L10 | Backlog core |
 | Hook tiến độ chung (thay stderr của knowledge) | L11 | Backlog core |
