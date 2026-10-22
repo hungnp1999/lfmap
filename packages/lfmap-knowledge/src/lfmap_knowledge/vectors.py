@@ -13,6 +13,8 @@ from lfmap_core import ToolError
 
 ANN_INDEX_MIN_ROWS = 50_000  # K0 result: build the ANN index from about 50k vectors
 
+DELETE_BATCH = 500  # content hashes per delete filter
+
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -88,6 +90,17 @@ class LanceVectorStore:
         table = self._open()
         if table is not None:
             table.delete(f"content_hash = '{content_hash}'")
+
+    def delete_contents(self, content_hashes: list[str]) -> None:
+        """delete_content for many hashes, DELETE_BATCH per filter."""
+        if not all(_HASH.match(content_hash) for content_hash in content_hashes):
+            raise ToolError("invalid_input", "content_hash must be 64 lower-case hex characters")
+        table = self._open()
+        if table is None:
+            return
+        for start in range(0, len(content_hashes), DELETE_BATCH):
+            listed = ", ".join(f"'{h}'" for h in content_hashes[start : start + DELETE_BATCH])
+            table.delete(f"content_hash IN ({listed})")
 
     def search(self, vector: list[float], limit: int) -> list[tuple[int, float]]:
         """Best first as (chunk_id, score), score = 1 - cosine distance."""

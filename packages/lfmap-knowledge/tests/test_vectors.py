@@ -153,3 +153,18 @@ def test_optimize_builds_the_ann_index_from_the_threshold(store, monkeypatch):
     store.upsert([600], [content_hash(60)], random_vectors(1, seed=5))
     store.optimize()
     assert store.has_index() and store.count() == 601
+
+
+def test_delete_contents_in_several_filters(store, monkeypatch):
+    fill(store)
+    monkeypatch.setattr(vectors, "DELETE_BATCH", 2)
+    store.delete_contents([content_hash(0), content_hash(3), content_hash(7)])
+    assert store.count() == 70
+
+
+def test_delete_contents_rejects_a_filter_injection(store):
+    fill(store)
+    with pytest.raises(ToolError) as error:
+        store.delete_contents([content_hash(0), "x' OR '1'='1"])
+    assert error.value.code == "invalid_input"
+    assert store.count() == 100
