@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Test Case và Báo cáo kiểm thử
 
-Phiên bản 1.0 · 2026-10-22 · Mốc code `b002710`
+Phiên bản 1.1 · 2026-10-22 · Mốc code `b002710`
 
 ## 1. Chiến lược kiểm thử
 
@@ -93,8 +93,8 @@ Mỗi dòng là một nhóm (một file test); số trong ngoặc là số case 
 | TC-914 (UAT) | `lfmap jobs doctor` trên DIEP-ANH | Không có `FAIL` | Đạt 2026-10-22: không có `FAIL`; `ollama` warn |
 | TC-915 (UAT) | K9 trên thư mục thật `D:\Tmp\kb-test` (20 file `.md`) | Lần 2 không trích/embed; xóa vectors thì embed lại | Đạt 2026-10-22: lần 1 extracted 20, embedded 20, 62 s; lần 2 0/0; lần 3 sau khi đổi tên `vectors` embedded 20; 278 chunk; 0 lỗi |
 | TC-916 (UAT) | K14 qua MCP (LOCALAPPDATA tách riêng, `a1bcf38`): `knowledge_get_context`, `knowledge_search` | Citation đúng; `untrusted`; tôn trọng ngân sách; root `secret` ẩn trên `mcp`, hiện trên `cli`; `egress_log` một dòng mỗi lời gọi có hit; top-5 như cũ sau khi dựng lại vectors | Đạt 2026-10-22 |
-| TC-917 (UAT) | K14 bench 10.000 file `.md` tổng hợp trên DIEP-ANH | Reindex lần hai < 60 s | Đạt 2026-10-22. Tại `b002710`: lần đầu 6.187 s (trích ~843 s, embed ~5.345 s = 1,87 file/s), lần hai 45,8 s; 148k chunk, chỉ mục 5,8 GB. Sau PR #44 (gom lô vector): lần đầu 3.556 s (embed 3,75 file/s), lần hai 7,2 s (2,0 s trong core), chỉ mục 1,78 GB. PR #45, #46 tối ưu embed tiếp |
-| TC-918 (UAT, Exit) | Thư mục PDF/DOCX thật do Hùng chọn: hỏi Claude Code, xem trích dẫn và `egress_log` | Câu trả lời có trích dẫn đường dẫn + heading; chỉ đoạn được truy xuất rời máy | Đang chạy: Hùng chọn thư mục 2026-10-22 15:22Z (chỉ đọc, LOCALAPPDATA riêng, không đưa nội dung vào PR/tài liệu); ghi bổ sung sau nghiệm thu |
+| TC-917 (UAT) | K14 bench 10.000 file `.md` tổng hợp trên DIEP-ANH | Reindex lần hai < 60 s | Đạt 2026-10-22. Tại `a871f09` (indexer K9): lần đầu 6.187 s (trích ~843 s, embed ~5.345 s = 1,87 file/s), lần hai 45,8 s (không embed: 3,9 s); 148k chunk, chỉ mục 5,8 GB. Sau PR #44 (gom lô vector): lần đầu 3.556 s (embed 3,75 file/s), lần hai 7,2 s (2,0 s trong core), chỉ mục 1,78 GB. PR #45 không cải thiện (3,61 file/s); #46 thêm `embed_concurrency` |
+| TC-918 (UAT, Exit) | Thư mục PDF/DOCX thật do Hùng chọn: hỏi Claude Code, xem trích dẫn và `egress_log` | Câu trả lời có trích dẫn đường dẫn + heading; chỉ đoạn được truy xuất rời máy | Đạt 2026-10-22 (thư mục tài liệu kế toán thật do Hùng chọn, chỉ đọc, LOCALAPPDATA riêng; repo chỉ ghi số đếm): 17 file → 8 indexed (2 docx, 2 pdf, 1 pptx, 3 xlsx), 9 `.doc` skipped `office_gui_only` (ADR-011); 0 lỗi; 841 chunk; reindex lần đầu 54 s. 3 câu hỏi tiếng Việt qua MCP `get_context`: chunk có citation, `untrusted`, ~4000 token mỗi lần, 3 dòng `egress_log`. Tìm không dấu "khau hao" cho cùng top-5 với "khấu hao" |
 | TC-919 (quy trình) | Vòng qwen-loop chạy thật đợt K4–K7 (Roadmap 1.7) | Có báo cáo B5, quyết định B6 | Đạt 2026-10-21: 3/4 card xanh theo test, K5 viết lại trong review; PR #26 |
 
 ## 3. Kết quả
@@ -103,7 +103,7 @@ Mỗi dòng là một nhóm (một file test); số trong ngoặc là số case 
 |---|---|---|
 | CI mỗi PR #3 … #39 | GitHub Actions `windows-latest` + CodeQL | Xanh (điều kiện merge) |
 | Chạy lại khi lập tài liệu (2026-10-22) | Linux container, Python 3.12, commit `b002710` | **545 pass, 10 skip** |
-| UAT | DIEP-ANH, xem bảng trên | 9 đạt, TC-918 đang chạy |
+| UAT | DIEP-ANH, xem bảng trên | 10 đạt |
 
 10 skip trên Linux: 1 hoa thường (chỉ Windows), 1 junction (chỉ Windows), 4 OCR (cần extra + Tesseract), 4 font Arial.
 
