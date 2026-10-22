@@ -303,8 +303,10 @@ def test_approve_summary_cannot_hide_anything(user_dirs, monkeypatch, registry, 
     approval_id = queued_id(registry)
     path = approvals_dir() / "pending" / f"{approval_id}.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    hidden = {**data, "reason": "x\x1b[8m", "detail": "‮evil", "input": {"names": ["‮b"]}}
+    hidden = {**data, "reason": "x\x1b[8m", "detail": "\u202eevil", "input": {"names": ["\u202eb"]}}
     path.write_text(json.dumps(hidden), encoding="utf-8")
+    listed = run(registry, "approvals", "pending").output
+    assert "\x1b" not in listed and "\\u001b[8m" in listed
     result = run(registry, "approvals", "approve", approval_id, input="n\n")
-    assert "\x1b" not in result.output and "‮" not in result.output
+    assert "\x1b" not in result.output and "\u202e" not in result.output
     assert "\\u001b[8m" in result.output and "\\u202eevil" in result.output and "\\u202eb" in result.output

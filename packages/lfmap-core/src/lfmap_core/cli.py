@@ -201,7 +201,8 @@ def build_app(registry: Registry) -> typer.Typer:
             return
         for p in proposals:
             expires = p.expires.isoformat(timespec="minutes")
-            typer.echo(f"{p.id}  {p.job}  {p.plugin}.{p.operation}  {p.tier}  {p.reason}  until {expires}")
+            line = f"{p.id}  {p.job}  {p.plugin}.{p.operation}  {p.tier}  {p.reason}  until {expires}"
+            typer.echo(approvals.visible(line))
 
     @approvals_app.command("approve")
     def approve(
