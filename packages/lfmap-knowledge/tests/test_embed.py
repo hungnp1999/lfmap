@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -26,6 +27,10 @@ class _Ollama(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         self.server.requests.append(("POST", self.path, body))
+        if self.server.barrier is not None:
+            self.server.barrier.wait()  # every request of the call must be in flight at once
+            if body["input"][0].endswith(" 0"):
+                time.sleep(0.2)  # the first batch answers last
         self._reply({"embeddings": [[float(text.split()[-1]), 0.5] for text in body["input"]]})
 
     def log_message(self, *args) -> None:
@@ -36,6 +41,7 @@ class _Server:
     def __init__(self) -> None:
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Ollama)
         self.httpd.requests = []
+        self.httpd.barrier = None
         self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}"
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
@@ -156,4 +162,25 @@ def test_batch_size_can_be_set(server: _Server, net: PermissionManager):
 def test_bad_batch_size_is_invalid_input(net: PermissionManager, size):
     with pytest.raises(ToolError) as err:
         OllamaEmbedder("http://localhost:1", "m", net, batch_size=size)
+    assert err.value.code == "invalid_input"
+
+
+def test_concurrent_requests_keep_the_input_order(server: _Server, net: PermissionManager):
+    server.httpd.barrier = threading.Barrier(3, timeout=5)
+    embedder = OllamaEmbedder(server.url, "nomic-embed-text", net, timeout=10, batch_size=2, concurrency=3)
+    assert embedder.embed([f"t {i}" for i in range(6)]) == [[float(i), 0.5] for i in range(6)]
+    assert sorted(body["input"][0] for _, _, body in server.requests) == ["t 0", "t 2", "t 4"]
+
+
+def test_concurrent_failure_is_backend_unavailable(net: PermissionManager):
+    embedder = OllamaEmbedder("http://127.0.0.1:1", "m", net, timeout=2, batch_size=1, concurrency=2)
+    with pytest.raises(ToolError) as err:
+        embedder.embed(["t 0", "t 1", "t 2"])
+    assert err.value.details["reason"] == "ollama_unreachable"
+
+
+@pytest.mark.parametrize("value", [0, 5, "2", True])
+def test_bad_concurrency_is_invalid_input(net: PermissionManager, value):
+    with pytest.raises(ToolError) as err:
+        OllamaEmbedder("http://localhost:1", "m", net, concurrency=value)
     assert err.value.code == "invalid_input"
