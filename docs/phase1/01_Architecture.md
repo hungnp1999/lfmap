@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Phiên bản tài liệu | 0.9 bản nháp (2026-10-22), chờ số đo K14 và nghiệm thu |
+| Phiên bản tài liệu | 1.0 (2026-10-22), đã nghiệm thu MVP Phase 1 |
 | Phạm vi | Phase 1 — MVP Document → Knowledge → Answer: core 0.2 (điều kiện tiên quyết), Roadmap 1.1, 1.4, 1.5, 1.7, 1.8 |
-| Chưa làm | 1.2 Docling, 1.3 REST, 1.6 plugin `powershell` (xem `00_Index_Bien_ban_nghiem_thu.md` §2) |
+| Chưa làm | 1.2 Docling, 1.3 REST (Phase 1b). 1.6 `powershell` xong sau mốc (PR #43), đặc tả `docs/specs/powershell.md` |
 | Mốc code | `hungnp1999/lfmap` commit `b002710` trên `main` (PR #3 … #39) |
 | Nguồn thiết kế | ADR-011 … ADR-018 (cùng các ADR Phase 0); Plugin Contract; `docs/specs/knowledge.md`, `docs/specs/jobs.md`; project files `phase1-specs/` (00 Overview, 01 Core Prereqs, 02 markitdown) |
 
@@ -245,7 +245,7 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 
 | # | Giới hạn | Ảnh hưởng | Xử lý |
 |---|---|---|---|
-| L8 | Chưa có REST (1.3), Docling (1.2), plugin `powershell` (1.6) | Phase 1 chưa đủ hạng mục Roadmap | Kế hoạch sau nghiệm thu MVP (`07` §6) |
+| L8 | Chưa có REST (1.3), Docling (1.2) | Phase 1 chưa đủ hạng mục Roadmap | Phase 1b (`07` §6); 1.6 xong ở PR #43 |
 | L9 | Core không đối chiếu `min_core_version` của manifest | Plugin cần core 0.2 vẫn nạp được trên core cũ | Backlog core |
 | L10 | `audit.jsonl` luôn ở `%LOCALAPPDATA%\lfmap\`, không theo `LFMAP_CONFIG`; lần đọc bị từ chối không ghi audit | Thử nghiệm tách cấu hình vẫn ghi chung audit | Backlog core |
 | L11 | Tiến độ `reindex` in ra stderr khi kênh `cli` (tạm) | Không có hook tiến độ chung cho MCP | Chờ core có progress hook |
@@ -256,4 +256,4 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 | L16 | Job chỉ chạy trên Windows; `jobs register` (`/F`) đặt lại "Run whether user is logged on" và "Wake" | Phải đặt lại tay sau mỗi lần register | `docs/jobs.md`; `jobs doctor` cảnh báo |
 | L17 | OCR là extra Internal (LGPL); CI Windows không có Tesseract nên test OCR bị skip | OCR chỉ kiểm trên máy có Tesseract | Plugin `ocr` (PaddleOCR) Phase 2 |
 | L18 | LanceDB cảnh báo deprecation về tự chiếu cột `_distance` | Có thể vỡ khi nâng lancedb | Đã sửa sau mốc: PR #40 (chọn `_distance` tường minh) |
-| L19 | Hiệu năng 10.000 file và reindex lần hai < 60 s: **[CHỜ: số đo K14 từ thread "Việc trên DIEP-ANH chiều 22/10"]** | DoD knowledge chưa đóng mục này | Điền khi có số đo |
+| L19 | Embed lần đầu chậm: 10.000 file mất ~1 giờ (3,75 file/s sau PR #44, GPU chưa dùng hết) | Lần lập chỉ mục đầu của thư mục lớn kéo dài | PR #45, #46 (lô lớn hơn, embed song song); reindex lần hai đạt (7,2 s) |

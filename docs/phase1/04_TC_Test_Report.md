@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Test Case và Báo cáo kiểm thử
 
-Phiên bản 0.9 bản nháp · 2026-10-22 · Mốc code `b002710`
+Phiên bản 1.0 · 2026-10-22 · Mốc code `b002710`
 
 ## 1. Chiến lược kiểm thử
 
@@ -89,12 +89,12 @@ Mỗi dòng là một nhóm (một file test); số trong ngoặc là số case 
 | TC-910 (UAT) | markitdown qua MCP stdio thật trên Windows: `info`, `classify`, `convert`, đọc ngoài root bị từ chối, `export` tạo file (T1, có audit), ghi đè bị từ chối khi chưa duyệt (T2, có audit) | Như mô tả | Đạt, 2026-10-20 (TC-M9, PR #15) |
 | TC-911 (UAT) | TC-K0 spike trên DIEP-ANH: ghi LanceDB 20k vector trong khi 2 process đọc; FTS5; bge-m3 | 0 lỗi đọc | Đạt 2026-10-20: 0 lỗi; 49,6 ms ở 20k, 197,7 ms ở 100k (vét cạn); p95 đọc ~550 ms khi đang ghi; 7,5 chunk/s |
 | TC-912 (UAT) | Job `echo-hello` (T0) chạy theo lịch khi máy ở màn hình khóa (S4U) | Có dòng log, exit 0 | Đạt 2026-10-22: task chạy S4U, Last Result 0 |
-| TC-913 (UAT) | Job `markitdown.export` với `max_tier = 0` chỉ tạo đề xuất; `lfmap approvals approve` thực thi và ghi audit | Có `hello.md`, `pending` trống, audit có `approve` | Phần xếp hàng đạt (đề xuất `20261022T055248Z-export-test-c33c1fbb`). **[CHỜ: Hùng chạy `approve` ở DIEP-ANH, ca tối 22/10]** |
-| TC-914 (UAT) | `lfmap jobs doctor` trên DIEP-ANH | Không có `FAIL` | **[CHỜ: xác nhận kết quả từ thread "Việc trên DIEP-ANH chiều 22/10"]** |
+| TC-913 (UAT) | Job `markitdown.export` với `max_tier = 0` chỉ tạo đề xuất; `lfmap approvals approve` thực thi và ghi audit | Có `hello.md`, `pending` trống, audit có `approve` | Đạt 2026-10-22 14:40Z: đề xuất `20261022T055248Z-export-test-c33c1fbb` được Hùng approve; file `.md` được ghi, `pending` trống, đề xuất ở `done`, audit: queue (job) → approve (cli) → allow |
+| TC-914 (UAT) | `lfmap jobs doctor` trên DIEP-ANH | Không có `FAIL` | Đạt 2026-10-22: không có `FAIL`; `ollama` warn |
 | TC-915 (UAT) | K9 trên thư mục thật `D:\Tmp\kb-test` (20 file `.md`) | Lần 2 không trích/embed; xóa vectors thì embed lại | Đạt 2026-10-22: lần 1 extracted 20, embedded 20, 62 s; lần 2 0/0; lần 3 sau khi đổi tên `vectors` embedded 20; 278 chunk; 0 lỗi |
 | TC-916 (UAT) | K14 qua MCP (LOCALAPPDATA tách riêng, `a1bcf38`): `knowledge_get_context`, `knowledge_search` | Citation đúng; `untrusted`; tôn trọng ngân sách; root `secret` ẩn trên `mcp`, hiện trên `cli`; `egress_log` một dòng mỗi lời gọi có hit; top-5 như cũ sau khi dựng lại vectors | Đạt 2026-10-22 |
-| TC-917 (UAT) | K14 bench 10.000 file trên DIEP-ANH | Reindex lần hai < 60 s | **[CHỜ: thời gian reindex lần đầu = …; lần hai = … s; nguồn: thread "Việc trên DIEP-ANH chiều 22/10"]** (đang chạy: trích ~13–14 phút, embed ~2 file/s) |
-| TC-918 (UAT, Exit) | Thư mục PDF/DOCX thật do Hùng chọn: hỏi Claude Code, xem trích dẫn và `egress_log` | Câu trả lời có trích dẫn đường dẫn + heading; chỉ đoạn được truy xuất rời máy | **[CHỜ: Hùng chọn thư mục; kết quả thử]** |
+| TC-917 (UAT) | K14 bench 10.000 file `.md` tổng hợp trên DIEP-ANH | Reindex lần hai < 60 s | Đạt 2026-10-22. Tại `b002710`: lần đầu 6.187 s (trích ~843 s, embed ~5.345 s = 1,87 file/s), lần hai 45,8 s; 148k chunk, chỉ mục 5,8 GB. Sau PR #44 (gom lô vector): lần đầu 3.556 s (embed 3,75 file/s), lần hai 7,2 s (2,0 s trong core), chỉ mục 1,78 GB. PR #45, #46 tối ưu embed tiếp |
+| TC-918 (UAT, Exit) | Thư mục PDF/DOCX thật do Hùng chọn: hỏi Claude Code, xem trích dẫn và `egress_log` | Câu trả lời có trích dẫn đường dẫn + heading; chỉ đoạn được truy xuất rời máy | Đang chạy: Hùng chọn thư mục 2026-10-22 15:22Z (chỉ đọc, LOCALAPPDATA riêng, không đưa nội dung vào PR/tài liệu); ghi bổ sung sau nghiệm thu |
 | TC-919 (quy trình) | Vòng qwen-loop chạy thật đợt K4–K7 (Roadmap 1.7) | Có báo cáo B5, quyết định B6 | Đạt 2026-10-21: 3/4 card xanh theo test, K5 viết lại trong review; PR #26 |
 
 ## 3. Kết quả
@@ -103,7 +103,7 @@ Mỗi dòng là một nhóm (một file test); số trong ngoặc là số case 
 |---|---|---|
 | CI mỗi PR #3 … #39 | GitHub Actions `windows-latest` + CodeQL | Xanh (điều kiện merge) |
 | Chạy lại khi lập tài liệu (2026-10-22) | Linux container, Python 3.12, commit `b002710` | **545 pass, 10 skip** |
-| UAT | DIEP-ANH, xem bảng trên | 6 đạt, 4 chờ (TC-913 phần approve, TC-914, TC-917, TC-918) |
+| UAT | DIEP-ANH, xem bảng trên | 9 đạt, TC-918 đang chạy |
 
 10 skip trên Linux: 1 hoa thường (chỉ Windows), 1 junction (chỉ Windows), 4 OCR (cần extra + Tesseract), 4 font Arial.
 
@@ -120,4 +120,5 @@ Tổng: 555 case pytest (423 hàm test; tăng 495 case so với 60 của Phase 0
 | 1.7 | — | TC-919 |
 | 1.8 | FR-20 … FR-23, NFR-15 | TC-201 … TC-203, TC-912 … TC-914 |
 | Phase 0 (hồi quy) | FR-01 … FR-13 | TC-109 |
-| 1.2, 1.3, 1.6 | — | Chưa làm |
+| 1.6 | — | Test trong PR #43 (sau mốc) |
+| 1.2, 1.3 | — | Phase 1b |

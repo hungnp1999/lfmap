@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Runbook xử lý sự cố
 
-Phiên bản 0.9 bản nháp · 2026-10-22 · Mốc code `b002710`. `core/` = `packages/lfmap-core/src/lfmap_core/`, `kn/` = `packages/lfmap-knowledge/src/lfmap_knowledge/`, `md/` = `plugins/lfmap-markitdown/src/lfmap_markitdown/`.
+Phiên bản 1.0 · 2026-10-22 · Mốc code `b002710`. `core/` = `packages/lfmap-core/src/lfmap_core/`, `kn/` = `packages/lfmap-knowledge/src/lfmap_knowledge/`, `md/` = `plugins/lfmap-markitdown/src/lfmap_markitdown/`.
 
 Cách dùng: tìm triệu chứng, chạy bước chẩn đoán, mở đúng file ở cột "Code". Sự cố của khung Phase 0 (discovery, manifest, quyền cơ bản, CI) vẫn tra `docs/phase0/06_Runbook.md` (RB-01 … RB-06).
 

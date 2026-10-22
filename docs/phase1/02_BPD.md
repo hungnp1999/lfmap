@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Tài liệu Quy trình nghiệp vụ (BPD)
 
-Phiên bản 0.9 bản nháp · 2026-10-22 · Mốc code `b002710`
+Phiên bản 1.0 · 2026-10-22 · Mốc code `b002710`
 
 Tài liệu mô tả các quy trình Phase 1 thêm hoặc đổi so với Phase 0, ai tham gia, và mỗi bước chạy qua đoạn code nào. Mã quy trình nối tiếp Phase 0 (BP-01 … BP-07). BP-05 (phê duyệt) và BP-07 (giao việc cho model local) được thay bằng BP-09 và BP-15.
 
