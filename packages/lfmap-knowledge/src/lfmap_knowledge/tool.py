@@ -69,6 +69,7 @@ class KnowledgeTool(Tool):
             settings.get("embed_model", indexer.DEFAULT_EMBED_MODEL),
             self.ctx.permissions,
             batch_size=settings.get("embed_batch", BATCH_SIZE),
+            concurrency=settings.get("embed_concurrency", 1),
         )
 
     @operation("status")

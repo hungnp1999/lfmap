@@ -54,3 +54,9 @@ def test_embed_batch_setting(tool):
     assert tool._embedder().batch_size == 128
     tool.ctx.settings["embed_batch"] = 2
     assert tool._embedder().batch_size == 2
+
+
+def test_embed_concurrency_setting(tool):
+    assert tool._embedder().concurrency == 1
+    tool.ctx.settings["embed_concurrency"] = 2
+    assert tool._embedder().concurrency == 2
