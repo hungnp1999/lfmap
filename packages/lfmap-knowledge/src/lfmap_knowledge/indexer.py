@@ -1,9 +1,12 @@
 """Incremental reindex (spec section 4) and read-only status of the knowledge catalog."""
 
+import itertools
 import os
 import sqlite3
 import time
-from collections.abc import Callable
+from collections import deque
+from collections.abc import Callable, Iterator
+from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
@@ -202,29 +205,8 @@ def _collect_garbage(conn: sqlite3.Connection, store: LanceVectorStore) -> int:
     return len(orphans)
 
 
-def _flush(
-    conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore, hashes: list[str], chunks: list[Any]
-) -> None:
-    """Embed and write the chunks of several contents at once, then mark those contents embedded."""
-    vectors = embedder.embed([chunk["text"] for chunk in chunks])
-    store.upsert([chunk["chunk_id"] for chunk in chunks], [chunk["content_hash"] for chunk in chunks], vectors)
-    now = _now()
-    conn.executemany(
-        "UPDATE contents SET embed_model = ?, embedded_at = ? WHERE content_hash = ?",
-        [(embedder.model, now, content_hash) for content_hash in hashes],
-    )
-    conn.commit()
-
-
-def _embed(conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore, out: dict, progress) -> None:
-    """Embed contents in batches of about UPSERT_BATCH chunks; a failed batch stays pending for the next run."""
-    if store.exists():
-        todo = conn.execute(
-            "SELECT content_hash FROM contents WHERE embedded_at IS NULL OR embed_model IS NOT ? ORDER BY content_hash",
-            (embedder.model,),
-        ).fetchall()
-    else:
-        todo = conn.execute("SELECT content_hash FROM contents ORDER BY content_hash").fetchall()
+def _batches(conn: sqlite3.Connection, todo: list[Any]) -> Iterator[tuple[int, list[str], list[Any]]]:
+    """(contents done so far, content hashes, their chunks) per about UPSERT_BATCH chunks."""
     hashes: list[str] = []
     chunks: list[Any] = []
     for i, row in enumerate(todo, 1):
@@ -235,17 +217,56 @@ def _embed(conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore
                 (row["content_hash"],),
             )
         )
-        if len(chunks) < UPSERT_BATCH and i < len(todo):
-            continue
-        try:
-            _flush(conn, embedder, store, hashes, chunks)
-        except ToolError as error:
-            out["embed_skipped_reason"] = error.details.get("reason", error.code)
-            break
-        out["embedded"] += len(hashes)
-        hashes, chunks = [], []
-        if progress:
-            progress("embed", i, len(todo))
+        if len(chunks) >= UPSERT_BATCH or i == len(todo):
+            yield i, hashes, chunks
+            hashes, chunks = [], []
+
+
+def _write(
+    conn: sqlite3.Connection, model: str, store: LanceVectorStore, hashes: list[str], chunks: list[Any], vectors
+) -> None:
+    """Write one embedded batch, then mark its contents embedded."""
+    store.upsert([chunk["chunk_id"] for chunk in chunks], [chunk["content_hash"] for chunk in chunks], vectors)
+    now = _now()
+    conn.executemany(
+        "UPDATE contents SET embed_model = ?, embedded_at = ? WHERE content_hash = ?",
+        [(model, now, content_hash) for content_hash in hashes],
+    )
+    conn.commit()
+
+
+def _embed(conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore, out: dict, progress) -> None:
+    """Embed contents in batches of about UPSERT_BATCH chunks; the next batch is embedded while one is written.
+
+    A failed batch and the ones after it stay pending for the next run.
+    """
+    if store.exists():
+        todo = conn.execute(
+            "SELECT content_hash FROM contents WHERE embedded_at IS NULL OR embed_model IS NOT ? ORDER BY content_hash",
+            (embedder.model,),
+        ).fetchall()
+    else:
+        todo = conn.execute("SELECT content_hash FROM contents ORDER BY content_hash").fetchall()
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="lfmap-embed")
+    queue: deque[tuple[int, list[str], list[Any], Future]] = deque()
+    try:
+        batches = _batches(conn, todo)
+        while True:
+            for i, hashes, chunks in itertools.islice(batches, 2 - len(queue)):
+                queue.append((i, hashes, chunks, pool.submit(embedder.embed, [c["text"] for c in chunks])))
+            if not queue:
+                break
+            i, hashes, chunks, future = queue.popleft()
+            try:
+                _write(conn, embedder.model, store, hashes, chunks, future.result())
+            except ToolError as error:
+                out["embed_skipped_reason"] = error.details.get("reason", error.code)
+                break
+            out["embedded"] += len(hashes)
+            if progress:
+                progress("embed", i, len(todo))
+    finally:
+        pool.shutdown(wait=True, cancel_futures=True)
 
 
 def reindex(

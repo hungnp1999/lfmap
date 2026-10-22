@@ -86,11 +86,11 @@ def test_loopback_is_accepted(net: PermissionManager):
 
 
 def test_embed_in_batches(server: _Server, net: PermissionManager):
-    texts = [f"câu {i}" for i in range(70)]
+    texts = [f"câu {i}" for i in range(300)]
     vectors = _embedder(server, net).embed(texts)
-    assert vectors == [[float(i), 0.5] for i in range(70)]
-    assert BATCH_SIZE == 32
-    assert [len(body["input"]) for _, _, body in server.requests] == [32, 32, 6]
+    assert vectors == [[float(i), 0.5] for i in range(300)]
+    assert BATCH_SIZE == 128
+    assert [len(body["input"]) for _, _, body in server.requests] == [128, 128, 44]
     assert all(method == "POST" and path == "/api/embed" for method, path, _ in server.requests)
     assert all(body["model"] == "nomic-embed-text" for _, _, body in server.requests)
 
@@ -144,3 +144,16 @@ def test_wrong_vector_count_is_an_error(server: _Server, net: PermissionManager,
 def test_ping_without_network_permission_makes_no_request(server: _Server):
     assert _embedder(server, PermissionManager([], [])).ping() is False
     assert server.requests == []
+
+
+def test_batch_size_can_be_set(server: _Server, net: PermissionManager):
+    embedder = OllamaEmbedder(server.url, "nomic-embed-text", net, timeout=5, batch_size=2)
+    assert embedder.embed(["t 1", "t 2", "t 3"]) == [[1.0, 0.5], [2.0, 0.5], [3.0, 0.5]]
+    assert [len(body["input"]) for _, _, body in server.requests] == [2, 1]
+
+
+@pytest.mark.parametrize("size", [0, 1025, "64", 2.0, True])
+def test_bad_batch_size_is_invalid_input(net: PermissionManager, size):
+    with pytest.raises(ToolError) as err:
+        OllamaEmbedder("http://localhost:1", "m", net, batch_size=size)
+    assert err.value.code == "invalid_input"

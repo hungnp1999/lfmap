@@ -26,6 +26,7 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    [plugins.knowledge.settings]
    ollama_url = "http://127.0.0.1:11434"   # loopback only: 127.0.0.1, ::1 or localhost
    embed_model = "bge-m3"
+   embed_batch = 128                        # texts per Ollama /api/embed request, 1 to 1024
 
    [plugins.knowledge.settings.sensitivity]   # default "normal"
    'D:\Contracts' = "private"
