@@ -9,7 +9,7 @@ import re
 import subprocess
 import urllib.request
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from lfmap_core import jobs
 from lfmap_core.errors import ToolError
@@ -52,6 +52,22 @@ def _check_uv() -> Check:
         return Check("uv", True, str(jobs.find_uv()))
     except ToolError as error:
         return Check("uv", False, error.message, "winget install astral-sh.uv")
+
+
+def _check_pwsh(xml: dict[str, str | None]) -> Check:
+    try:
+        pwsh = jobs.find_pwsh()
+    except ToolError as error:
+        return Check("pwsh", False, error.message, "winget install Microsoft.PowerShell")
+    bare = sorted(i for i, text in xml.items() if text and not _absolute(_tag(text, "Command")))
+    if bare:
+        detail = f"Task Scheduler cannot start pwsh without a full path: {', '.join(bare)}"
+        return Check("pwsh", False, detail, REGISTER_FIX)
+    return Check("pwsh", True, str(pwsh))
+
+
+def _absolute(command: str | None) -> bool:
+    return command is None or PureWindowsPath(command.strip('"')).is_absolute()
 
 
 def _load(registry: Registry, path: Path) -> tuple[Check, list[jobs.Job] | None]:
@@ -187,6 +203,7 @@ def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
     seconds, power_error = _sleep_seconds()
     return [
         uv,
+        _check_pwsh(xml),
         jobs_file,
         _check_tasks(enabled_ids, registered, error),
         _check_logon(xml),
