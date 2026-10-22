@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `lfmap-knowledge` reindex embeds and writes vectors in batches of about `UPSERT_BATCH = 512` chunks gathered across files, instead of one Ollama call and one LanceDB write per file. The 10k-file bench on DIEP-ANH left 10,004 LanceDB versions after the first run and kept the GPU about 21% busy; with a fake embedder on 1,000 files the first run drops from 81 s to 29 s and the table keeps 5 versions instead of 1,003. A batch that fails (Ollama down) stays pending for the next run, earlier batches are kept. `optimize` runs only when the reindex embedded or garbage-collected something, and garbage collection deletes vectors with one filter per 500 content hashes (`LanceVectorStore.delete_contents`).
 - `lfmap-knowledge` vector search selects `_distance` explicitly, so LanceDB 0.40 no longer logs its scoring autoprojection deprecation warning to stderr on every search (seen in the K14 MCP run).
 - `lfmap jobs register` writes the full path of `pwsh` into each task (`--pwsh` overrides). With PowerShell from the Microsoft Store, Task Scheduler could not start `pwsh` by name, so every job failed with `0x80070002`, even at the lock screen. `lfmap jobs doctor` gains a `pwsh` check that also flags tasks registered with plain `pwsh`.
 

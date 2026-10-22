@@ -21,6 +21,7 @@ from lfmap_knowledge.vectors import LanceVectorStore, model_slug
 
 DEFAULT_EMBED_MODEL = "bge-m3"
 MAX_ATTEMPTS = 3
+UPSERT_BATCH = 512  # chunks per embed call and vector write, gathered across files
 SENSITIVITIES = ("normal", "private", "secret")
 Progress = Callable[[str, int, int], None]  # stage ("scan" | "extract" | "embed"), done, total
 
@@ -180,21 +181,43 @@ def _extract_pending(
     return indexed
 
 
-def _collect_garbage(conn: sqlite3.Connection, store: LanceVectorStore) -> None:
+def _collect_garbage(conn: sqlite3.Connection, store: LanceVectorStore) -> int:
+    """Drop edges of deleted files and contents no live file uses; returns the number of contents dropped."""
     conn.execute(
         "DELETE FROM edges WHERE src_file_id IN (SELECT file_id FROM files WHERE status = 'deleted')"
         " OR dst_file_id IN (SELECT file_id FROM files WHERE status = 'deleted')"
     )
-    orphans = conn.execute(
-        "SELECT content_hash FROM contents c WHERE NOT EXISTS"
-        " (SELECT 1 FROM files f WHERE f.content_hash = c.content_hash AND f.status != 'deleted')"
-    ).fetchall()
-    for row in orphans:
-        _drop_content(conn, row["content_hash"], store if store.exists() else None)
+    orphans = [
+        row["content_hash"]
+        for row in conn.execute(
+            "SELECT content_hash FROM contents c WHERE NOT EXISTS"
+            " (SELECT 1 FROM files f WHERE f.content_hash = c.content_hash AND f.status != 'deleted')"
+        )
+    ]
+    for content_hash in orphans:
+        _drop_content(conn, content_hash, None)
+    if orphans and store.exists():
+        store.delete_contents(orphans)
+    conn.commit()
+    return len(orphans)
+
+
+def _flush(
+    conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore, hashes: list[str], chunks: list[Any]
+) -> None:
+    """Embed and write the chunks of several contents at once, then mark those contents embedded."""
+    vectors = embedder.embed([chunk["text"] for chunk in chunks])
+    store.upsert([chunk["chunk_id"] for chunk in chunks], [chunk["content_hash"] for chunk in chunks], vectors)
+    now = _now()
+    conn.executemany(
+        "UPDATE contents SET embed_model = ?, embedded_at = ? WHERE content_hash = ?",
+        [(embedder.model, now, content_hash) for content_hash in hashes],
+    )
     conn.commit()
 
 
 def _embed(conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore, out: dict, progress) -> None:
+    """Embed contents in batches of about UPSERT_BATCH chunks; a failed batch stays pending for the next run."""
     if store.exists():
         todo = conn.execute(
             "SELECT content_hash FROM contents WHERE embedded_at IS NULL OR embed_model IS NOT ? ORDER BY content_hash",
@@ -202,26 +225,27 @@ def _embed(conn: sqlite3.Connection, embedder: Embedder, store: LanceVectorStore
         ).fetchall()
     else:
         todo = conn.execute("SELECT content_hash FROM contents ORDER BY content_hash").fetchall()
+    hashes: list[str] = []
+    chunks: list[Any] = []
     for i, row in enumerate(todo, 1):
-        content_hash = row["content_hash"]
-        chunks = conn.execute(
-            "SELECT chunk_id, text FROM chunks WHERE content_hash = ? ORDER BY ordinal", (content_hash,)
-        ).fetchall()
+        hashes.append(row["content_hash"])
+        chunks.extend(
+            conn.execute(
+                "SELECT chunk_id, content_hash, text FROM chunks WHERE content_hash = ? ORDER BY ordinal",
+                (row["content_hash"],),
+            )
+        )
+        if len(chunks) < UPSERT_BATCH and i < len(todo):
+            continue
         try:
-            vectors = embedder.embed([chunk["text"] for chunk in chunks])
-            store.upsert([chunk["chunk_id"] for chunk in chunks], [content_hash] * len(chunks), vectors)
+            _flush(conn, embedder, store, hashes, chunks)
         except ToolError as error:
             out["embed_skipped_reason"] = error.details.get("reason", error.code)
             break
-        conn.execute(
-            "UPDATE contents SET embed_model = ?, embedded_at = ? WHERE content_hash = ?",
-            (embedder.model, _now(), content_hash),
-        )
-        conn.commit()
-        out["embedded"] += 1
+        out["embedded"] += len(hashes)
+        hashes, chunks = [], []
         if progress:
             progress("embed", i, len(todo))
-    store.optimize()
 
 
 def reindex(
@@ -284,12 +308,14 @@ def reindex(
             for file_id in sorted(linked):
                 edges.link_generated_from(conn, file_id)
             conn.commit()
-            _collect_garbage(conn, store)
+            dropped = _collect_garbage(conn, store)
 
             if embedder is None:
                 out["embed_skipped_reason"] = "no_embedder"
             else:
                 _embed(conn, embedder, store, out, progress)
+            if out["embedded"] or dropped:
+                store.optimize()
         finally:
             conn.close()
     return ReindexOutput(**out, duration_s=round(time.monotonic() - started, 3))

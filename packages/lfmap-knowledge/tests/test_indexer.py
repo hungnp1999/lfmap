@@ -344,3 +344,89 @@ def test_status_after_reindex(ctx, docs, data_dir: Path, emb):
     assert out.ollama_available is True
     with writer_lock(data_dir):
         assert status(ctx, ollama_available=True).indexer_busy is True
+
+
+class FlakyEmbedder(FakeEmbedder):
+    """Goes down after `calls` successful embed calls."""
+
+    def __init__(self, calls: int) -> None:
+        super().__init__()
+        self.calls = calls
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        if self.calls == 0:
+            raise ToolError("backend_unavailable", "Ollama is not reachable", {"reason": "ollama_unreachable"})
+        self.calls -= 1
+        return super().embed(texts)
+
+
+@pytest.fixture
+def many(root: Path) -> Path:
+    for n in range(10):
+        _write(root / f"note{n}.txt", f"note number {n}\n")
+    return root
+
+
+@pytest.fixture
+def writes(monkeypatch: pytest.MonkeyPatch) -> dict[str, int]:
+    calls = {"upsert": 0, "optimize": 0, "delete_content": 0, "delete_contents": 0}
+    for name in calls:
+        original = getattr(LanceVectorStore, name)
+
+        def counting(self, *args, _name=name, _original=original, **kwargs):
+            calls[_name] += 1
+            return _original(self, *args, **kwargs)
+
+        monkeypatch.setattr(LanceVectorStore, name, counting)
+    return calls
+
+
+def test_embed_batches_chunks_across_files(ctx, many, data_dir: Path, emb, writes, monkeypatch):
+    monkeypatch.setattr(indexer, "UPSERT_BATCH", 4)
+    out = _run(ctx, emb)
+    assert out.embedded == 10
+    assert writes["upsert"] == 3  # 4 + 4 + 2 one-chunk files
+    assert writes["optimize"] == 1
+    assert _store(data_dir).count() == _count(data_dir, "SELECT COUNT(*) FROM chunks") == 10
+    assert _count(data_dir, "SELECT COUNT(*) FROM contents WHERE embedded_at IS NOT NULL") == 10
+
+
+def test_embed_progress_is_reported_per_batch(ctx, many, emb, monkeypatch):
+    monkeypatch.setattr(indexer, "UPSERT_BATCH", 4)
+    events: list[tuple[str, int, int]] = []
+    _run(ctx, emb, progress=lambda stage, done, total: events.append((stage, done, total)))
+    assert [e for e in events if e[0] == "embed"] == [("embed", 4, 10), ("embed", 8, 10), ("embed", 10, 10)]
+
+
+def test_nothing_to_do_writes_no_vectors(ctx, many, emb, writes):
+    _run(ctx, emb)
+    for name in writes:
+        writes[name] = 0
+    out = _run(ctx, emb)
+    assert out.embedded == 0
+    assert writes == {"upsert": 0, "optimize": 0, "delete_content": 0, "delete_contents": 0}
+
+
+def test_failed_batch_keeps_earlier_batches_and_retries_the_rest(ctx, many, data_dir: Path, monkeypatch):
+    monkeypatch.setattr(indexer, "UPSERT_BATCH", 4)
+    out = _run(ctx, FlakyEmbedder(calls=1))
+    assert (out.embedded, out.errors, out.embed_skipped_reason) == (4, 0, "ollama_unreachable")
+    assert _store(data_dir).count() == 4
+    assert _count(data_dir, "SELECT COUNT(*) FROM contents WHERE embedded_at IS NOT NULL") == 4
+    emb = FakeEmbedder()
+    assert _run(ctx, emb).embedded == 6
+    assert len(emb.texts) == 6
+    assert _store(data_dir).count() == 10
+
+
+def test_garbage_collection_deletes_vectors_in_one_call(ctx, many, data_dir: Path, emb, writes):
+    _run(ctx, emb)
+    for n in range(6):
+        (many / f"note{n}.txt").unlink()
+    for name in writes:
+        writes[name] = 0
+    out = _run(ctx, emb)
+    assert out.deleted == 6
+    assert (writes["delete_contents"], writes["delete_content"], writes["upsert"]) == (1, 0, 0)
+    assert writes["optimize"] == 1
+    assert _store(data_dir).count() == _count(data_dir, "SELECT COUNT(*) FROM chunks") == 4
