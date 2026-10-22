@@ -7,7 +7,7 @@ from pathlib import Path
 from lfmap_core import Tool, operation
 from lfmap_knowledge import catalog, edges, indexer
 from lfmap_knowledge import search as chunk_search
-from lfmap_knowledge.embed import OllamaEmbedder
+from lfmap_knowledge.embed import BATCH_SIZE, OllamaEmbedder
 from lfmap_knowledge.schemas import (
     GetContextInput,
     GetContextOutput,
@@ -68,6 +68,7 @@ class KnowledgeTool(Tool):
             settings.get("ollama_url", "http://127.0.0.1:11434"),
             settings.get("embed_model", indexer.DEFAULT_EMBED_MODEL),
             self.ctx.permissions,
+            batch_size=settings.get("embed_batch", BATCH_SIZE),
         )
 
     @operation("status")

@@ -1,6 +1,7 @@
 import hashlib
 import os
 import shutil
+import threading
 from pathlib import Path
 
 import pytest
@@ -430,3 +431,27 @@ def test_garbage_collection_deletes_vectors_in_one_call(ctx, many, data_dir: Pat
     assert (writes["delete_contents"], writes["delete_content"], writes["upsert"]) == (1, 0, 0)
     assert writes["optimize"] == 1
     assert _store(data_dir).count() == _count(data_dir, "SELECT COUNT(*) FROM chunks") == 4
+
+
+def test_next_batch_is_embedded_while_the_previous_one_is_written(ctx, many, data_dir: Path, monkeypatch):
+    monkeypatch.setattr(indexer, "UPSERT_BATCH", 4)
+    second_embed = threading.Event()
+    overlapped: list[bool] = []
+
+    class Recording(FakeEmbedder):
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            if self.texts:
+                second_embed.set()
+            return super().embed(texts)
+
+    original = LanceVectorStore.upsert
+
+    def upsert(self, *args, **kwargs):
+        if not overlapped:
+            overlapped.append(second_embed.wait(timeout=5))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(LanceVectorStore, "upsert", upsert)
+    assert _run(ctx, Recording()).embedded == 10
+    assert overlapped == [True]
+    assert _store(data_dir).count() == 10

@@ -8,7 +8,8 @@ from ipaddress import ip_address
 from lfmap_core import ToolError
 from lfmap_core.permissions import PermissionManager
 
-BATCH_SIZE = 32
+BATCH_SIZE = 128  # texts per /api/embed request; setting embed_batch overrides
+MAX_BATCH_SIZE = 1024
 
 
 def check_loopback(url: str) -> str:
@@ -31,21 +32,30 @@ def _is_loopback_ip(host: str) -> bool:
 class OllamaEmbedder:
     """Embedder for POST {url}/api/embed; proxies from the environment are ignored so data stays local."""
 
-    def __init__(self, url: str, model: str, perms: PermissionManager, timeout: float = 120) -> None:
+    def __init__(
+        self, url: str, model: str, perms: PermissionManager, timeout: float = 120, batch_size: int = BATCH_SIZE
+    ) -> None:
+        if not isinstance(batch_size, int) or isinstance(batch_size, bool) or not 1 <= batch_size <= MAX_BATCH_SIZE:
+            raise ToolError(
+                "invalid_input",
+                f"embed_batch must be an integer from 1 to {MAX_BATCH_SIZE}",
+                {"embed_batch": batch_size},
+            )
         self.url = check_loopback(url)
+        self.batch_size = batch_size
         self.model = model
         self.perms = perms
         self.timeout = timeout
         self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
     def embed(self, texts: list[str]) -> list[list[float]]:
-        """One vector per text, requested in batches of BATCH_SIZE; needs network permission."""
+        """One vector per text, requested in batches of batch_size; needs network permission."""
         if not texts:
             return []
         self.perms.require_network()
         vectors: list[list[float]] = []
-        for start in range(0, len(texts), BATCH_SIZE):
-            vectors.extend(self._embed_batch(texts[start : start + BATCH_SIZE]))
+        for start in range(0, len(texts), self.batch_size):
+            vectors.extend(self._embed_batch(texts[start : start + self.batch_size]))
         return vectors
 
     def _embed_batch(self, batch: list[str]) -> list[list[float]]:

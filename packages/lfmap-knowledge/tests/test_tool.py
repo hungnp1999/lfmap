@@ -48,3 +48,9 @@ def test_reindex_progress_goes_to_stderr_on_cli(tool, capsys):
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "extract 1/1" in captured.err.splitlines()
+
+
+def test_embed_batch_setting(tool):
+    assert tool._embedder().batch_size == 128
+    tool.ctx.settings["embed_batch"] = 2
+    assert tool._embedder().batch_size == 2
