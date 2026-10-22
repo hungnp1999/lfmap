@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Hồ sơ nghiệm thu giai đoạn
 
-> **Phiên bản 1.1 (2026-10-22): đã nghiệm thu MVP Phase 1** (Hùng, 15:41Z, phương án A). TC-918 (thư mục PDF/DOCX thật) đạt cùng ngày, ghi bổ sung ở bản 1.1.
+> **Phiên bản 1.1 (2026-10-22): đã nghiệm thu MVP Phase 1** (Hùng, 15:41Z, phương án A). TC-918 (thư mục PDF/DOCX thật) đạt cùng ngày, ghi bổ sung ở bản 1.1. Bản 1.2: retro bổ sung việc sau nghiệm thu (PR #43 … #51) và hành động A8–A11.
 
 | Mục | Giá trị |
 |---|---|

@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Sprint Review, Release Notes và Retrospective
 
-Phiên bản 1.1 · 2026-10-22
+Phiên bản 1.2 · 2026-10-22 (bổ sung việc sau nghiệm thu: PR #43 … #51 và bài học vận hành)
 
 Phase 1 được coi là một Increment theo Scrum, chạy 2026-10-19 → 2026-10-22. Vai trò: **Product Owner** = Hùng; **Managing Agent** (Scrum Master / Planner / Reviewer) = Claude trong project (coordinator + thread), theo phân cấp Hùng chốt 2026-10-22; **Developers / Working Agents** = phiên Claude Code (Cloud và trên DIEP-ANH), qwen2.5-coder:14b qua `qwen-loop` (card S).
 
@@ -65,13 +65,28 @@ Kết quả: **Đạt về chức năng trên dữ liệu mẫu** (TC-916, 2026-
 | — | `pwsh` đường dẫn đầy đủ (lỗi tìm thấy khi thử thật) | Xong | PR #34 |
 | Exit 1.8 | Job T0 chạy ở màn hình khóa; đề xuất + approve; doctor không FAIL | Đạt: TC-912, TC-913, TC-914 | |
 
+### Sau nghiệm thu (2026-10-22)
+
+| Việc | Người làm | Trạng thái | Bằng chứng |
+|---|---|---|---|
+| 1.6 plugin `powershell` (allow-list script) | Claude Code Cloud | Xong | PR #43 |
+| ADR-020 tầng phê duyệt theo từng script (sửa ADR-017) | Claude | Xong | PR #48 |
+| Gom lô embed + ghi vector qua nhiều file (TC-917: 1,87 → 3,75 file/s; lần hai 45,8 → 7,2 s) | Claude Code Cloud | Xong | PR #44 |
+| Lô embed lớn hơn, embed chồng với ghi | Claude Code Cloud | Xong, không cải thiện (3,61 file/s) | PR #45 |
+| `embed_concurrency` (song song gọi Ollama) | Claude Code Cloud | Xong, không cải thiện: Ollama chạy bge-m3 một slot | PR #46 |
+| Báo lỗi HTTP Ollama rõ ràng (`ollama_http_400`), cảnh báo `embed_concurrency > 1` | Claude Code Cloud | Xong | PR #51 |
+| certifi 2026.10.19 (GHSA-6q48-6c7w-9gw2, cảnh báo critical) | Claude | Xong | PR #49 |
+| Hồ sơ Phase 1 bản 1.0, 1.1 (TC-918, L20–L23) | Claude | Xong | PR #47, #50 |
+
+Mục tiêu 5 file/s cho embed lần đầu được bỏ: nút thắt nằm ở Ollama (một slot cho bge-m3), không ở indexer. Tăng tốc tiếp cần `OLLAMA_FLASH_ATTENTION` hoặc model embed nhỏ hơn, Hùng quyết (§6).
+
 ### Hạng mục chưa làm
 
 | # | Hạng mục | Lý do |
 |---|---|---|
 | 1.2 | Backend Docling (`--backend docling`) | Ưu tiên đường chính 1.1 → 1.4 → 1.5; interface `Backend` đã chừa sẵn |
 | 1.3 | Adapter REST sinh tự động | Chưa có client cần REST; kênh `rest` đã có trong ẩn root và `egress_log` |
-| 1.6 | Plugin `powershell` với allow-list | Xong sau mốc, PR #43 (`68a042f`); Hùng chốt tách quyền theo từng script → Phase 1b |
+| 1.6 | Plugin `powershell` với allow-list | Xong sau mốc, PR #43 (`68a042f`); quyền theo từng script: ADR-020, PR #48 |
 
 Việc hỗ trợ (docs/handoff, không phải code sản phẩm): PR #7, #8 (hồ sơ Phase 0), #19, #20, #24, #28, #30, #35, #37 (handoff + test chuẩn bị sẵn), hook `uv sync` cho phiên Cloud (`f286d3a`).
 
@@ -90,13 +105,13 @@ Release notes (tóm tắt CHANGELOG `[Unreleased]` tại `b002710`):
 - **Changed:** CLI và MCP quyết định phê duyệt theo tầng (T1 chạy không hỏi, có audit; T2 hỏi; T3 cần grant hoặc TTY); `--approve` hết hạn sau 8 giờ; license check quét cả `packages/*`.
 - **Fixed:** task theo lịch khởi chạy `pwsh` bằng đường dẫn đầy đủ (`0x80070002`).
 
-Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ngược, cần Hùng duyệt).
+`main` sau mọi PR của Phase 1: `6cd994b` (thêm `lfmap-powershell` 0.1.0). Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ngược, cần Hùng duyệt).
 
 ## 4. Definition of Done (DoD) áp dụng
 
 | Tiêu chí | Đạt | Ghi chú |
 |---|---|---|
-| Code merge vào `main` qua PR | ✅ | PR #3 … #39 |
+| Code merge vào `main` qua PR | ✅ | PR #3 … #51 |
 | Test tự động pass trên Windows | ✅ | CI mỗi PR; 545 pass / 10 skip khi chạy lại trên Linux |
 | Lint, format, CodeQL, license | ✅ | Điều kiện merge |
 | CHANGELOG cập nhật | ✅ | Root + CHANGELOG từng plugin |
@@ -118,6 +133,9 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 - Thử thật trên DIEP-ANH bắt được lỗi môi trường mà CI không thấy (`pwsh` alias Store → `0x80070002`, PR #34) và xác nhận K0, K9, K14 trên Windows + Ollama.
 - Review dữ liệu rò rỉ có checklist riêng (handoff K10/K11 §6) và test đi qua `tool.py` trên kênh `mcp`; phát hiện thêm trường hợp root vừa đổi sang `secret` trước reindex và vá trong cùng PR #38.
 - Tiết kiệm hạn mức Pro: card S cho qwen, gom review theo lô, việc chỉ người làm được gom vào một danh sách tối.
+- Số đo thật dẫn tới sửa đúng chỗ: bench 10k (TC-917) chỉ ra LanceDB tạo một version cho mỗi file; PR #44 gom lô, embed nhanh gấp đôi, reindex lần hai từ 45,8 s xuống 7,2 s, chỉ mục từ 5,8 GB xuống 1,78 GB.
+- Phân cấp mới (Project = Managing Agent, Claude Code = Working Agent) làm 9 PR (#43 … #51) trong nửa ngày sau nghiệm thu; cảnh báo bảo mật critical (certifi) được vá trong ngày.
+- Quyết định của Hùng gom thành thẻ chọn (nghiệm thu A/B, tầng theo script) nên chốt nhanh, có ghi lại lý do.
 
 **Cần cải thiện**
 
@@ -125,16 +143,24 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 - Spec lệch với code đã merge: K12 trong spec có trường `glob` nhưng schema K1 không có (giải bằng glob trong `query`); ADR-018 ghi `approvals list` cho hàng đợi nhưng chốt `approvals pending`. Spec cần cập nhật khi quyết định đổi.
 - Lệnh chỉ chạy ở TTY (`approve`, `add-folder`) và bộ lọc auto-mode của Claude Code trên DIEP-ANH làm thử thật phụ thuộc Hùng có mặt; các bước Exit 1.8 và K14 bị dồn sang ca tối.
 - `jobs register` ghi đè thiết lập logon/wake: dễ quên, đã ghi trong `docs/jobs.md` và doctor cảnh báo, nhưng vẫn là bước tay.
+- Tối ưu trước khi đo nút thắt: PR #45 và #46 không tăng tốc vì Ollama chỉ chạy bge-m3 một slot; một lần đo GPU/Ollama trước đã tiết kiệm hai PR.
+- Bộ lọc auto-mode của Claude Code trên DIEP-ANH chỉ nhận phê duyệt Hùng gõ trực tiếp trong thread Remote Control; phê duyệt chuyển tiếp từ coordinator bị từ chối, nhiều bước phải chờ Hùng gõ lại.
+- Hùng vẫn phải làm tay một số bước chuẩn bị môi trường (dù đã yêu cầu Claude tự chuẩn bị); việc trên Windows phụ thuộc DIEP-ANH bật và Hùng ở nhà.
+- A4 (cập nhật spec knowledge, ADR-018) chưa làm trước nghiệm thu như kế hoạch; hồ sơ Phase 1 sửa ba lần trong một ngày (1.0, 1.1, 1.2) vì kết quả thử thật đến sau.
 - Hành động A1 của Phase 0 ("viết tài liệu giai đoạn dần theo PR") chỉ làm được một phần: handoff viết dần, còn bộ hồ sơ này vẫn soạn ở cuối Phase.
 
 **Hành động**
 
 | # | Hành động | Chủ trì | Khi nào |
 |---|---|---|---|
-| A4 | Cập nhật `docs/specs/knowledge.md` (bỏ `glob`, ghi `shown_roots`) và ADR-018 (`approvals pending`) | Claude | Trước nghiệm thu |
-| A5 | Gom mọi bước cần TTY vào checklist tối duy nhất; thiết lập auto-mode Claude Code trên DIEP-ANH (`/auto-mode-setup`) | Hùng | Ca tối 22/10 |
+| A4 | Cập nhật `docs/specs/knowledge.md` (bỏ `glob`, ghi `shown_roots`) và ADR-018 (`approvals pending`) | Claude | Chưa làm; dời sáng 23/10 (Cloud) |
+| A5 | Gom mọi bước cần TTY vào checklist tối duy nhất; thiết lập auto-mode Claude Code trên DIEP-ANH (`/auto-mode-setup`) | Hùng | Checklist: xong 22/10; allow rule thêm 15:16Z. Giữ: lệnh TTY là kiểm soát an toàn, không vượt |
 | A6 | Sửa cảnh báo LanceDB `_distance` (L18) | Claude Code Cloud | Xong 2026-10-22, PR #40 |
-| A7 | Cập nhật `docs/phase1/` mỗi PR của 1.2, 1.3, 1.6 thay vì cuối giai đoạn | Claude | Tiếp theo |
+| A7 | Cập nhật hồ sơ giai đoạn trong cùng PR của từng hạng mục (1.2, 1.3 và Phase 2) thay vì cuối giai đoạn | Claude | Từ Phase 1b |
+| A8 | Trước một PR tối ưu hiệu năng: đo nút thắt (GPU, Ollama, I/O) và ghi giả thuyết + số đo mong đợi vào handoff; không đạt thì dừng | Claude | Từ Phase 1b |
+| A9 | Khi cần phê duyệt trên DIEP-ANH: soạn sẵn một câu chính xác để Hùng gõ trong thread Remote Control, gom vào một lần | Claude | Từ 23/10 |
+| A10 | Ưu tiên task Cloud (Linux, CI) khi Hùng ở văn phòng; việc cần Windows/Office/GPU dồn vào một ca có máy, chuẩn bị sẵn từ Cloud | Claude | Từ 23/10 |
+| A11 | Mỗi task: Claude tự chuẩn bị nhánh, fixture, test, cấu hình; chỉ hỏi Hùng một dòng về quyền phải cấp | Claude | Thường trực |
 
 ## 6. Việc chuyển tiếp (Product Backlog)
 
@@ -144,6 +170,8 @@ Chưa gắn tag/release GitHub (phát hành là quyết định không đảo ng
 | REST adapter (OpenAPI `/docs`) | Roadmap 1.3, L7 | Sau nghiệm thu MVP; Cloud |
 | Quyền riêng theo từng script `powershell` (Hùng chốt 2026-10-22) | Quyết định nghiệm thu | Xong: ADR-020, PR #48 |
 | Heading `.docx` sai, PDF không heading, `get_context` đầy ngân sách | L20, L21, L23 (TC-918) | Phase 1b |
+| `.doc`/Office cũ không vào chỉ mục | L22 | Qua MarkitdownTool (ADR-011); cân nhắc tự động ở Phase 1b |
+| Embed lần đầu nhanh hơn (`OLLAMA_FLASH_ATTENTION` hoặc model embed nhỏ hơn) | L19, PR #45/#46 | Hùng quyết; cần đo trên DIEP-ANH |
 | `min_core_version` được core đối chiếu | L3, L9 | Backlog core |
 | `audit.jsonl` theo `LFMAP_CONFIG`; audit lần đọc bị từ chối | L10 | Backlog core |
 | Hook tiến độ chung (thay stderr của knowledge) | L11 | Backlog core |
