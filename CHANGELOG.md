@@ -9,6 +9,7 @@
 
 ### Added
 
+- `lfmap-powershell` 0.1.0 (Roadmap 1.6, task PS1): runs PowerShell 7 scripts allow-listed in `[plugins.powershell.settings.scripts.<id>]`. `list` (T0) shows each script, its typed parameters (`string`, `int`, `switch`, `choice`) and whether it is ready; `run` is `external` (T3), so over MCP it needs `lfmap approvals grant powershell.run --tier T3`. Each entry pins a SHA-256; `run` checks the script path with `require_read` against `[paths] scripts`, runs a temporary copy of the hashed bytes with `pwsh -NoProfile -NonInteractive -NoLogo -File` and an argument list (no shell, no `-Command`), kills the whole process tree at the timeout, caps output per stream and writes one audit line per run. `lfmap config add-folder ... --as scripts` is now accepted.
 - Phase 1 acceptance documentation draft in `docs/phase1/` (architecture, business processes, functional spec, test cases and report, user guide, runbook, sprint review), in Vietnamese, describing the code as of `b002710`. K14 benchmark numbers, the remaining DIEP-ANH checks and the sign-off are marked placeholders.
 - Handoff plan, module spec (`docs/specs/powershell.md`) and prepared tests for the `powershell` plugin (Roadmap 1.6): allow-listed PowerShell 7 scripts with pinned SHA-256 and typed parameters, `run` as T3.
 - `lfmap-knowledge` README (TC-K14): operations, setup (`[paths] knowledge`, settings, sensitivity), CLI, SDK and MCP examples, an hourly `knowledge-reindex` job for `jobs.toml`, and limits.
