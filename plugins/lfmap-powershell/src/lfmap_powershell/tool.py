@@ -4,6 +4,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from lfmap_core import Tool, ToolError, operation
 from lfmap_core.approval import audit
 from lfmap_core.permissions import _is_remote
@@ -71,10 +73,20 @@ class PowerShellTool(Tool):
             description=entry.description,
             path=entry.path,
             timeout_s=entry.timeout_s,
+            tier=entry.tier,
             params=[_param_info(name, spec) for name, spec in entry.params.items()],
             ready=not problem,
             problem=problem,
         )
+
+    @classmethod
+    def call_tier(cls, operation: str, inp: BaseModel, settings: dict) -> str | None:
+        """ADR-020: `run` takes the tier the user wrote for the script; core keeps it within T1..T3."""
+        if operation != "run":
+            return None
+        entries, _ = load_allowlist(settings)
+        entry = entries.get(inp.script)
+        return entry.tier if entry else None
 
     def health(self) -> dict:
         try:
@@ -114,7 +126,7 @@ class PowerShellTool(Tool):
                 "channel": self.ctx.channel,
                 "plugin": self.ctx.plugin_id,
                 "operation": "run",
-                "tier": "T3",
+                "tier": entry.tier,
                 "decision": "allow",
                 "reason": "timeout" if result.timed_out else f"exit {result.exit_code}",
                 "target": script_id,

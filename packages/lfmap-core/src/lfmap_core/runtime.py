@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from lfmap_core.approval import audit
+from lfmap_core.approval import TIERS, Tier, audit, base_tier, raise_tier
 from lfmap_core.config import load_config, plugin_variables
 from lfmap_core.errors import ToolError
 from lfmap_core.permissions import PermissionManager
@@ -27,6 +27,27 @@ def _plugin_settings(config: dict, plugin_id: str) -> dict[str, Any]:
     if not isinstance(settings, dict):
         raise ToolError("invalid_input", f"[plugins.{plugin_id}.settings] must be a table", {"plugin": plugin_id})
     return settings
+
+
+def call_tier(entry: PluginEntry, operation: str, payload: dict[str, Any], config: dict | None = None) -> Tier:
+    """The tier the adapters gate one call on: the declared tier, lowered only as far as the manifest's
+    `min_tier` allows and only when the plugin reads a lower tier from the user's config (ADR-020)."""
+    declared = entry.manifest.operation(operation)
+    if declared is None:
+        raise ToolError("not_found", f"Unknown operation {entry.id}.{operation}", {"operation": operation})
+    tier = base_tier(declared.side_effects)
+    spec = entry.tool_class.operations().get(operation)
+    if declared.min_tier is None or spec is None:
+        return tier
+    try:
+        inp = spec.input_model.model_validate(payload)
+        settings = _plugin_settings(load_config() if config is None else config, entry.id)
+        wanted = entry.tool_class.call_tier(operation, inp, settings)
+    except Exception:  # noqa: BLE001 - any failure keeps the declared tier
+        return tier
+    if wanted not in TIERS:
+        return tier
+    return min(raise_tier(wanted, declared.min_tier), tier, key=TIERS.index)
 
 
 def _plugin_dirs(variables: Variables) -> dict[str, Path | None]:

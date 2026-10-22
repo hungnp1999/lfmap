@@ -26,7 +26,7 @@ from lfmap_core.approval import Asker, Gate, Policy, base_tier
 from lfmap_core.config import load_config
 from lfmap_core.errors import ToolError
 from lfmap_core.registry import PluginEntry, Registry
-from lfmap_core.runtime import run_operation
+from lfmap_core.runtime import call_tier, run_operation
 from lfmap_core.tool import OperationSpec
 
 # `serve mcp --approve` covers one working session, not an open-ended one (ADR-017).
@@ -79,8 +79,6 @@ def _asker(context: Context) -> Asker | None:
 
 
 def _make_tool(entry: PluginEntry, spec: OperationSpec, preapproved: Callable[[], frozenset[str]]):
-    side_effects = entry.manifest.operation(spec.name).side_effects
-
     def call(**kwargs: Any) -> Any:
         context = kwargs.pop(_CONTEXT_PARAM, None)
         # Third-party backends may print; stdout belongs to the MCP protocol stream.
@@ -95,7 +93,7 @@ def _make_tool(entry: PluginEntry, spec: OperationSpec, preapproved: Callable[[]
                     _asker(context) if context is not None else None,
                 )
                 # ADR-017: the declared side effects set the starting tier; the plugin may escalate at run time.
-                gate(base_tier(side_effects), "side_effects")
+                gate(call_tier(entry, spec.name, kwargs), "side_effects")
                 return run_operation(entry, spec.name, kwargs, channel="mcp", approver=gate)
             except ToolError as error:
                 details = f" {error.details}" if error.details else ""
@@ -107,10 +105,13 @@ def _make_tool(entry: PluginEntry, spec: OperationSpec, preapproved: Callable[[]
     return call
 
 
-def _description(spec: OperationSpec, side_effects: str, approved: bool) -> str:
+def _description(spec: OperationSpec, side_effects: str, approved: bool, min_tier: str | None = None) -> str:
     tier = base_tier(side_effects)
     if tier == "T0":
         return spec.description
+    if min_tier is not None:
+        note = f"The user's config sets each call's tier ({min_tier} to {tier}); {tier} needs a time-limited grant."
+        return f"{spec.description} Side effects: {side_effects}. {note}".strip()
     if tier == "T3":
         note = "Needs a time-limited grant from `lfmap approvals grant` in the user's terminal."
     elif approved:
@@ -148,7 +149,8 @@ def build_server(registry: Registry, plugin_ids: list[str], approve: Iterable[st
         if not entry.manifest.adapters.mcp:
             continue
         for spec in entry.tool_class.operations().values():
-            side_effects = entry.manifest.operation(spec.name).side_effects
+            declared = entry.manifest.operation(spec.name)
+            side_effects = declared.side_effects
             approved = f"{entry.id}.{spec.name}" in approved_ops
             annotations = ToolAnnotations(
                 read_only_hint=side_effects == "none",
@@ -157,7 +159,7 @@ def build_server(registry: Registry, plugin_ids: list[str], approve: Iterable[st
             server.add_tool(
                 _make_tool(entry, spec, preapproved),
                 name=tool_name(entry.id, spec.name),
-                description=_description(spec, side_effects, approved),
+                description=_description(spec, side_effects, approved, declared.min_tier),
                 annotations=annotations,
                 structured_output=True,
             )

@@ -11,7 +11,7 @@ Let an agent (MCP), the CLI or a scheduled job run **PowerShell 7 scripts that t
 | # | Decision | Rejected options |
 |---|---|---|
 | P1 | The allow-list lives in `config.toml` under `[plugins.powershell.settings.scripts.<id>]`. No operation or MCP tool writes `config.toml` (core rule), so an agent cannot add a script. | A separate `scripts.toml` (one more file and loader, same protection); an `add` operation (an agent could allow-list its own script). |
-| P2 | `run` declares `side_effects = "external"`, so it is **T3** under ADR-017 ("runs external commands"). Over MCP it runs only under a time-limited grant made in an interactive terminal (`lfmap approvals grant powershell.run --tier T3 --for 2h`); the interactive CLI asks; jobs queue it (ADR-018). `--approve` cannot pre-approve it. No ADR changes. | Per-script tiers declared in the allow-list (would let read-only scripts run without a grant, but changes ADR-017: needs Hùng; possible later as an ADR); T1 for all scripts (contradicts ADR-017). |
+| P2 | `run` declares `side_effects = "external"` with `min_tier = "T1"`. Each allow-list entry has `tier = "T1" | "T2" | "T3"`, **default T3** (ADR-020, amending ADR-017). Core asks the plugin for the call's tier before running and clamps it to T1..T3. T3: over MCP only under a time-limited grant made in an interactive terminal (`lfmap approvals grant powershell.run --tier T3 --for 2h`); the interactive CLI asks; jobs queue it (ADR-018). T2: asks, or a grant / `serve mcp --approve`. T1: runs and is audited (jobs need `max_tier >= 1`). | All scripts T3 (read-only scripts would need a broad grant); a separate `run_safe` operation (the boundary would be the operation name the agent picks, not the user's config); T0 scripts (no audit trail for an external command). |
 | P3 | Each entry pins the script's **SHA-256**. `run` reads the file once, checks the hash, writes those exact bytes to a fresh copy in the plugin's temp folder and runs the copy, so the file cannot change between check and start. The working directory is the script's own folder. | Run the original path (time-of-check/time-of-use gap); no hash (any later edit to the script runs silently). |
 | P4 | Script paths must be inside `[paths] scripts` (manifest `fs_read = ["${scripts}"]`) and go through `require_read`, so UNC and device paths are refused before any I/O. | Trust the path in config (bypasses the shared security rule). |
 | P5 | Parameters are typed in the allow-list (`string`, `int`, `switch`, `choice`) and passed as an argument list to `pwsh -NoProfile -NonInteractive -NoLogo -File <copy> -Name value ...`, never through a shell or `-Command`. Strings may not start with `-` and may not contain control characters or `"`. | `-Command` with a built string (injection); free-form argument arrays (an agent could pass any switch). |
@@ -33,6 +33,7 @@ sha256 = "3F2A..."            # (Get-FileHash -Algorithm SHA256 <path>).Hash; ca
 description = "Free space per drive"
 timeout_s = 60                # 1..3600, default 60
 max_output_chars = 20000      # 1000..200000, default 20000, per stream
+tier = "T1"                   # T1 | T2 | T3, default T3 (ADR-020); only lower it for read-only scripts
 
 [plugins.powershell.settings.scripts.disk-report.params.Drive]
 type = "string"               # string | int | switch | choice (default string)
@@ -64,7 +65,7 @@ Input: none. Output `ListOutput.scripts: list[ScriptInfo]`, sorted by id:
 
 `list` does not need `pwsh` and starts no process.
 
-### `run` (side_effects `external`, T3)
+### `run` (side_effects `external`, tier from the entry: T1..T3, default T3)
 
 Input `RunInput`: `script` (id, pattern as above), `params: dict[str, str | int | bool]` (default empty). The CLI takes it as `--input-json`.
 
@@ -77,7 +78,7 @@ Steps, in this order (nothing is started before step 6):
 5. Resolve `pwsh`: bad `settings.pwsh`: `invalid_input`; not found: `backend_unavailable`.
 6. `ctx.dry_run`: return `dry_run = true` and `command`, start nothing, audit nothing.
 7. Write the bytes to `<temp_dir>/<tmp folder>/<id>-<8 hex>.ps1`, run `[pwsh, -NoProfile, -NonInteractive, -NoLogo, -File, <copy>, *args]` in the script's folder with the entry's timeout and output limit, then delete the copy (also on error).
-8. Append one audit line: `channel`, `plugin = powershell`, `operation = run`, `tier = T3`, `decision = allow`, `reason = "exit <code>"` or `"timeout"`, `target = <id>`. Never the output.
+8. Append one audit line: `channel`, `plugin = powershell`, `operation = run`, `tier = <entry tier>`, `decision = allow`, `reason = "exit <code>"` or `"timeout"`, `target = <id>`. Never the output.
 
 Output `RunOutput`: `script`, `dry_run`, `command` (with the **allow-listed** path, not the copy), `exit_code` (null on timeout), `stdout`, `stderr` (UTF-8, invalid bytes replaced, cut to `max_output_chars` each), `stdout_truncated`, `stderr_truncated`, `timed_out`, `duration_ms`, `untrusted = true`, `notice`.
 
@@ -109,7 +110,7 @@ Workspace: add `lfmap-powershell` to the root `pyproject.toml` (dependencies and
 
 ## 7. Security notes
 
-- The script itself runs with the user's full rights; the plugin only controls **which** script and **which** arguments. That is why `run` is T3 and why allow-listing stays a hand edit of `config.toml`.
+- The script itself runs with the user's full rights; the plugin only controls **which** script and **which** arguments. That is why `run` defaults to T3, why a lower tier must be written per script, and why allow-listing stays a hand edit of `config.toml`.
 - A grant on `powershell.run` covers every allow-listed script for its duration. Keep the allow-list short.
 - Script output goes back to the caller (over MCP, to Claude). Do not allow-list scripts that print secrets.
 - `$PSScriptRoot` points at the temporary copy; scripts should use the working directory (`Get-Location`) to find files next to them.
@@ -117,4 +118,4 @@ Workspace: add `lfmap-powershell` to the root `pyproject.toml` (dependencies and
 
 ## 8. Not in scope (Phase 1)
 
-Path-typed parameters checked against roots, per-script tiers, exit-code-to-job-failure mapping, streaming output, running as another user, Windows PowerShell 5.1.
+Path-typed parameters checked against roots, exit-code-to-job-failure mapping, streaming output, running as another user, Windows PowerShell 5.1.

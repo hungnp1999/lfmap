@@ -4,11 +4,13 @@ import tomllib
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from lfmap_core.errors import ToolError
 
 SideEffects = Literal["none", "local_write", "external"]
+MinTier = Literal["T0", "T1", "T2", "T3"]
+_BASE_TIER_INDEX = {"none": 0, "local_write": 1, "external": 3}
 
 
 class _Strict(BaseModel):
@@ -36,6 +38,14 @@ class OperationDecl(_Strict):
     input: str
     output: str
     side_effects: SideEffects = "none"
+    # ADR-020: the plugin may lower a call's tier from the user's config, never below this.
+    min_tier: MinTier | None = None
+
+    @model_validator(mode="after")
+    def _min_tier_below_base(self) -> "OperationDecl":
+        if self.min_tier is not None and int(self.min_tier[1]) >= _BASE_TIER_INDEX[self.side_effects]:
+            raise ValueError(f"min_tier {self.min_tier} must be below the tier of side_effects {self.side_effects!r}")
+        return self
 
 
 class Permissions(_Strict):

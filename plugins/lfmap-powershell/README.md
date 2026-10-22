@@ -5,7 +5,7 @@ LFMAP plugin that lets an agent (MCP), the CLI or a scheduled job run **PowerShe
 | Operation | What it does | Side effects |
 | --- | --- | --- |
 | `list` | Allow-listed scripts, their parameters, and whether each can run now (`ready`, `problem`) | none (T0) |
-| `run` | Run one allow-listed script; returns exit code, stdout, stderr and duration | external (T3) |
+| `run` | Run one allow-listed script; returns exit code, stdout, stderr and duration | external (T1–T3 per script, default T3) |
 
 ## Setup
 
@@ -33,6 +33,7 @@ LFMAP plugin that lets an agent (MCP), the CLI or a scheduled job run **PowerShe
    description = "Free space per drive"
    timeout_s = 60                # 1..3600, default 60
    max_output_chars = 20000      # 1000..200000, default 20000, per stream
+   tier = "T1"                   # T1 | T2 | T3, default T3; see "Running a script"
 
    [plugins.powershell.settings.scripts.disk-report.params.Drive]
    type = "string"               # string | int | switch | choice (default string)
@@ -52,7 +53,15 @@ LFMAP plugin that lets an agent (MCP), the CLI or a scheduled job run **PowerShe
 
 ## Running a script
 
-`run` is tier T3 ("runs external commands", ADR-017):
+Each script has its own approval tier (`tier` in the allow-list, ADR-020). Leave it out and the script is T3 ("runs external commands", ADR-017). Lower it only for scripts that just read and report, such as a disk report; `list` shows each script's tier.
+
+| `tier` | Interactive CLI | MCP (Claude) | Job |
+| --- | --- | --- | --- |
+| `T1` | runs, audited | runs, audited | runs if the job's `max_tier` ≥ 1 |
+| `T2` | asks | asks (elicitation), or a grant / `serve mcp --approve powershell.run` | queued for approval |
+| `T3` (default) | asks | only under a grant made in a terminal | queued for approval |
+
+For a T3 script:
 
 - **Interactive CLI**: asks you before it runs.
 
@@ -80,7 +89,9 @@ How it runs: the plugin reads the script once, checks the hash, writes those exa
 
 ## Limits and security
 
-- The script runs with **your full user rights**. The plugin only controls which script runs and with which arguments. That is why `run` is T3 and why the allow-list is a hand edit of `config.toml`.
-- A grant on `powershell.run` covers **every** allow-listed script while it lasts. Keep the allow-list short.
+- The script runs with **your full user rights**. The plugin only controls which script runs and with which arguments. That is why `run` defaults to T3, why a lower tier must be written per script, and why the allow-list is a hand edit of `config.toml`.
+- A T3 grant on `powershell.run` covers **every** allow-listed script while it lasts. Keep the allow-list short.
+- A T1 script runs whenever an agent asks, with any allowed parameter values. Give T1 only to scripts you would run blindly, and prefer `choice` or tight `pattern` parameters for them.
+- Changing a script changes its hash, so `run` refuses it until you update `sha256`: a lowered tier never carries over to new code silently.
 - Script output goes back to the caller, over MCP to Claude (marked `untrusted`). Do not allow-list scripts that print secrets.
-- Not supported yet: path-typed parameters, per-script tiers, mapping exit codes to job failures, streaming output, running as another user, Windows PowerShell 5.1.
+- Not supported yet: path-typed parameters, mapping exit codes to job failures, streaming output, running as another user, Windows PowerShell 5.1.
