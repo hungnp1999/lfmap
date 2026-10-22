@@ -1,6 +1,5 @@
 """File edges (GENERATED_FROM, REFERENCES) and related files; link paths are strings only, never opened."""
 
-import os
 import posixpath
 import re
 import sqlite3
@@ -9,6 +8,7 @@ from typing import Protocol
 from urllib.parse import unquote
 
 from lfmap_core import ToolError
+from lfmap_knowledge.catalog import abs_path
 from lfmap_knowledge.schemas import RelatedFile
 
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
@@ -110,10 +110,6 @@ def link_references(conn: sqlite3.Connection, file_id: int, markdown: str) -> in
     return written
 
 
-def _abs_path(root_path: str, rel_path: str) -> str:
-    return os.path.normpath(os.path.join(root_path, *rel_path.split("/")))
-
-
 def _ids(conn: sqlite3.Connection, sql: str, params: Iterable[object]) -> list[int]:
     return [row[0] for row in conn.execute(sql, tuple(params))]
 
@@ -165,6 +161,8 @@ def related(
 ) -> list[RelatedFile]:
     """Related files, each with its strongest reason, sorted by reason, score and path."""
     me = _file(conn, file_id)
+    if me["root_id"] in exclude_root_ids:
+        raise ToolError("not_found", "File is not in the catalog", {"file_id": file_id})
     sources: dict[str, list[int]] = {
         "duplicate": (
             _ids(conn, "SELECT file_id FROM files WHERE content_hash = ?", [me["content_hash"]])
@@ -205,7 +203,7 @@ def related(
             if row["root_id"] in exclude_root_ids:
                 continue
             rank, score = best[row["file_id"]]
-            results.append((rank, -score, row["rel_path"], _abs_path(row["root_path"], row["rel_path"])))
+            results.append((rank, -score, row["rel_path"], abs_path(row["root_path"], row["rel_path"])))
     results.sort()
     return [
         RelatedFile(path=path, reason=REASONS[rank], score=-neg_score) for rank, neg_score, _, path in results[:limit]

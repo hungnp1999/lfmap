@@ -224,6 +224,16 @@ def test_related_hides_excluded_roots(db, rid, tmp_path: Path):
     assert related(db, me, exclude_root_ids={secret}) == []
 
 
+def test_related_of_file_in_excluded_root_is_not_found(db, rid, tmp_path: Path):
+    secret = _root(db, tmp_path / "secret", "secret")
+    me = _file(db, secret, "salary.pdf")
+    _file(db, secret, "bonus.pdf")
+    assert [Path(r.path).name for r in related(db, me)] == ["bonus.pdf"]
+    with pytest.raises(ToolError) as err:
+        related(db, me, exclude_root_ids={secret})
+    assert err.value.code == "not_found"
+
+
 def test_related_unknown_file_is_not_found(db, rid):
     with pytest.raises(ToolError) as err:
         related(db, 999)

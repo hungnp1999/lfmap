@@ -169,6 +169,23 @@ def test_get_file_counts_chunks_and_duplicates(catalog, root: Path, data_dir: Pa
     assert out.markdown_cached is False
 
 
+def test_get_file_in_excluded_root_is_not_found(catalog, tmp_path: Path, data_dir: Path):
+    secret = tmp_path / "secret"
+    rid = _root(catalog, secret, "secret")
+    _file(catalog, rid, "salary.xlsx")
+    assert get_file(catalog, secret / "salary.xlsx", data_dir).file.path == abs_path(str(secret), "salary.xlsx")
+    with pytest.raises(ToolError) as err:
+        get_file(catalog, secret / "salary.xlsx", data_dir, exclude_root_ids={rid})
+    assert err.value.code == "not_found"
+
+
+def test_excluded_root_filter_is_not_found(catalog, tmp_path: Path):
+    rid = _root(catalog, tmp_path / "secret", "secret")
+    with pytest.raises(ToolError) as err:
+        search_files(catalog, root=str(tmp_path / "secret"), exclude_root_ids={rid})
+    assert err.value.code == "not_found"
+
+
 def test_get_file_sees_markdown_cache(catalog, root: Path, data_dir: Path):
     cache_dir = data_dir / "cache" / "md"
     md = cache_path(cache_dir, HASH_A)

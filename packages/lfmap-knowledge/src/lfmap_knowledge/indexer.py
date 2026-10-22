@@ -53,17 +53,17 @@ def knowledge_roots(ctx: ToolContext) -> list[Path]:
     return roots
 
 
-def _data_dir(ctx: ToolContext) -> Path:
+def data_dir_of(ctx: ToolContext) -> Path:
     if ctx.data_dir is None:
         raise ToolError("internal", "The knowledge plugin needs a data_dir")
     return ctx.data_dir
 
 
-def _store(data_dir: Path, model: str) -> LanceVectorStore:
+def vector_store(data_dir: Path, model: str) -> LanceVectorStore:
     return LanceVectorStore(data_dir / "vectors", f"chunks_{model_slug(model)}")
 
 
-def _sensitivity(settings: dict[str, Any], root: Path) -> str:
+def root_sensitivity(settings: dict[str, Any], root: Path) -> str:
     levels = {os.path.normcase(os.path.normpath(k)): v for k, v in settings.get("sensitivity", {}).items()}
     level = levels.get(os.path.normcase(os.path.normpath(root)), "normal")
     if level not in SENSITIVITIES:
@@ -76,7 +76,7 @@ def _sync_roots(conn: sqlite3.Connection, roots: list[Path], settings: dict[str,
     ids: dict[str, int] = {}
     for root in roots:
         conn.execute("INSERT OR IGNORE INTO roots (path) VALUES (?)", (str(root),))
-        conn.execute("UPDATE roots SET sensitivity = ? WHERE path = ?", (_sensitivity(settings, root), str(root)))
+        conn.execute("UPDATE roots SET sensitivity = ? WHERE path = ?", (root_sensitivity(settings, root), str(root)))
         ids[str(root)] = conn.execute("SELECT root_id FROM roots WHERE path = ?", (str(root),)).fetchone()[0]
     configured = set(ids.values())
     dropped = [row["root_id"] for row in conn.execute("SELECT root_id FROM roots") if row["root_id"] not in configured]
@@ -242,7 +242,7 @@ def reindex(
         if not targets:
             raise ToolError("invalid_input", "root is not a knowledge root", {"root": root})
 
-    data_dir = _data_dir(ctx)
+    data_dir = data_dir_of(ctx)
     data_dir.mkdir(parents=True, exist_ok=True)
     out: dict[str, Any] = dict.fromkeys(
         ("scanned", "new", "changed", "unchanged", "deleted", "skipped", "extracted", "embedded", "errors"), 0
@@ -254,7 +254,7 @@ def reindex(
             migrate(conn)
             root_ids, out["deleted"] = _sync_roots(conn, roots, ctx.settings)
             model = embedder.model if embedder is not None else ctx.settings.get("embed_model", DEFAULT_EMBED_MODEL)
-            store = _store(data_dir, model)
+            store = vector_store(data_dir, model)
             if full:
                 _reset_all(conn, data_dir / "vectors")
             version = extractor_version()
@@ -307,7 +307,7 @@ def _indexer_busy(data_dir: Path) -> bool:
 
 def status(ctx: ToolContext, ollama_available: bool) -> StatusOutput:
     """Counts from a read-only catalog connection; never takes the writer lock for longer than a probe."""
-    data_dir = _data_dir(ctx)
+    data_dir = data_dir_of(ctx)
     roots: list[RootStatus] = []
     by_status: dict[str, int] = {}
     chunks = 0

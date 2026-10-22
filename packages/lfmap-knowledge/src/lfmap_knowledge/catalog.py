@@ -33,9 +33,10 @@ def _same_path(a: str, b: str) -> bool:
     return os.path.normcase(os.path.normpath(a)) == os.path.normcase(os.path.normpath(b))
 
 
-def _root_id(conn: sqlite3.Connection, root: str) -> int:
+def root_id(conn: sqlite3.Connection, root: str, exclude_root_ids: Collection[int] = frozenset()) -> int:
+    """Catalog id of a root path; a root that is unknown or excluded is not_found alike."""
     for row in conn.execute("SELECT root_id, path FROM roots"):
-        if _same_path(row["path"], root):
+        if _same_path(row["path"], root) and row["root_id"] not in exclude_root_ids:
             return row["root_id"]
     raise ToolError("not_found", "Root is not in the catalog", {"root": root})
 
@@ -44,7 +45,7 @@ def _ext(ext: str) -> str:
     return "." + ext.lstrip(".").lower()
 
 
-def _after_ns(modified_after: str) -> int:
+def after_ns(modified_after: str) -> int:
     try:
         moment = datetime.fromisoformat(modified_after)
     except ValueError as error:
@@ -99,13 +100,13 @@ def search_files(
         where.append("f.status != 'deleted'")
     if root:
         where.append("f.root_id = ?")
-        params.append(_root_id(conn, root))
+        params.append(root_id(conn, root, exclude_root_ids))
     if ext:
         where.append("f.ext = ?")
         params.append(_ext(ext))
     if modified_after:
         where.append("f.mtime_ns > ?")
-        params.append(_after_ns(modified_after))
+        params.append(after_ns(modified_after))
     if exclude_root_ids:
         where.append(f"f.root_id NOT IN ({','.join('?' * len(exclude_root_ids))})")
         params.extend(exclude_root_ids)
@@ -149,6 +150,8 @@ def get_file(
 ) -> GetFileOutput:
     """Catalog entry of one file with its chunk count, live duplicates and whether its Markdown is cached."""
     row = find_file(conn, path)
+    if row["root_id"] in exclude_root_ids:
+        raise ToolError("not_found", "File is not in the catalog", {"path": str(path)})
     content_hash = row["content_hash"]
     if not content_hash:
         return GetFileOutput(file=_file_info(row), chunk_count=0, duplicates=[], markdown_cached=False)
