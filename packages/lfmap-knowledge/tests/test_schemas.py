@@ -1,9 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from lfmap_core import ToolError
 from lfmap_core.registry import Registry, load_entry
-from lfmap_core.runtime import default_context
 from lfmap_knowledge import schemas
 from lfmap_knowledge.tool import KnowledgeTool
 
@@ -32,17 +30,6 @@ def test_discovered_through_entry_point():
 def test_inputs_are_flat(name):
     model = getattr(schemas, f"{_pascal(name)}Input")
     assert "$defs" not in model.model_json_schema()
-
-
-@pytest.mark.parametrize("name", [name for name in OPERATIONS if name not in ("status", "reindex")])
-def test_operations_not_implemented_yet(name):
-    tool = KnowledgeTool(default_context("knowledge"))
-    inputs = {"search": {"query": "x"}, "get_context": {"question": "x"}, "get_file": {"path": "C:/x"}}
-    inputs["related"] = {"path": "C:/x"}
-    inp = getattr(schemas, f"{_pascal(name)}Input")(**inputs.get(name, {}))
-    with pytest.raises(ToolError) as error:
-        getattr(tool, name)(inp)
-    assert error.value.code == "internal"
 
 
 def test_search_defaults_and_bounds():
