@@ -369,10 +369,14 @@ def build_app(registry: Registry) -> typer.Typer:
         dry_run: Annotated[bool, typer.Option("--dry-run", help="Print the schtasks commands only.")] = False,
         repo: Annotated[Path | None, typer.Option("--repo", help="Repository root; default this checkout.")] = None,
         uv: Annotated[Path | None, typer.Option("--uv", help="Path to uv.exe; default PATH, then WinGet.")] = None,
+        pwsh: Annotated[
+            Path | None, typer.Option("--pwsh", help="Path to pwsh.exe; default found by full path.")
+        ] = None,
     ) -> None:
         """Create or update a task in \\LFMAP\\ for each enabled job; delete the tasks of the others."""
         repo = repo or jobs.repo_root()
         uv = uv or jobs.find_uv()
+        pwsh = pwsh or jobs.find_pwsh()
         job_list = jobs.load_jobs()
         try:
             existing = jobs.existing_tasks()
@@ -382,7 +386,7 @@ def build_app(registry: Registry) -> typer.Typer:
             typer.echo(f"Warning: {error.message}; assuming no task is registered yet", err=True)
             existing = set()
         script = repo / "scripts" / "Invoke-LfmapJob.ps1"
-        for command in jobs.register_commands(job_list, existing, repo, uv, script):
+        for command in jobs.register_commands(job_list, existing, repo, uv, script, pwsh):
             typer.echo(subprocess.list2cmdline(command))
             if not dry_run:
                 jobs._schtasks(command)

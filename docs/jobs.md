@@ -69,7 +69,10 @@ uv run lfmap jobs doctor           # read-only machine check; exit 1 when a chec
 `register` creates or updates (`/F`) a task for every enabled job and deletes the tasks of jobs that are disabled
 or no longer in `jobs.toml`. It only ever touches tasks directly in `\LFMAP\`. `--dry-run` prints the
 `schtasks` commands without running them. `--repo` (default: this checkout) and `--uv` (default: `uv` on
-`PATH`, then `%LOCALAPPDATA%\Microsoft\WinGet\Links\uv.exe`) are written into each task.
+`PATH`, then `%LOCALAPPDATA%\Microsoft\WinGet\Links\uv.exe`) are written into each task. So is the full path of
+PowerShell 7 (`--pwsh`; default `%ProgramFiles%\PowerShell\7\pwsh.exe`, then the Microsoft Store alias
+`%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe`, then `PATH`): Task Scheduler cannot start the Store `pwsh` by
+name, and the task then fails with `0x80070002`.
 
 ## The runner script
 
@@ -96,6 +99,7 @@ only runs `schtasks /Query` and `powercfg /query`, and asks Ollama for its versi
 | Check | `ok` | `warn` | `FAIL` |
 | --- | --- | --- | --- |
 | `uv` | uv found (same rule as the runner script) | | uv not found |
+| `pwsh` | PowerShell 7 found, and every task starts it by full path | | not found, or a task starts plain `pwsh`; run `register` |
 | `jobs_file` | `jobs.toml` valid, every plugin and operation exists | no `jobs.toml` | invalid file, or a job names an unknown plugin or operation |
 | `tasks` | a task in `\LFMAP\` for each enabled job, and no other | no `schtasks`, or no job and no task | a task is missing, or a disabled or removed job still has one; run `register` |
 | `logon_mode` | every task runs whether you are logged on or not | a task runs only while you are logged on (`InteractiveToken`), or no task | |

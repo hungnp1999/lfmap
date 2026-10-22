@@ -50,6 +50,15 @@ def jobs_file(user_dirs, monkeypatch) -> Path:
     return path
 
 
+PWSH = Path("C:/Program Files/PowerShell/7/pwsh.exe")
+REAL_FIND_PWSH = jobs.find_pwsh
+
+
+@pytest.fixture(autouse=True)
+def fixed_pwsh(monkeypatch):
+    monkeypatch.setattr(jobs, "find_pwsh", lambda: PWSH)
+
+
 def run(registry, *args):
     return runner.invoke(build_app(registry), list(args))
 
@@ -145,6 +154,28 @@ def test_task_command_weekly():
     assert command[command.index("/SC") + 1] == "WEEKLY"
     assert command[command.index("/D") + 1] == "MON"
     assert command[command.index("/ST") + 1] == "07:30"
+
+
+def test_task_command_with_full_pwsh_path():
+    command = jobs.task_command(job(), REPO, UV, SCRIPT, PWSH)
+    action = command[command.index("/TR") + 1]
+    assert action.startswith(f'"{PWSH}" -NoProfile -File ')
+
+
+def test_find_pwsh_prefers_full_paths(user_dirs, monkeypatch):
+    monkeypatch.setenv("ProgramFiles", str(user_dirs / "pf"))
+    monkeypatch.setattr(jobs.shutil, "which", lambda name: None)
+    with pytest.raises(ToolError) as error:
+        REAL_FIND_PWSH()
+    assert error.value.code == "not_found"
+    store = user_dirs / "localappdata" / "Microsoft" / "WindowsApps" / "pwsh.exe"
+    store.parent.mkdir(parents=True)
+    store.write_bytes(b"")
+    assert REAL_FIND_PWSH() == store
+    msi = user_dirs / "pf" / "PowerShell" / "7" / "pwsh.exe"
+    msi.parent.mkdir(parents=True)
+    msi.write_bytes(b"")
+    assert REAL_FIND_PWSH() == msi
 
 
 def test_task_command_every_minutes():
@@ -269,6 +300,8 @@ def test_register_runs_each_command(jobs_file, registry, monkeypatch):
     deleted = {c[3] for c in calls if c[1] == "/Delete"}
     assert created == {"\\LFMAP\\hello", "\\LFMAP\\weekly-write"}
     assert deleted == {"\\LFMAP\\echo-hello", "\\LFMAP\\old"}
+    actions = [c[c.index("/TR") + 1] for c in calls if c[1] == "/Create"]
+    assert all(action.startswith(f'"{PWSH}" ') for action in actions)
 
 
 def _no_schtasks(args):

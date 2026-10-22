@@ -35,7 +35,8 @@ POWER = ("powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE")
 TASKS_CSV = '"\\LFMAP\\hello","N/A","Ready"\n"\\Microsoft\\Windows\\Other","N/A","Ready"\n'
 
 
-def task_xml(logon: str = "InteractiveToken", wake: str = "false") -> str:
+def task_xml(logon: str = "InteractiveToken", wake: str = "false", command: str | None = None) -> str:
+    action = f"\n  <Actions><Exec><Command>{command}</Command></Exec></Actions>" if command else ""
     return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Principals>
@@ -46,7 +47,7 @@ def task_xml(logon: str = "InteractiveToken", wake: str = "false") -> str:
   </Principals>
   <Settings>
     <WakeToRun>{wake}</WakeToRun>
-  </Settings>
+  </Settings>{action}
 </Task>
 """
 
@@ -114,6 +115,7 @@ def system(monkeypatch):
     monkeypatch.setattr(jobs_doctor, "_run", fake_run)
     monkeypatch.setattr(jobs_doctor, "_http_get", fake_http_get)
     monkeypatch.setattr(jobs, "find_uv", lambda: Path("C:/uv/uv.exe"))
+    monkeypatch.setattr(jobs, "find_pwsh", lambda: Path("C:/Program Files/PowerShell/7/pwsh.exe"))
     return {"outputs": outputs, "http": http, "calls": calls}
 
 
@@ -127,7 +129,7 @@ def no_schtasks() -> ToolError:
 
 def test_check_names_and_order(jobs_file, registry, system):
     names = [check.name for check in jobs_doctor.run_checks(registry)]
-    assert names == ["uv", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"]
+    assert names == ["uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"]
 
 
 def test_default_machine(jobs_file, registry, system):
@@ -294,7 +296,7 @@ def test_cli_doctor_exit_0_without_false(jobs_file, registry, system):
     system["outputs"][XML_QUERY] = task_xml(logon="Password", wake="true")
     result = runner.invoke(build_app(registry), ["jobs", "doctor"])
     assert result.exit_code == 0
-    for name in ("uv", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"):
+    for name in ("uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"):
         assert name in result.output
 
 
@@ -302,6 +304,35 @@ def test_cli_doctor_json(jobs_file, registry, system):
     result = runner.invoke(build_app(registry), ["jobs", "doctor", "--json"])
     assert result.exit_code == 1
     rows = json.loads(result.output)
-    assert [row["name"] for row in rows][:2] == ["uv", "jobs_file"]
+    assert [row["name"] for row in rows][:3] == ["uv", "pwsh", "jobs_file"]
     assert set(rows[0]) == {"name", "ok", "detail", "fix"}
     assert {row["name"]: row["ok"] for row in rows}["wake"] is False
+
+
+def test_pwsh_found(jobs_file, registry, system):
+    check = by_name(jobs_doctor.run_checks(registry))["pwsh"]
+    assert check.ok is True
+    assert "pwsh.exe" in check.detail
+
+
+def test_task_with_bare_pwsh_fails(jobs_file, registry, system):
+    system["outputs"][XML_QUERY] = task_xml(command="pwsh")
+    check = by_name(jobs_doctor.run_checks(registry))["pwsh"]
+    assert check.ok is False
+    assert "hello" in check.detail
+    assert "jobs register" in check.fix
+
+
+def test_task_with_full_pwsh_path_is_ok(jobs_file, registry, system):
+    system["outputs"][XML_QUERY] = task_xml(command=r"C:\Users\x\AppData\Local\Microsoft\WindowsApps\pwsh.exe")
+    assert by_name(jobs_doctor.run_checks(registry))["pwsh"].ok is True
+
+
+def test_missing_pwsh(jobs_file, registry, system, monkeypatch):
+    def missing() -> Path:
+        raise ToolError("not_found", "pwsh was not found; pass --pwsh")
+
+    monkeypatch.setattr(jobs, "find_pwsh", missing)
+    check = by_name(jobs_doctor.run_checks(registry))["pwsh"]
+    assert check.ok is False
+    assert check.fix

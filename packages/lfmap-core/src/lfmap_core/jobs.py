@@ -151,8 +151,9 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None) -> BaseMo
     return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
 
-def task_command(job: Job, repo: Path, uv: Path, script: Path) -> list[str]:
-    action = f'pwsh -NoProfile -File "{script}" -JobId {job.id} -RepoPath "{repo}" -UvPath "{uv}"'
+def task_command(job: Job, repo: Path, uv: Path, script: Path, pwsh: Path | None = None) -> list[str]:
+    shell = f'"{pwsh}"' if pwsh else "pwsh"
+    action = f'{shell} -NoProfile -File "{script}" -JobId {job.id} -RepoPath "{repo}" -UvPath "{uv}"'
     if len(action) > MAX_ACTION:
         raise ToolError("invalid_input", f"Task action is longer than {MAX_ACTION} characters", {"action": action})
     return ["schtasks", "/Create", "/TN", TASK_FOLDER + job.id, "/TR", action, *job.schedule.task_args(), "/F"]
@@ -173,11 +174,13 @@ def registered_tasks(query_csv: str) -> set[str]:
     return ids
 
 
-def register_commands(jobs: list[Job], existing: set[str], repo: Path, uv: Path, script: Path) -> list[list[str]]:
+def register_commands(
+    jobs: list[Job], existing: set[str], repo: Path, uv: Path, script: Path, pwsh: Path | None = None
+) -> list[list[str]]:
     """Create a task for every enabled job; delete existing tasks whose job is disabled or gone."""
     enabled = [job for job in jobs if job.enabled]
     stale = existing - {job.id for job in enabled}
-    return [task_command(job, repo, uv, script) for job in enabled] + [delete_command(i) for i in sorted(stale)]
+    return [task_command(job, repo, uv, script, pwsh) for job in enabled] + [delete_command(i) for i in sorted(stale)]
 
 
 def _schtasks(args: list[str]) -> str:
@@ -209,3 +212,20 @@ def find_uv() -> Path:
     if winget.is_file():
         return winget
     raise ToolError("not_found", "uv was not found; pass --uv", {"tried": ["PATH", str(winget)]})
+
+
+def find_pwsh() -> Path:
+    """PowerShell 7 by full path: Task Scheduler cannot start the Microsoft Store `pwsh` by name."""
+    base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+    program_files = os.environ.get("ProgramFiles") or r"C:\Program Files"
+    candidates = [
+        Path(program_files) / "PowerShell" / "7" / "pwsh.exe",
+        Path(base) / "Microsoft" / "WindowsApps" / "pwsh.exe",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    found = shutil.which("pwsh")
+    if found:
+        return Path(found)
+    raise ToolError("not_found", "pwsh was not found; pass --pwsh", {"tried": [*map(str, candidates), "PATH"]})

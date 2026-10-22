@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `lfmap jobs register` writes the full path of `pwsh` into each task (`--pwsh` overrides). With PowerShell from the Microsoft Store, Task Scheduler could not start `pwsh` by name, so every job failed with `0x80070002`, even at the lock screen. `lfmap jobs doctor` gains a `pwsh` check that also flags tasks registered with plain `pwsh`.
+
 ### Added
 
 - `lfmap jobs doctor [--json]` (Roadmap 1.8, TC-J4): read-only checks for uv, `jobs.toml`, the tasks in `\LFMAP\`, their logon type and wake setting, sleep on AC power and, when an enabled job uses a plugin with network access, Ollama. Exit 1 when a check fails. A task that runs only while you are logged on is a warning, not a failure. See `docs/jobs.md`.
