@@ -123,12 +123,33 @@ Net: **about 20–35 % of Claude tokens on batches of S cards**, near 0 on secur
 - **ADR-004** (no agent framework in Phase 0–1): no conflict if the Leading tier stays plain Python outside the product, like `qwen-loop`.
 - **ADR-004 note B6** ("qwen only gets S cards with strict tests; M cards and security go to Claude Code") and **Blueprint §4.4** ("Review chất lượng → Cloud"): **conflict** once a local model does any review or splits Claude's packages. Shadow mode (§3) does not conflict because Claude still reviews everything; the "filter" stage does. Hence the ADR draft below, to accept before the filter stage, not before the benchmark.
 
+## 9a. Getting the Working tier better over time (decided 2026-10-23)
+
+The owner asked how a small model can gain skill over time, the way a worker gains experience. Three levels were weighed; the owner decided (2026-10-23 09:36Z):
+
+| Level | What | Decision |
+| --- | --- | --- |
+| 1 Experience store | no weight changes: a lessons file and accepted examples are retrieved into each prompt | **adopt now** |
+| 2 Fine-tuning (LoRA/QLoRA on a 7–14B) | train on accepted solutions | **dropped**: too much effort and risk for a solo developer (hundreds of examples needed, redo on each new base model, Anthropic terms forbid using Claude output to build competing models) |
+| 3 Swap to newer base models | re-run B0 on new releases | **not the main path**: depends on others; the owner prefers to build and customise his own setup. Model tags stay configurable so a swap remains cheap |
+
+Level 1 design, plain Python in `qwen-loop` (`lfmap-tools`, outside the product):
+
+- `lessons.toml`: one entry per recurring mistake (`id`, `rule`, `applies_to` glob or tag, `seen` count, `last_seen`, source run). Examples from the K-batches: do not define fixtures that `conftest.py` provides; keep existing docstrings; import what you use (`tomllib`); end the prompt with "NOW WRITE THE COMPLETE <module>.py". The driver adds matching rules to every card prompt, at most ~10 to keep prompts under ~4K tokens.
+- `examples/`: each card that Claude accepted is saved with its card, final diff and the tests (accepted code only, written by the Working model and fixed by the owner or Claude in review).
+- Retrieval: for a new card, the 1–2 most similar accepted examples are found by embedding the card text with the local `bge-m3` (through `lfmap-knowledge`, or a plain Ollama `/api/embed` call) and pasted as worked examples.
+- Feedback: after every review, Claude (or the Leading Agent once trusted) adds or bumps lessons from the findings; a lesson that has not matched in 3 batches is retired so the list stays short.
+- Skill metric: first-round green rate per batch (K4–K7 baseline: 0/4 green in round 1, 3/4 green by tests at the end), rounds per card, Claude fixes per card. Logged in `summary.csv`.
+
+Nothing leaves the machine; no new dependency (TOML via `tomllib`, embeddings via the existing Ollama model).
+
 ## 10. Tasks
 
 | # | Task | Environment | Done when | Needs owner |
 | --- | --- | --- | --- | --- |
 | L0 | B0 benchmark: pull 3 (opt. 4) models to `D:\AI\models\ollama`, measure tok/s, VRAM, swap time at `num_ctx` 8K/16K; review 10 diffs (6 from K4–K7 with known verdicts, 4 with seeded bugs); split one past package | Local (DIEP-ANH, GPU), driven by Claude through Remote Control | `bench.csv` + short report in `docs/research/` | **yes: approval in the Remote Control thread (sentence below); ~60 GB download, ~1–2 h GPU** |
 | L1 | Extend `qwen-loop` with package/standard/report files and the quote check | Cloud (code) + Local (run) | unit tests green; dry run on a past package | no |
+| L1b | Experience store (§9a): `lessons.toml`, `examples/`, retrieval of 1–2 similar accepted examples with `bge-m3`, first-round green metric; seed lessons from the K-batch reviews | Cloud (code, Claude Code session) + Local (run) | unit tests green; next qwen batch logs which lessons and examples each prompt carried | no |
 | L2 | Shadow run inside the 2a.1 spike on a real batch | Local + Claude review | §3 thresholds measured | no |
 | L3 | Decide ADR-022 | owner | Accepted or Rejected | **yes** |
 
