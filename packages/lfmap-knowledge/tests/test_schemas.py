@@ -47,6 +47,13 @@ def test_get_context_budget_bounds():
             schemas.GetContextInput(question="q", token_budget=bad)
 
 
+def test_get_context_min_relative_score_bounds():
+    assert schemas.GetContextInput(question="q").min_relative_score == 0.5
+    for bad in (-0.1, 1.1):
+        with pytest.raises(ValidationError):
+            schemas.GetContextInput(question="q", min_relative_score=bad)
+
+
 def test_get_context_output_is_marked_untrusted():
     citation = schemas.Citation(path="D:/a.md", heading_path="A > B", char_start=0, char_end=5)
     out = schemas.GetContextOutput(

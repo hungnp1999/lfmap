@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 _HEADING = re.compile(r"^(#{1,6})[ \t]+(.*)$", re.MULTILINE)
 _SENTENCE_ENDS = (". ", "? ", "! ")
+HEADING_MAX_CHARS = 120
+SENTENCE_HEADING_WORDS = 8
 
 
 @dataclass(frozen=True)
@@ -24,7 +26,8 @@ Span = tuple[int, int, str]  # char_start, char_end, text
 def chunk_markdown(text: str, target_chars: int = 1500, max_chars: int = 3000) -> list[Chunk]:
     """Chunk Markdown without overlap; offsets point into text for citations.
 
-    Sections start at ATX headings and carry a heading path such as "A > B". Blocks (runs of
+    Sections start at ATX headings and carry a heading path such as "A > B". A heading line
+    that reads like body text (see _is_heading) stays in the current section. Blocks (runs of
     non-blank lines) are merged up to target_chars. A paragraph longer than max_chars is cut at
     a sentence boundary or hard cut. A table longer than max_chars is cut by rows and every
     piece repeats the header and separator lines; for those pieces char_start/char_end cover
@@ -41,12 +44,26 @@ def _sections(text: str) -> list[tuple[int, int, str]]:
     sections: list[tuple[int, int, str]] = []
     start, path = 0, ""
     for match in _HEADING.finditer(text):
+        if not _is_heading(match.group(2)):
+            continue
         sections.append((start, match.start(), path))
         level = len(match.group(1))
         stack = [(n, title) for n, title in stack if n < level] + [(level, match.group(2).strip())]
         start, path = match.start(), " > ".join(title for _, title in stack)
     sections.append((start, len(text), path))
     return [section for section in sections if section[0] < section[1]]
+
+
+def _is_heading(title: str) -> bool:
+    """False for a sentence markitdown turned into a heading, e.g. a .docx opening paragraph in italics.
+
+    Such a title is longer than HEADING_MAX_CHARS, or ends with a period after at least
+    SENTENCE_HEADING_WORDS words. Emphasis marks around the title are ignored.
+    """
+    plain = title.strip().strip("*_").strip()
+    if len(plain) > HEADING_MAX_CHARS:
+        return False
+    return not (plain.endswith(".") and len(plain.split()) >= SENTENCE_HEADING_WORDS)
 
 
 def _blocks(text: str, start: int, end: int) -> list[tuple[int, int]]:

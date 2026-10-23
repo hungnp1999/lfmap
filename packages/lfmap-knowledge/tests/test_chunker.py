@@ -104,3 +104,26 @@ def test_ordinals_are_consecutive():
     text = f"# A\n\n{_sentences(100)}\n\n# B\n\n{_sentences(100)}\n"
     chunks = chunk_markdown(text)
     assert [c.ordinal for c in chunks] == list(range(len(chunks)))
+
+
+def test_italic_opening_sentence_is_not_a_heading():
+    text = (
+        "# *Tài liệu này mô tả quy trình mua sắm thiết bị văn phòng cho toàn công ty ABC.*\n\n"
+        "Nội dung mở đầu.\n\n# Phạm vi\n\nÁp dụng cho mọi phòng ban.\n"
+    )
+    chunks = chunk_markdown(text)
+    _assert_slices(text, chunks)
+    assert _with(chunks, "Nội dung mở đầu").heading_path == ""
+    assert _with(chunks, "Áp dụng").heading_path == "Phạm vi"
+
+
+def test_overlong_heading_is_body_text():
+    title = "Báo cáo " + "rất dài " * 20
+    chunks = chunk_markdown(f"# A\n\n## {title}\n\nPhần thân.\n")
+    assert _with(chunks, "Phần thân").heading_path == "A"
+
+
+def test_short_headings_with_punctuation_are_kept():
+    chunks = chunk_markdown("# Điều 1.\n\nPhần một.\n\n# Vì sao cần quy trình này?\n\nPhần hai.\n")
+    assert _with(chunks, "Phần một").heading_path == "Điều 1."
+    assert _with(chunks, "Phần hai").heading_path == "Vì sao cần quy trình này?"
