@@ -31,6 +31,7 @@ Checked at `606342b` (2026-10-23) by reading module headers, searching the tree 
 | lfmap-core: approval tiers, grants, audit | `approval.py`, `grants.py` | In-house | — | Claude Code | #5, #6, #17 |
 | lfmap-core: reads outside roots, `plugins health`, `config`, `audit tail` | `cli.py`, `permissions.py`, `config.py` | In-house | A qwen2.5-coder draft of TC-C1/C3/C5 was used as a reference only | Claude | #9 |
 | lfmap-core: jobs, approval queue, `jobs doctor` | `jobs.py`, `approvals.py`, `jobs_doctor.py` | In-house | Windows Task Scheduler and `schtasks` documented behaviour | Claude Code | #25, #27, #29 |
+| lfmap-core: onnxruntime telemetry opt-out | `telemetry.py` | In-house | onnxruntime documented `ORT_DISABLE_TELEMETRY` setting | Claude Code | #62 |
 | lfmap-knowledge: skeleton, schemas, catalog store | `packages/lfmap-knowledge/src/lfmap_knowledge/{__init__,schemas,store}.py`, `lfmap.toml` | In-house | — | qwen2.5-coder:14b, review fixes by Claude | #18 |
 | lfmap-knowledge: scanner | `scanner.py` | In-house | — | Claude (qwen draft rewritten in review) | #18 |
 | lfmap-knowledge: extract, FTS, embed | `extract.py`, `fts.py`, `embed.py` | In-house | Ollama `/api/embed` HTTP API (MIT) as a protocol | qwen2.5-coder:14b via qwen-loop, reviewed and corrected by Claude; later changes to `embed.py` by Claude Code | #26; #45, #46, #51 |

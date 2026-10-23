@@ -1,7 +1,10 @@
 """LFMAP core runtime."""
 
 from lfmap_core.errors import ErrorCode, ToolError
+from lfmap_core.telemetry import disable_telemetry
 from lfmap_core.tool import OperationSpec, Tool, ToolContext, invoke, operation
+
+disable_telemetry()
 
 __version__ = "0.2.0"
 

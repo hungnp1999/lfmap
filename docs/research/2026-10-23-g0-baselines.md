@@ -53,7 +53,7 @@ Reading:
 
 - The byte share will stay near 100 % for any Python product that ships compiled libraries; track its trend and metric 1, not the absolute value.
 - LanceDB is more than half of the install. The plan already watches sqlite-vec as the way to drop it; this baseline shows that switch is the single largest reduction available.
-- `onnxruntime` already arrives through `markitdown` → `magika` (file type detection), not only through Docling. On Windows `magika` pins `onnxruntime<=1.20.1`, so the telemetry found by the Docling spike (1.29+) does not apply while that pin holds; the `ORT_DISABLE_TELEMETRY=1` task should cover the markitdown plugin too, for the day the pin is lifted.
+- `onnxruntime` already arrives through `markitdown` → `magika` (file type detection), not only through Docling. On Windows `magika` pins `onnxruntime<=1.20.1`, so the telemetry found by the Docling spike (1.29+) does not apply while that pin holds; `lfmap-core` sets `ORT_DISABLE_TELEMETRY=1` on import since #62, which covers the markitdown plugin too.
 - Windows numbers differ (for example `pywin32`); compare releases on the same platform, using the CI log.
 
 ## RT-13 Provenance register
