@@ -160,7 +160,21 @@ Quality gaps to handle in the implementation:
 
 Cost: Docling is 50 to 135 times slower than MarkItDown on CPU. For knowledge reindexing it fits only as an opt-in backend for PDFs that need structure, not as the default.
 
-GPU run: the CUDA wheel (`torch` 2.11.0+cu128 from `download.pytorch.org`, 2.6 GB) failed to download (connection reset, five retries), so `ACCEL_DEVICE=cuda` stopped with `AcceleratorDeviceNotAvailableError`. The script now raises the uv HTTP timeout and has `-Gpu -SkipCpu` for a GPU-only retry; results will be added here. The GPU path is optional for 1.2.
+### GPU run (RTX 5060 Ti 16 GB, 2026-10-24)
+
+`torch` 2.11.0+cu128 (and `torchvision` 0.26.0+cu128) installed from a resumable `curl` download after `uv` failed twice on the 2.6 GB wheel (connection reset). Same PDFs, `ACCEL_DEVICE=cuda`:
+
+| File | CPU | GPU |
+|---|---|---|
+| `headings.pdf` (first file) | 4.58 s | 33.4 s (one-time CUDA warm-up) |
+| `table.pdf` | 5.76 s | 0.76 s |
+| `scanned.pdf` | 2.37 s | 0.59 s |
+| `long30.pdf` (30 pages) | 93.6 s | 11.3 s = **0.38 s/page** (8.3x faster) |
+
+- Output is byte-identical to the CPU run for all four files.
+- Import and pipeline init 10.6 s (CPU 4.9 s), plus about 30 s of CUDA warm-up on the first document of a process.
+- `nvidia-smi` sampling: peak 1,300 MiB VRAM (545 MiB idle), at most 16 % utilization, 24 W. The log was cut off before `long30.pdf`, so the true peak is not recorded; layout and TableFormer are small (heron 43M parameters) and are not expected to need much more.
+- Conclusion: the GPU helps long reindex runs, not single conversions (the warm-up dominates). CPU stays the default; the implementation can expose the device as a setting. Running it next to an Ollama model that already holds about 14 GB of VRAM is tight.
 
 ## 9. Recommendation
 
