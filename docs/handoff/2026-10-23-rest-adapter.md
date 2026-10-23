@@ -2,7 +2,7 @@
 
 Spec: [`docs/specs/rest.md`](../specs/rest.md). Test viết sẵn: [`prep/2026-10-23-rest/`](prep/2026-10-23-rest/). Nếu code trên `main` không khớp với kế hoạch này, dừng lại và hỏi.
 
-**Trạng thái: thiết kế xong, CHƯA code.** ADR-003 (Accepted) nói REST chỉ bật khi có client cần (Tauri UI, n8n). Hiện chưa có client nào, nên Hùng quyết định code ngay ở Phase 1b hay đợi đầu Phase 2 (xem "Câu hỏi còn mở" 1).
+**Trạng thái: thiết kế xong, CHƯA code.** Hùng chốt 2026-10-23 02:09Z: giữ ADR-003, đợi Phase 2. Task R1 chỉ bắt đầu vào đầu Phase 2, khi n8n hoặc Tauri UI cần REST. Đến lúc đó kiểm lại phiên bản FastAPI/Starlette/Uvicorn trong `uv.lock` trước khi chạy test chuẩn bị sẵn.
 
 ## Bối cảnh
 
@@ -65,13 +65,13 @@ Tiêu chí hoàn thành R1:
 
 ## Câu hỏi còn mở
 
-1. **Code R1 bây giờ (Phase 1b) hay đầu Phase 2?** Khuyến nghị: đợi đầu Phase 2, làm cùng lúc với Tauri UI hoặc n8n, theo ADR-003; spec và test đã sẵn, R1 khoảng một phiên Cloud. Nếu Hùng muốn đóng 1.3 ngay thì R1 chạy được trên Cloud hôm nay, không đụng ADR-003 vì mọi plugin thật vẫn `rest = false`.
+1. ~~Code R1 bây giờ hay đầu Phase 2?~~ Đã chốt (Hùng, 2026-10-23): đầu Phase 2, khi n8n hoặc Tauri cần REST. ADR-003 giữ nguyên.
 2. **n8n chạy trong Docker** không gọi được 127.0.0.1 của máy (nó dùng `host.docker.internal`). Khi dùng n8n: chạy n8n trực tiếp (`npx n8n`) trên loopback, hoặc ADR mới cho bind Docker/LAN. Liên quan ADR-005 (Proposed).
 3. **Tauri UI** gửi `Origin` riêng; Phase 2 chọn giữa `[rest] allowed_origins` trong config.toml hoặc gọi SDK trực tiếp qua sidecar Python (không cần REST).
 
 ## Cập nhật tài liệu dự án
 
-- ROADMAP 1.3: "thiết kế xong, chờ client (ADR-003)"; ✅ khi PR R1 merge.
+- ROADMAP 1.3: dời sang đầu Phase 2 (Hùng chốt 2026-10-23); ghi "thiết kế xong, code khi n8n/Tauri cần (ADR-003)"; ✅ khi PR R1 merge.
 - DECISIONS: không có ADR mới. ADR-003 giữ nguyên.
 - Plugin Contract §5: ghi "OpenAPI tại `/openapi.json`, `/docs` là trang tĩnh không JS" và §2 "lfmap-core chỉ phục vụ plugin có `rest = true`, luôn cần token, chỉ loopback".
 - License Register: sửa dòng FastAPI (thêm phiên bản 0.161.x, "dependency của lfmap-core, adapter REST"); thêm dòng Starlette (BSD-3-Clause, Ship, đã có qua mcp), Uvicorn (BSD-3-Clause, Ship, đã có qua mcp), annotated-doc (MIT, Ship, đã có qua Typer).

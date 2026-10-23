@@ -1,6 +1,6 @@
 # Module Spec: REST adapter (Roadmap 1.3)
 
-Version 0.1 · 2026-10-23 · Status: design ready, **implementation on hold** (ADR-003: REST is enabled only when a client needs it). Handoff: `docs/handoff/2026-10-23-rest-adapter.md`. Prepared tests: `docs/handoff/prep/2026-10-23-rest/`.
+Version 0.1 · 2026-10-23 · Status: design ready, **implementation deferred to the start of Phase 2**, when n8n or the Tauri UI needs REST (ADR-003; Hùng decided 2026-10-23). Handoff: `docs/handoff/2026-10-23-rest-adapter.md`. Prepared tests: `docs/handoff/prep/2026-10-23-rest/`.
 
 ## 1. Purpose
 
@@ -86,7 +86,7 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8765/tools/echo/say `
 
 ## 9. Open questions
 
-1. **When to build** (ADR-003): now in Phase 1b, or at the start of Phase 2 with the Tauri UI. Decided by Hùng.
+1. ~~When to build~~ Decided 2026-10-23: at the start of Phase 2, when n8n or the Tauri UI needs REST (ADR-003 unchanged).
 2. **n8n in Docker** cannot reach 127.0.0.1 on the host (it calls `host.docker.internal`, which is not loopback). Options when n8n arrives: run n8n natively (`npx n8n`) on loopback, or an ADR for a LAN/docker bind with a stricter token. Not solved here.
 3. **Tauri UI**: its webview sends an `Origin` (e.g. `tauri://localhost` / `http://tauri.localhost`). Phase 2 adds `[rest] allowed_origins` in `config.toml` (exact match, plus CORS for those origins only), or the UI calls the SDK in-process through a Python sidecar and needs no REST at all.
 4. Should REST calls get their own audit field (client name)? Not needed while there is one token.
