@@ -322,3 +322,35 @@ def test_roots_outside_shown_roots_are_hidden_on_mcp(w):
     assert "contract.md" not in _names(out)
     out = get_context(w.db, w.store, w.emb, GetContextInput(question="kangaroo hop"), "mcp", shown)
     assert not any(c.citation.path.startswith(w.roots["private"][1]) for c in out.chunks)
+
+
+class FixedStore:
+    """Returns the same (chunk_id, similarity) list for every query, like a vector store with flat scores."""
+
+    def __init__(self, results: list[tuple[int, float]]) -> None:
+        self.results = results
+
+    def search(self, vector: list[float], limit: int) -> list[tuple[int, float]]:
+        return self.results[:limit]
+
+
+def _fixed_context(w: World, results: list[tuple[int, float]], channel: str = "cli", **kwargs) -> list[str]:
+    inp = GetContextInput(question="xyzzy", **kwargs)
+    return [c.text for c in get_context(w.db, FixedStore(results), w.emb, inp, channel).chunks]
+
+
+def test_context_cuts_vector_only_hits_although_rrf_scores_are_flat(w):
+    flat = [(1, 0.80), (3, 0.62), (2, 0.40)]
+    assert _fixed_context(w, flat) == ["Doanh thu quý 3 tăng mạnh", "kế hoạch tuyển dụng kangaroo"]
+    assert _fixed_context(w, flat, min_relative_score=0.6) == ["Doanh thu quý 3 tăng mạnh"]
+    assert len(_fixed_context(w, flat, min_relative_score=0)) == 3
+
+
+def test_context_cut_ignores_hidden_chunks(w):
+    results = [(4, 0.99), (1, 0.80), (3, 0.62), (2, 0.40)]
+    assert _fixed_context(w, results, channel="mcp") == ["Doanh thu quý 3 tăng mạnh", "kế hoạch tuyển dụng kangaroo"]
+
+
+def test_context_keeps_a_single_or_tied_candidate(w):
+    assert _fixed_context(w, [(3, 0.3)]) == ["kế hoạch tuyển dụng kangaroo"]
+    assert len(_fixed_context(w, [(1, 0.5), (2, 0.5)], min_relative_score=1)) == 2

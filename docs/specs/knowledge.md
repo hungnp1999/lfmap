@@ -183,7 +183,7 @@ class VectorStore(Protocol):  # ADR-013: interface để Phase 3 thay bằng Qdr
 - `mode="keyword"`: FTS5 `bm25`. `mode="vector"`: embed câu hỏi, LanceDB. `mode="hybrid"` (mặc định): RRF `score = Σ 1/(60 + rank)` trên top `4×limit` của mỗi bên. Ollama không chạy → hybrid tự lùi về keyword, `ChunkHit.mode_used = "keyword"`.
 - Một chunk thuộc `content_hash`; đổi ra file bằng file `indexed` đầu tiên theo `rel_path` (các bản trùng ở `duplicates`).
 - Kênh `mcp`/`rest`: bỏ chunk thuộc root `secret`. Cách làm (K10/K12, PR #32, #38): `tool.py` tính `shown_roots` = các root knowledge đang cấu hình và không `secret`; mọi root khác trong catalog (kể cả root vừa đổi sang `secret` hoặc đã gỡ khỏi config) bị ẩn bằng `exclude_root_ids` ở `search`, `get_context`, `search_files`, `related`; ghi một dòng `egress_log` cho mỗi lời gọi trả nội dung (cả `search` vì snippet là nội dung).
-- `get_context`: hybrid `limit=20`, bỏ hit có điểm dưới `min_relative_score` (mặc định 0,5) × điểm hit đầu (L23), rồi lấy lần lượt tới khi `ước lượng token > token_budget` với ước lượng `ceil(len(text) / 3)` (tiếng Việt tốn token hơn tiếng Anh; chọn bảo thủ). Output:
+- `get_context`: hybrid `limit=20`, chỉ giữ hit đạt `min_relative_score` (mặc định 0,5) ở danh sách keyword hoặc vector, sau khi mỗi danh sách được co giãn min-max trên các ứng viên nhìn thấy được (tốt nhất 1, kém nhất trong pool 80 là 0; không dùng điểm RRF vì quá phẳng, L23), rồi lấy lần lượt tới khi `ước lượng token > token_budget` với ước lượng `ceil(len(text) / 3)` (tiếng Việt tốn token hơn tiếng Anh; chọn bảo thủ). Output:
 
 ```python
 class Citation(BaseModel):
