@@ -126,6 +126,9 @@ class GetContextInput(BaseModel):
     question: str = Field(..., min_length=1, description="The question to get context for.")
     root: str = Field("", description="The root directory to search.")
     token_budget: int = Field(4000, ge=200, le=50000, description="The token budget for the context.")
+    min_relative_score: float = Field(
+        0.5, ge=0, le=1, description="Drop chunks scoring below this fraction of the best chunk; 0 keeps all."
+    )
 
 
 class GetContextOutput(BaseModel):

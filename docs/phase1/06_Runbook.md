@@ -86,7 +86,7 @@ Cách dùng: tìm triệu chứng, chạy bước chẩn đoán, mở đúng fil
 1. `claude mcp list` → `lfmap` phải `Connected`, server chạy với `--plugins knowledge` (xem RB-03 Phase 0).
 2. So kết quả kênh `cli` và `mcp`: `uv run lfmap knowledge search --query "..."`. CLI thấy mà Claude không thấy → root `secret` hoặc root không còn trong `${knowledge}` (đúng thiết kế).
 3. Tìm từ khóa không dấu kém: dùng `hybrid` (mặc định) và kiểm Ollama đang chạy (`mode_used`).
-4. Claude cắt bớt ngữ cảnh: giảm `token_budget` (ước lượng 3 ký tự/token là thô).
+4. Claude cắt bớt ngữ cảnh: giảm `token_budget` (ước lượng 3 ký tự/token là thô) hoặc tăng `min_relative_score` (mặc định 0,5; 0 giữ mọi hit).
 5. Trích dẫn: `char_start/char_end` trỏ vào Markdown cache (`cache\md\<2 ký tự>\<hash>.md`), không phải file gốc; heading theo Markdown đã trích.
 6. Kiểm dữ liệu đã gửi: bảng `egress_log` trong `catalog.db` (UG §6).
 

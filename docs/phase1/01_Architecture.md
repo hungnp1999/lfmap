@@ -257,7 +257,7 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 | L17 | OCR là extra Internal (LGPL); CI Windows không có Tesseract nên test OCR bị skip | OCR chỉ kiểm trên máy có Tesseract | Plugin `ocr` (PaddleOCR) Phase 2 |
 | L18 | LanceDB cảnh báo deprecation về tự chiếu cột `_distance` | Có thể vỡ khi nâng lancedb | Đã sửa sau mốc: PR #40 (chọn `_distance` tường minh) |
 | L19 | Embed lần đầu chậm: 10.000 file mất ~1 giờ (3,75 file/s sau PR #44, GPU chưa dùng hết) | Lần lập chỉ mục đầu của thư mục lớn kéo dài | PR #45 không cải thiện; #46 thêm `embed_concurrency` (song song, cần `OLLAMA_NUM_PARALLEL`); reindex lần hai đạt (7,2 s) |
-| L20 | markitdown đổi đoạn mở đầu in nghiêng của một số `.docx` thành heading | `heading_path` thành một câu dài | Theo dõi; xử lý ở chunker hoặc markitdown (TC-918) |
+| L20 | markitdown đổi đoạn mở đầu in nghiêng của một số `.docx` thành heading | `heading_path` thành một câu dài | Đã sửa sau mốc ở chunker (Phase 1b, S5): dòng heading dài hơn 120 ký tự, hoặc kết thúc bằng dấu chấm và có từ 8 từ, được coi là nội dung. Chỉ mục cũ cần `reindex --full` (giữ cache Markdown) |
 | L21 | PDF không có heading Markdown | `heading_path` rỗng, trích dẫn chỉ có đường dẫn + vị trí ký tự | Chấp nhận ở MVP; Docling (1.2) có thể cải thiện |
 | L22 | `.doc` và Office cũ bị bỏ qua (`office_gui_only`) | Thư mục thật: 9/17 file không vào chỉ mục | Chuyển bằng app MarkitdownTool (ADR-011) rồi index file `.md` |
-| L23 | `get_context` thường lấy đầy ngân sách 4000 token | Tốn ngữ cảnh của client | Giảm `token_budget` khi hỏi; xem lại mặc định ở Phase 1b |
+| L23 | `get_context` thường lấy đầy ngân sách 4000 token | Tốn ngữ cảnh của client | Đã sửa sau mốc (Phase 1b, S5): `min_relative_score` (mặc định 0,5) bỏ chunk có điểm dưới 0,5 lần chunk tốt nhất. Với hybrid, câu hỏi khớp từ khóa chỉ giữ chunk khớp cả hai phía; câu hỏi thuần ngữ nghĩa (không khớp từ khóa) vẫn có thể đầy ngân sách. Đo lại trên thư mục thật |

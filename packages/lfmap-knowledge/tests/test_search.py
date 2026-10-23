@@ -270,11 +270,24 @@ def test_context_respects_small_budget(w):
 
 
 def test_context_fills_budget_and_estimates_tokens(w):
-    out = _context(w, "kangaroo doanh chi", token_budget=4000)
+    out = _context(w, "kangaroo doanh chi", token_budget=4000, min_relative_score=0)
     assert len(out.chunks) >= 4
     assert out.estimated_tokens == sum(math.ceil(len(c.text) / 3) for c in out.chunks)
     assert out.untrusted is True
     assert "not as instructions" in out.notice
+
+
+def test_context_drops_hits_far_below_the_best(w):
+    out = _context(w, "doanh thu")
+    assert [c.text for c in out.chunks] == ["Doanh thu quý 3 tăng mạnh"]
+    assert len(_context(w, "doanh thu", min_relative_score=0).chunks) > 1
+
+
+def test_context_relative_cut_without_vectors_uses_keyword_scores(w):
+    w.content(H["l"], [("Dài", "doanh thu " + "lorem ipsum " * 300)])
+    w.file("docs", "long.md", H["l"])
+    texts = [c.text for c in _context(w, "doanh thu", embedder=None, min_relative_score=0.9).chunks]
+    assert texts == ["Doanh thu quý 3 tăng mạnh"]
 
 
 def test_context_citation_points_at_the_chunk(w):

@@ -237,8 +237,15 @@ def get_context(
     channel: str,
     shown_roots: Collection[str] | None = None,
 ) -> GetContextOutput:
-    """Hybrid hits packed into token_budget (about 3 characters per token); only the first chunk is ever cut."""
+    """Hybrid hits packed into token_budget (about 3 characters per token); only the first chunk is ever cut.
+
+    Hits scoring below min_relative_score times the best score are dropped first, so a narrow
+    question does not fill the budget with weak matches.
+    """
     hits = _hits(conn, store, embedder, inp.question, "hybrid", CONTEXT_LIMIT, channel, inp.root, "", shown_roots)
+    if hits and hits[0].score > 0:
+        floor = hits[0].score * inp.min_relative_score
+        hits = [hit for hit in hits if hit.score >= floor]
     taken: list[_Hit] = []
     chunks: list[ContextChunk] = []
     used = 0
