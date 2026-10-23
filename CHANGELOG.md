@@ -16,6 +16,7 @@
 
 ### Added
 
+- Research note `docs/research/2026-10-23-b0-benchmark.md`: benchmark B0 of Leading Agent candidates on DIEP-ANH (16 GB). `qwen3.8:27b` gave 7/7 correct review verdicts, caught 2/3 seeded bugs and invented no quotes, at 14 tok/s; `qwen3-coder:30b` fast but 4/7; `gpt-oss:20b` inconclusive (invalid JSON); `devstral-small-2:24b` dropped; `qwen3.8:27b-nvfp4` needs MLX, not available on Windows.
 - Research note `docs/research/2026-10-23-local-model-tiers.md`: a local Leading Agent tier between Claude and the local Working Agents (candidate models for 16 GB VRAM with licences, Ollama rotation by batch phase, work package and review report format, token saving estimate, risks, timeline) and ADR-022 draft (Proposed); §9a records the decision to improve the Working tier with an experience store (lessons + retrieved accepted examples) and not by fine-tuning.
 - Research stage G0 of the commercial replacement plan (ADR-021), results in `docs/research/2026-10-23-g0-baselines.md`:
   - RT-01: `scripts/license_watch.py` hashes the license files of n8n, Open WebUI, NATS, Valkey, Ollama, LibreChat, Activepieces, Node-RED, MarkItDown and LanceDB against `docs/research/license-watch.json`; the `License watch` workflow runs it monthly and fails when a text changes.
