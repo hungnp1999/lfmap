@@ -16,6 +16,7 @@
 
 ### Added
 
+- Development provenance (`docs/DEVELOPMENT_PROVENANCE.md`): every commit carries a `Dev-Environment` trailer naming an allowed environment (`cloud` or `pc-01`), added by `.githooks/prepare-commit-msg`; the new `Provenance` workflow fails a pull request otherwise and warns about unsigned commits. New pull request template with a development environment section.
 - Commercial replacement plan 1.1: build in-house or derive from permissive code first (LFMAP Flows instead of n8n, Tauri chat instead of Open WebUI, SQLite-backed EventBus instead of NATS/Valkey), clean-room rule for fair-code/AGPL sources, provenance register, dependency-share metric, tasks RT-01 to RT-13. ADR-021 draft updated.
 - Docling spike for Roadmap 1.2 (`docs/specs/docling-spike.md`): current version, install size, model downloads and offline mode, license check of all runtime dependencies and models, MarkItDown baseline on synthetic PDFs, fit with the `Backend` interface. Recommendation: conditional GO as an optional, offline-only `docling` extra for PDFs, pending a quality and speed run on Windows. Side finding: `onnxruntime` 1.29+ sends telemetry unless `ORT_DISABLE_TELEMETRY=1` (today's lock has 1.20.1, not affected).
 - Research plan for replacing components that do not fit commercial distribution (n8n, Open WebUI, NATS, Valkey, Ollama, Office COM): risks, candidates, swap seams, triggers and Cloud research tasks RT-01 to RT-10, `docs/research/2026-10-23-commercial-replacements.md` (Vietnamese). ADR-021 is a draft only.
