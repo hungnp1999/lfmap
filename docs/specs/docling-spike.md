@@ -1,6 +1,6 @@
 # Spike: Docling backend (Roadmap 1.2)
 
-Version 0.1 · 2026-10-23 · Status: research spike, no product code. Recommendation: **conditional GO** (section 9).
+Version 0.2 · 2026-10-23 · Status: research spike, no product code. Recommendation: **GO** (section 9), after the Windows CPU run on DIEP-ANH met every pass criterion.
 
 Spike scripts live outside the repo, in the project files folder `lfmap-core/docling-1.2/` (`make_pdfs.py`, `compare.py`, `Run-DoclingSpike.ps1`, MarkItDown baseline output).
 
@@ -112,7 +112,7 @@ Docling fits without changing the protocol:
 
 Changes needed in the plugin (implementation task, not this spike):
 
-1. New extra `docling = ["docling-slim[format-pdf,models-local,convert-core]==2.142.0"]`; import Docling only inside the backend module, as the `ocr` backend does with OCRmyPDF.
+1. New extra `docling = ["docling-slim[format-pdf,models-local,convert-core]==2.142.0", "opencv-python-headless"]` (TableFormer imports `cv2`, which no `docling-slim` extra installs; OpenCV is Apache-2.0); import Docling only inside the backend module, as the `ocr` backend does with OCRmyPDF.
 2. `ConvertInput`/`ExportInput` gain `backend: Literal["markitdown", "docling"] = "markitdown"`; the CLI flag `--backend docling` is generated from it. `ConvertOutput.backend` already exists.
 3. Settings: `docling_artifacts_path` (required; without it the backend reports `backend_unavailable` and never downloads), `docling_ocr` (`tesseract` default, uses `find_tesseract()` and `ocr_languages`).
 4. Docling handles scanned pages itself, so for `backend = "docling"` the OCRmyPDF detour is skipped; `ocr=true` turns on Docling's OCR.
@@ -128,17 +128,44 @@ Model weights are downloaded once with `docling-tools models download layout tab
 Acceptable, as an optional extra only.
 
 - For: MIT code, permissive model licenses, IBM-originated project with very active maintenance, a modular `docling-slim` package, a documented offline mode, and a plug-in point (`Backend`) that already exists.
-- Against: heavy dependency tree (PyTorch, transformers), very fast release cadence with frequent minor changes, model files to manage outside pip, and slow CPU inference compared with MarkItDown (to be measured).
+- Against: heavy dependency tree (PyTorch, transformers), very fast release cadence with frequent minor changes, model files to manage outside pip, and slow CPU inference: about 3.1 s per page against 0.02 s for MarkItDown (section 8).
 - Containment: exact pin, extra not installed by default, lazy import, upgrade only on purpose with the comparison script, models in a declared folder, no automatic downloads.
 
-## 8. DIEP-ANH run (open)
+## 8. DIEP-ANH run (Windows, CPU)
 
-`Run-DoclingSpike.ps1` (project files `lfmap-core/docling-1.2/`) installs the slim set into `D:\Development\lfmap-tools\docling-spike`, records the installed size and wheel count, downloads the layout and TableFormer weights once from Hugging Face, then converts the three PDFs with `HF_HUB_OFFLINE=1`, Tesseract CLI OCR and the local models, and writes both Markdown versions and timings. `-Gpu` optionally times the CUDA path. Results to record here: installed size, model size, first-run and per-page time on CPU, the three quality checks of section 5, and the model `README.md` licenses.
+`Run-DoclingSpike.ps1` (project files `lfmap-core/docling-1.2/`) ran on DIEP-ANH on 2026-10-23 in `D:\Development\lfmap-tools\docling-spike`: slim set plus OpenCV, weights downloaded once from Hugging Face, conversions with `HF_HUB_OFFLINE=1`, `ACCEL_DEVICE=cpu` and Tesseract CLI OCR (`eng`). A fourth synthetic PDF, `long30.pdf` (30 pages, one heading and one table per page), measures throughput.
+
+| Item | Result |
+|---|---|
+| Install | 948 MB, 91 packages (CPU torch) |
+| Models | 669 MB (`docling-layout-heron`, `docling-layout-heron-onnx`, `docling-models`); downloaded `README.md` licenses: Apache-2.0, Apache-2.0, CDLA-Permissive-2.0 |
+| Import and pipeline init | 4.9 s, once per process |
+| First run without OpenCV | `ModuleNotFoundError: No module named 'cv2'` in TableFormer; fixed by adding `opencv-python-headless` (section 6) |
+
+| File | MarkItDown | Docling (CPU) |
+|---|---|---|
+| `headings.pdf` | 0.10 s, 0 headings | 4.58 s, 7 headings |
+| `table.pdf` | 0.08 s, columns 1 and 2 merged | 5.76 s, 5 correct columns, 8 rows |
+| `scanned.pdf` | 0.05 s, empty | 2.37 s, OCR text (small errors: "PumpP-01", lost colons) |
+| `long30.pdf` (30 pages) | 0.69 s, 0 headings | 93.6 s = **3.1 s/page**, 30/30 headings, tables correct |
+
+Pass criteria of section 5: all met (headings, five columns, scanned text, offline), and 3.1 s per page is under the 5 s target.
+
+Quality gaps to handle in the implementation:
+
+- Every heading comes out as `##`: Docling does not keep the H1/H2 level difference, so `heading_path` gets one level. Still a clear gain over no headings (L21).
+- The document title ("Quality Manual", reportlab `Title` style) was emitted as the last heading of the file instead of the first. A title-detection or reading-order quirk; check on real PDFs before relying on the first heading as the document title.
+- A spanned cell is repeated in every column it covers.
+- Tesseract's orientation detection (OSD) logs an error on the near-empty scanned page; the text is still recognised.
+
+Cost: Docling is 50 to 135 times slower than MarkItDown on CPU. For knowledge reindexing it fits only as an opt-in backend for PDFs that need structure, not as the default.
+
+GPU run: the CUDA wheel (`torch` 2.11.0+cu128 from `download.pytorch.org`, 2.6 GB) failed to download (connection reset, five retries), so `ACCEL_DEVICE=cuda` stopped with `AcceleratorDeviceNotAvailableError`. The script now raises the uv HTTP timeout and has `-Gpu -SkipCpu` for a GPU-only retry; results will be added here. The GPU path is optional for 1.2.
 
 ## 9. Recommendation
 
-**Conditional GO** for Roadmap 1.2 as the optional `docling` extra described in section 6, PDF only, offline by construction (`artifacts_path` required, Tesseract CLI OCR, no RapidOCR, telemetry off).
+**GO** for Roadmap 1.2 as the optional `docling` extra described in section 6: PDF only, opt-in per call (`--backend docling`), offline by construction (`artifacts_path` required, Tesseract CLI OCR, no RapidOCR, telemetry off). MarkItDown stays the default because it is 50 to 135 times faster.
 
-Condition: the DIEP-ANH run meets the pass criteria of section 5 and converts a typical page in a time acceptable for reindexing (target: under 5 s per page on CPU). If headings do not appear or CPU time is far worse, NO-GO: keep MarkItDown, and fix L21 with a cheap heuristic in the knowledge chunker instead.
+The implementation task should include the OpenCV dependency, the `torch` and `regex` license exceptions, a test with a fake converter (no models in CI), and a check on a few real PDFs of how the document title and heading levels come out.
 
-Separate follow-up regardless of the decision: guard against `onnxruntime` telemetry (section 3).
+The `onnxruntime` telemetry follow-up (section 3) is done in #62.
