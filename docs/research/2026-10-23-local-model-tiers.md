@@ -147,7 +147,7 @@ Nothing leaves the machine; no new dependency (TOML via `tomllib`, embeddings vi
 
 | # | Task | Environment | Done when | Needs owner |
 | --- | --- | --- | --- | --- |
-| L0 | B0 benchmark: pull 3 (opt. 4) models to `D:\AI\models\ollama`, measure tok/s, VRAM, swap time at `num_ctx` 8K/16K; review 10 diffs (6 from K4–K7 with known verdicts, 4 with seeded bugs); split one past package | Local (DIEP-ANH, GPU), driven by Claude through Remote Control | `bench.csv` + short report in `docs/research/` | **yes: approval in the Remote Control thread (sentence below); ~60 GB download, ~1–2 h GPU** |
+| L0 | B0 benchmark: pull 3 (opt. 4) models to `D:\AI\models\ollama`, measure tok/s, VRAM, swap time at `num_ctx` 8K/16K; review 10 diffs (6 from K4–K7 with known verdicts, 4 with seeded bugs); split one past package | Local (DIEP-ANH, GPU), driven by Claude through Remote Control | `bench.csv` + short report in `docs/research/` | done 2026-10-23: `docs/research/2026-10-23-b0-benchmark.md` (qwen3.8:27b 7/7 verdicts, chosen for shadow mode) |
 | L1 | Extend `qwen-loop` with package/standard/report files and the quote check | Cloud (code) + Local (run) | unit tests green; dry run on a past package | no |
 | L1b | Experience store (§9a): `lessons.toml`, `examples/`, retrieval of 1–2 similar accepted examples with `bge-m3`, first-round green metric; seed lessons from the K-batch reviews | Cloud (code, Claude Code session) + Local (run) | unit tests green; next qwen batch logs which lessons and examples each prompt carried | no |
 | L2 | Shadow run inside the 2a.1 spike on a real batch | Local + Claude review | §3 thresholds measured | no |
