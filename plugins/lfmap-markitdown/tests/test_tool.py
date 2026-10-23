@@ -125,7 +125,7 @@ def test_info_and_health(tool: MarkitdownTool, no_ocr: None) -> None:
     assert ".pdf" in info.formats and ".doc" not in info.formats
     assert (info.markitdown_version, info.plugin_version) == ("0.1.8", "0.1.0")
     assert (info.ocr_available, info.tesseract_path, info.ocr_languages) == (False, None, [])
-    assert tool.health() == {"ok": True, "markitdown": "0.1.8", "ocr": False, "tesseract": None}
+    assert tool.health() == {"ok": True, "markitdown": "0.1.8", "ocr": False, "tesseract": None, "docling": False}
 
 
 @pytest.mark.skipif(not ocr.ocr_available(), reason="needs the ocr extra and Tesseract")

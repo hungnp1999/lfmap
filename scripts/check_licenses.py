@@ -20,6 +20,11 @@ EXCEPTIONS: dict[str, str] = {
     "numpy": "BSD-3-Clause plus 0BSD, MIT, Zlib, CC0-1.0 for bundled parts, all permissive",
     "pillow": "MIT-CMU (OSI-approved, permissive, MIT-style)",
     "pypdfium2": "Apache-2.0 / BSD-3-Clause; metadata adds 'dependency licenses' for the bundled PDFium (BSD-style)",
+    "regex": "Apache-2.0 AND CNRI-Python (the permissive Python 1.6 license); only in the markitdown docling extra",
+    "torch": (
+        "Apache-2.0, Apache-2.0 WITH LLVM-exception, BSD-2-Clause, BSD-3-Clause, BSL-1.0 (Boost) and MIT, "
+        "all permissive; only in the markitdown docling extra"
+    ),
 }
 
 ALIASES = {
@@ -27,6 +32,7 @@ ALIASES = {
     "APACHE SOFTWARE LICENSE": "Apache-2.0",
     "APACHE LICENSE 2.0": "Apache-2.0",
     "APACHE 2.0": "Apache-2.0",
+    "APACHE 2.0 LICENSE": "Apache-2.0",
     "APACHE-2.0": "Apache-2.0",
     "BSD LICENSE": "BSD-3-Clause",
     "BSD": "BSD-3-Clause",

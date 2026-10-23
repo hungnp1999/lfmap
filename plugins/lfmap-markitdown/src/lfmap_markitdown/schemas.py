@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field
 from lfmap_markitdown.formats import ReasonCode
 
 PATH_DESCRIPTION = "Absolute path of a file inside an allowed folder."
+BACKEND_DESCRIPTION = (
+    "Converter for PDFs: 'docling' gives nested headings and table columns (needs the docling extra and "
+    "downloaded models, slower); other formats always use MarkItDown."
+)
 
 
 class ClassifyInput(BaseModel):
@@ -32,6 +36,7 @@ class ConvertInput(BaseModel):
     ocr: bool = Field(default=False, description="Run OCR when the file needs it (requires the ocr extra).")
     ocr_languages: str = Field(default="", description="Tesseract languages like 'vie+eng'; empty uses settings.")
     force_ocr: bool = Field(default=False, description="Replace the PDF text layer even if it looks fine.")
+    backend: Literal["markitdown", "docling"] = Field(default="markitdown", description=BACKEND_DESCRIPTION)
     max_chars: int = Field(default=2_000_000, ge=1, description="Truncate Markdown longer than this.")
 
 
@@ -56,6 +61,7 @@ class ExportInput(BaseModel):
     ocr: bool = Field(default=False, description="Run OCR on files that need it (requires the ocr extra).")
     ocr_languages: str = Field(default="", description="Tesseract languages like 'vie+eng'; empty uses settings.")
     force_ocr: bool = Field(default=False, description="Replace PDF text layers even if they look fine.")
+    backend: Literal["markitdown", "docling"] = Field(default="markitdown", description=BACKEND_DESCRIPTION)
     overwrite: bool = Field(default=False, description="Replace Markdown files that already exist (asks first).")
 
 
@@ -87,3 +93,5 @@ class InfoOutput(BaseModel):
     ocr_available: bool
     tesseract_path: str | None
     ocr_languages: list[str]
+    docling_available: bool = Field(description="The docling extra, the docling_artifacts_path setting and its models.")
+    docling_version: str
