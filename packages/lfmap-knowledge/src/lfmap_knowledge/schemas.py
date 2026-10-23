@@ -127,7 +127,11 @@ class GetContextInput(BaseModel):
     root: str = Field("", description="The root directory to search.")
     token_budget: int = Field(4000, ge=200, le=50000, description="The token budget for the context.")
     min_relative_score: float = Field(
-        0.5, ge=0, le=1, description="Drop chunks scoring below this fraction of the best chunk; 0 keeps all."
+        0.5,
+        ge=0,
+        le=1,
+        description="Keep chunks at least this fraction of the way from the weakest to the best candidate"
+        " of the keyword or vector list; 0 keeps all.",
     )
 
 
