@@ -1,0 +1,17 @@
+name: License watch
+
+on:
+  schedule:
+    - cron: "41 2 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare upstream license files with the baseline (RT-01)
+        run: python3 scripts/license_watch.py

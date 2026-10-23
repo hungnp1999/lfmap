@@ -1,0 +1,72 @@
+{
+  "checked": "2026-10-23",
+  "note": "SHA-256 of upstream license files (RT-01). Update with scripts/license_watch.py --update only after reviewing a change.",
+  "files": {
+    "activepieces": {
+      "url": "https://raw.githubusercontent.com/activepieces/activepieces/HEAD/LICENSE",
+      "sha256": "d490fc48488c4f5a721d354f0a5cce0972c7e3de768ac3e0c5851c3de79f3c9b",
+      "bytes": 1629,
+      "first_line": "Copyright (c) 2020-2024 Activepieces Inc."
+    },
+    "lancedb": {
+      "url": "https://raw.githubusercontent.com/lancedb/lancedb/HEAD/LICENSE",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "bytes": 11357,
+      "first_line": "Apache License"
+    },
+    "librechat": {
+      "url": "https://raw.githubusercontent.com/danny-avila/LibreChat/HEAD/LICENSE",
+      "sha256": "1ce5c9d51e5ab764b44142cd44d1e687f5bfe32f807c7221c14d061007309b97",
+      "bytes": 1066,
+      "first_line": "MIT License"
+    },
+    "markitdown": {
+      "url": "https://raw.githubusercontent.com/microsoft/markitdown/HEAD/LICENSE",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "bytes": 1141,
+      "first_line": "MIT License"
+    },
+    "n8n": {
+      "url": "https://raw.githubusercontent.com/n8n-io/n8n/HEAD/LICENSE.md",
+      "sha256": "d2f621f59aa4c10eab79b6333e59d9d3d5b53307dcfd16dbd75e40e679e84965",
+      "bytes": 4445,
+      "first_line": "# License"
+    },
+    "n8n-ee": {
+      "url": "https://raw.githubusercontent.com/n8n-io/n8n/HEAD/LICENSE_EE.md",
+      "sha256": "6110c69fd3b92928328a89e863dc2c862ea449f2335c352a9c4a137a36b13040",
+      "bytes": 1879,
+      "first_line": "# The n8n Enterprise License (the “Enterprise License”)"
+    },
+    "nats-server": {
+      "url": "https://raw.githubusercontent.com/nats-io/nats-server/HEAD/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357,
+      "first_line": "Apache License"
+    },
+    "node-red": {
+      "url": "https://raw.githubusercontent.com/node-red/node-red/HEAD/LICENSE",
+      "sha256": "876efc5b0ea06ac893b0d5f88bba8abfc050d82d157d65a95453abcb4dd6b0e0",
+      "bytes": 10247,
+      "first_line": "Copyright OpenJS Foundation and other contributors, https://openjsf.org/"
+    },
+    "ollama": {
+      "url": "https://raw.githubusercontent.com/ollama/ollama/HEAD/LICENSE",
+      "sha256": "5934ed2ce0d15154bcdb9c85203210abac0da4314af34081e36df4599f90b226",
+      "bytes": 1058,
+      "first_line": "MIT License"
+    },
+    "open-webui": {
+      "url": "https://raw.githubusercontent.com/open-webui/open-webui/HEAD/LICENSE",
+      "sha256": "5f1bd74c48bf13ab0f82e177ad9e637313b92533d20ead2593d49347a47fc232",
+      "bytes": 2819,
+      "first_line": "Open WebUI License"
+    },
+    "valkey": {
+      "url": "https://raw.githubusercontent.com/valkey-io/valkey/HEAD/COPYING",
+      "sha256": "9a67d40ae9076cd60b9d228135a9c0ce5d60f84f0c54c472965d4e03fdeb8f8f",
+      "bytes": 1571,
+      "first_line": "BSD 3-Clause License"
+    }
+  }
+}

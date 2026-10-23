@@ -102,6 +102,8 @@ Mỗi task là một phiên Claude Code Cloud; không task nào cần DIEP-ANH.
 | RT-09 | G2 | Bản mẫu LFMAP Flows chạy một luồng thật qua jobs + EventBus | code + test | luồng mẫu chạy được, bước duyệt vào hàng đợi approvals |
 | RT-10 | G3 | SBOM (CycloneDX) + sinh THIRD_PARTY_NOTICES tự động cho gói phát hành | script + CI | notices đủ mọi dòng Ship và mọi phần phái sinh |
 
+Trạng thái 2026-10-23: RT-01, RT-02, RT-11, RT-13 **xong**, kết quả và baseline ở `docs/research/2026-10-23-g0-baselines.md`, sổ nguồn gốc ở `docs/PROVENANCE.md`.
+
 Thứ tự đề xuất: RT-01, RT-02, RT-11, RT-13 ngay (rẻ); RT-03 → RT-12 khi vào Phase 2; RT-04, RT-05 trước khi bắt đầu Tauri.
 
 ## 8. ADR-021 (Accepted 2026-10-23; văn bản chính thức trong 03_Decisions_ADR)

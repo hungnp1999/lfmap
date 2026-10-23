@@ -20,6 +20,7 @@ jobs:
         run: |
           uv sync --frozen --no-dev
           uv run --no-sync python scripts/check_licenses.py
+          uv run --no-sync python scripts/dependency_share.py
       - name: Install with dev tools
         run: uv sync --frozen
       - name: Lint
