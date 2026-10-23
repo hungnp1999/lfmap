@@ -99,6 +99,7 @@ The Docling side of the comparison could not run here because the models cannot 
 ```python
 class Backend(Protocol):
     name: str
+
     def version(self) -> str: ...
     def to_markdown(self, stream: BinaryIO, extension: str, filename: str) -> str: ...
 ```
