@@ -20,7 +20,7 @@ MarkItDown đọc PDF không ra heading Markdown (L21), nên `heading_path` tron
 | D4 | OCR dùng Tesseract CLI (`TesseractCliOcrOptions`, dùng lại `find_tesseract()`, `ocr_languages`, `tessdata_dir`). Không RapidOCR (tải model từ modelscope.cn). Với backend docling, OCRmyPDF không chạy. | RapidOCR; OCRmyPDF rồi mới Docling (chậm gấp đôi) |
 | D5 | Hậu xử lý cấp heading theo số mục: Docling ra mọi heading là `##`; `## 1.1 X` thành `### 1.1 X`, `## 2.3.4 X` thành `####`, tối đa `######`. Heading không đánh số giữ `##`. Hàm thuần `fix_heading_levels` trong `headings.py`, chạy trong `DoclingBackend.to_markdown`. | Sửa cấp trong `DoclingDocument` trước khi export (gắn chặt với API Docling, khó test không có model) |
 | D6 | **typer:** `docling-core` 2.104.0 (bản mới nhất, bắt buộc với `docling-slim` 2.142.x) đòi `typer<0.27`, còn `lfmap-core` ghi `typer>=0.27.3`. uv khóa một phiên bản cho cả workspace kể cả extra chưa cài, nên hạ chặn dưới của `lfmap-core` xuống `typer>=0.26`; lock chọn 0.26.8. Đã thử trên bản sao: 706 passed, 12 skipped. Claude tự quyết (đảo ngược được): khi `docling-core` nới chặn trên thì nâng lại. | `override-dependencies` bỏ qua ràng buộc của docling-core (giấu xung đột thật); khai báo `conflicts` (uv chỉ hỗ trợ giữa các extra, không giữa dependency chính và extra) |
-| D7 | Giấy phép (Hùng chấp nhận cùng GO): `EXCEPTIONS` trong `scripts/check_licenses.py` thêm `torch` (Apache-2.0, BSD, BSL-1.0, MIT, LLVM-exception, đều permissive) và `regex` (Apache-2.0 AND CNRI-Python); `ALIASES` thêm `"APACHE 2.0 LICENSE": "Apache-2.0"` (metadata của `transformers` 5.20.2 ghi như vậy). Đã chạy logic của checker trên 75 gói Windows của extra: chỉ ba gói này trượt. Model: layout heron Apache-2.0, TableFormer CDLA-Permissive-2.0 (giữ file license đi kèm model). `opencv-python-headless` Apache-2.0 (code OpenCV), đóng gói MIT. | |
+| D7 | Giấy phép (Hùng chấp nhận cùng GO): `EXCEPTIONS` trong `scripts/check_licenses.py` thêm `torch` (Apache-2.0, BSD, BSL-1.0, MIT, LLVM-exception, đều permissive) và `regex` (Apache-2.0 AND CNRI-Python); `ALIASES` thêm `"APACHE 2.0 LICENSE": "Apache-2.0"` (metadata của `transformers` 5.20.2 ghi như vậy). Đã chạy logic của checker trên 75 gói Windows của extra: chỉ ba gói này trượt. Model: layout heron Apache-2.0, TableFormer CDLA-Permissive-2.0 (giữ file license đi kèm model). `opencv-python-headless` Apache-2.0. | |
 
 ## Phạm vi
 
@@ -134,7 +134,7 @@ Rồi thêm `docling_artifacts_path` vào `[plugins.markitdown.settings]` trong 
 
 - ROADMAP 1.2: ✅ khi D1 merge và D2 đạt; ghi "extra tùy chọn, chỉ PDF, offline".
 - DECISIONS: không ADR mới (Hùng chốt GO trong phạm vi Roadmap 1.2).
-- License Register: thêm các dòng ở spike §4 (Docling, PyTorch, transformers và họ HF, regex) và bảng model (heron Apache-2.0, TableFormer CDLA-Permissive-2.0), thêm `opencv-python-headless` (Apache-2.0 / MIT, Ship, chỉ trong extra `docling`).
+- License Register: thêm các dòng ở spike §4 (Docling, PyTorch, transformers và họ HF, regex) và bảng model (heron Apache-2.0, TableFormer CDLA-Permissive-2.0), thêm `opencv-python-headless` (Apache-2.0, Ship, chỉ trong extra `docling`).
 - Known limitations: L21 giải được khi dùng `--backend docling`; giới hạn mới về heading không đánh số.
 
 ## Prompt khởi động cho Claude Code

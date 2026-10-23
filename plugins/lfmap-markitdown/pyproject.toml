@@ -9,6 +9,7 @@ dependencies = ["lfmap-core", "markitdown[docx,pptx,xlsx,xls,pdf]==0.1.8", "pypd
 
 [project.optional-dependencies]
 ocr = ["ocrmypdf==17.13.0", "pillow>=12"]
+docling = ["docling-slim[format-pdf,models-local,convert-core]==2.142.0", "opencv-python-headless>=4.10,<6"]
 
 [project.entry-points."lfmap.plugins"]
 markitdown = "lfmap_markitdown.tool:MarkitdownTool"

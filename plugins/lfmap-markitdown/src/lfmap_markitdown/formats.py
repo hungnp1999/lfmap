@@ -11,7 +11,15 @@ IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp"})
 OFFICE_GUI_ONLY = frozenset({".doc", ".rtf", ".odt", ".ppt", ".odp", ".ods"})
 
 ReasonCode = Literal[
-    "", "unsupported_format", "needs_ocr", "garbled_text", "office_gui_only", "ocr_unavailable", "too_large", "exists"
+    "",
+    "unsupported_format",
+    "needs_ocr",
+    "garbled_text",
+    "office_gui_only",
+    "ocr_unavailable",
+    "docling_unavailable",
+    "too_large",
+    "exists",
 ]
 
 
