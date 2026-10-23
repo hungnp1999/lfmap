@@ -2,7 +2,7 @@
 
 - Ngày: 2026-10-23 · Người soạn: Claude (Managing Agent) · Yêu cầu: anh Hùng
 - Bản 1.1 (2026-10-23): theo chỉ đạo của anh Hùng, **ưu tiên tự xây hoặc làm sản phẩm phái sinh** trên cơ sở tham khảo sản phẩm hiện có, thay vì đổi sang một sản phẩm bên thứ ba khác. Mục tiêu: tỷ trọng phụ thuộc phần mềm bên thứ ba thấp nhất có thể.
-- Trạng thái: kế hoạch nghiên cứu, không đổi ADR. Đề xuất ADR ở mục 8 chỉ là **draft** chờ anh Hùng.
+- Trạng thái: kế hoạch nghiên cứu. **ADR-021 Accepted** (anh Hùng chốt 2026-10-23), ADR-006 đã sửa theo: EventBus tự xây trên SQLite, NATS chỉ khi nhiều máy.
 - Căn cứ: ADR-005/006/007 (Accepted 2026-10-23), License Register 2026-10-23, code `main`.
 - Không phải tư vấn pháp lý. Giấy phép ghi "cần xác minh" là chưa đọc file LICENSE gốc.
 
@@ -104,11 +104,11 @@ Mỗi task là một phiên Claude Code Cloud; không task nào cần DIEP-ANH.
 
 Thứ tự đề xuất: RT-01, RT-02, RT-11, RT-13 ngay (rẻ); RT-03 → RT-12 khi vào Phase 2; RT-04, RT-05 trước khi bắt đầu Tauri.
 
-## 8. ADR draft (chờ anh Hùng, chưa đưa vào 03_Decisions_ADR)
+## 8. ADR-021 (Accepted 2026-10-23; văn bản chính thức trong 03_Decisions_ADR)
 
 ```markdown
 ### ADR-021: Ưu tiên tự xây và phái sinh để giảm phụ thuộc bên thứ ba
-- Trạng thái: Proposed
+- Trạng thái: Accepted — anh Hùng chốt 2026-10-23 (sửa ADR-006)
 - Ngày: 2026-10-23
 - Bối cảnh: ADR-005/006/007 cho dùng n8n, Open WebUI, NATS, Valkey ở mức nội bộ. Anh Hùng muốn tỷ trọng phụ thuộc phần mềm bên thứ ba thấp nhất có thể và ưu tiên sản phẩm phái sinh hoặc tự xây trên cơ sở tham khảo sản phẩm hiện có.
 - Quyết định: (1) Khi thay một thành phần: tự xây trước, phái sinh từ mã permissive thứ hai, dùng sản phẩm có sẵn sau cùng; giữ hạ tầng phổ thông (SQLite, runtime model, LanceDB) sau interface. (2) Không đọc hay chép mã của dự án fair-code, AGPL, SSPL, BSL hoặc có điều khoản thương hiệu khi tự xây; chỉ dùng tài liệu và hành vi công khai. (3) Mọi module có dòng trong sổ nguồn gốc `docs/PROVENANCE.md`. (4) Thành phần Internal chỉ được chạm qua interface/giao thức công khai, có test hoặc CI kiểm chứng; giấy phép upstream được theo dõi hằng tháng. (5) Việc xây thay thế bắt đầu theo tín hiệu K1–K5, không theo lịch. Kế hoạch: `docs/research/2026-10-23-commercial-replacements.md`.
@@ -116,10 +116,9 @@ Thứ tự đề xuất: RT-01, RT-02, RT-11, RT-13 ngay (rẻ); RT-03 → RT-12
 - Hệ quả: lfmap-core có thêm EventBus (in-process + SQLite) và LFMAP Flows ở Phase 2; NATS và Valkey không còn cần trong kế hoạch một máy (sửa ADR-006); Tauri có chat riêng. Thêm RT-01..RT-13 vào backlog.
 ```
 
-## 9. Cập nhật tài liệu dự án (đề xuất, chưa làm)
+## 9. Cập nhật tài liệu dự án
 
-- 05_Roadmap Phase 2: "Event Bus NATS + adapter Events" → "EventBus tự xây (in-process + SQLite); NATS chỉ khi nhiều máy"; thêm "LFMAP Flows"; "Tích hợp n8n nội bộ qua REST" giữ cho giai đoạn chuyển tiếp.
-- 03 ADR-006: cần sửa theo ADR-021 nếu anh Hùng chốt.
+- Đã làm 2026-10-23: 03 thêm ADR-021 và sửa ADR-006; 05_Roadmap Phase 2 đổi sang EventBus tự xây, thêm LFMAP Flows, n8n là giai đoạn chuyển tiếp, Backlog thêm RT-01/02/11/13; 01 Blueprint dòng Messaging.
 - 04_License_Register: thêm cột hoặc ghi chú "nguồn phái sinh" khi có phần phái sinh đầu tiên.
 
 ## Nguồn (kiểm tra 2026-10-23)
