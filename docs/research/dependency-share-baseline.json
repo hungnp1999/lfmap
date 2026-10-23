@@ -1,0 +1,109 @@
+{
+  "measured": "2026-10-23",
+  "platform": "Linux x86_64, Python 3.12.3",
+  "third_party_distributions": 76,
+  "third_party_bytes": 652090418,
+  "lfmap_source_bytes": 264475,
+  "third_party_share": 0.9996,
+  "services_besides_model_runtime": 0,
+  "services": {
+    "ollama": {
+      "kind": "model-runtime",
+      "used_by": "lfmap-knowledge embeddings; optional, keyword search works without it"
+    }
+  },
+  "largest": [
+    {
+      "name": "lancedb",
+      "bytes": 187415647
+    },
+    {
+      "name": "pyarrow",
+      "bytes": 168197888
+    },
+    {
+      "name": "numpy",
+      "bytes": 56387804
+    },
+    {
+      "name": "pandas",
+      "bytes": 38941923
+    },
+    {
+      "name": "onnxruntime",
+      "bytes": 37876919
+    },
+    {
+      "name": "magika",
+      "bytes": 35869392
+    },
+    {
+      "name": "sympy",
+      "bytes": 26842401
+    },
+    {
+      "name": "pillow",
+      "bytes": 20409509
+    },
+    {
+      "name": "cryptography",
+      "bytes": 14999698
+    },
+    {
+      "name": "lxml",
+      "bytes": 11729435
+    },
+    {
+      "name": "pdfminer.six",
+      "bytes": 8552915
+    },
+    {
+      "name": "pypdfium2",
+      "bytes": 8424719
+    },
+    {
+      "name": "pydantic_core",
+      "bytes": 5205300
+    },
+    {
+      "name": "Pygments",
+      "bytes": 4621740
+    },
+    {
+      "name": "lance-namespace-urllib3-client",
+      "bytes": 2902415
+    }
+  ],
+  "removable_by_direct_dependency": [
+    {
+      "name": "lancedb",
+      "distributions": 6,
+      "bytes": 358842812
+    },
+    {
+      "name": "markitdown",
+      "distributions": 29,
+      "bytes": 190207357
+    },
+    {
+      "name": "typer",
+      "distributions": 7,
+      "bytes": 6653007
+    },
+    {
+      "name": "mcp",
+      "distributions": 18,
+      "bytes": 5960679
+    },
+    {
+      "name": "pydantic",
+      "distributions": 0,
+      "bytes": 0
+    },
+    {
+      "name": "pypdfium2",
+      "distributions": 0,
+      "bytes": 0
+    }
+  ]
+}

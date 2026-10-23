@@ -16,6 +16,12 @@
 
 ### Added
 
+- Research stage G0 of the commercial replacement plan (ADR-021), results in `docs/research/2026-10-23-g0-baselines.md`:
+  - RT-01: `scripts/license_watch.py` hashes the license files of n8n, Open WebUI, NATS, Valkey, Ollama, LibreChat, Activepieces, Node-RED, MarkItDown and LanceDB against `docs/research/license-watch.json`; the `License watch` workflow runs it monthly and fails when a text changes.
+  - RT-02: `lfmap-core` test `test_import_guard.py` fails when a package or plugin imports a NATS, Valkey/Redis, Open WebUI or n8n client, or when `uv.lock` contains one (seam S1).
+  - RT-11: `scripts/dependency_share.py` reports third-party runtime distributions, installed third-party bytes against LFMAP source, background services besides the model runtime, and what each direct dependency brings; CI prints it on Windows. Baseline: 76 distributions, 622 MiB, 0 services; LanceDB alone is 342 MiB.
+  - RT-13: provenance register `docs/PROVENANCE.md` with a row for every package, plugin and tooling module, its origin, the assistant that wrote it and the pull requests; the only derivative code is the markitdown plugin's port from the owner's MarkitdownTool.
+  - `pytest` also collects `scripts/tests`.
 - ADR-021 accepted (2026-10-23): prefer in-house and derivative work to reduce third-party dependencies. ADR-006 amended: Phase 2 builds its own `EventBus` (in-process + SQLite-backed queue); NATS only for multi-machine setups. The research plan records the decision.
 - Development provenance (`docs/DEVELOPMENT_PROVENANCE.md`): every commit carries a `Dev-Environment` trailer naming an allowed environment (`cloud` or `pc-01`), added by `.githooks/prepare-commit-msg`; the new `Provenance` workflow fails a pull request otherwise and warns about unsigned commits. New pull request template with a development environment section.
 - Commercial replacement plan 1.1: build in-house or derive from permissive code first (LFMAP Flows instead of n8n, Tauri chat instead of Open WebUI, SQLite-backed EventBus instead of NATS/Valkey), clean-room rule for fair-code/AGPL sources, provenance register, dependency-share metric, tasks RT-01 to RT-13. ADR-021 draft updated.

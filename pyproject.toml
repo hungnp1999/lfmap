@@ -23,4 +23,4 @@ members = ["packages/*", "plugins/*"]
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
-testpaths = ["packages", "plugins"]
+testpaths = ["packages", "plugins", "scripts"]
