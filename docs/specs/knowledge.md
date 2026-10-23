@@ -14,7 +14,8 @@ Theo ADR-012 (Proposed), ADR-013 (Accepted: SQLite + LanceDB), ADR-006 (NATS Pha
 - Operations (MCP: knowledge_<op>):
   - status       · {} · {roots, counts, last_scan, ollama_ok, vector_ok, embed_model} · none
   - reindex      · {root, full} · {scanned, new, changed, deleted, extracted, embedded, skipped, errors} · none (ADR-016)
-  - search_files · {name, glob, extension, modified_after, root, limit} · {files: [FileHit]} · none
+  - search_files · {query, root, ext, status, modified_after, limit} · {files: [FileInfo], total} · none
+    (glob đi trong `query`, schema không có trường `glob`; K12, PR #32)
   - get_file     · {path} · FileRecord (+ duplicates, edges, chunk_count) · none
   - search       · {query, mode, root, limit} · {hits: [ChunkHit]} · none (ghi egress_log khi channel mcp/rest)
   - get_context  · {question, token_budget, min_relative_score, root} · {chunks, untrusted, notice} · none (ghi egress_log)
@@ -181,7 +182,7 @@ class VectorStore(Protocol):  # ADR-013: interface để Phase 3 thay bằng Qdr
 ### 5.5 search và get_context
 - `mode="keyword"`: FTS5 `bm25`. `mode="vector"`: embed câu hỏi, LanceDB. `mode="hybrid"` (mặc định): RRF `score = Σ 1/(60 + rank)` trên top `4×limit` của mỗi bên. Ollama không chạy → hybrid tự lùi về keyword, `ChunkHit.mode_used = "keyword"`.
 - Một chunk thuộc `content_hash`; đổi ra file bằng file `indexed` đầu tiên theo `rel_path` (các bản trùng ở `duplicates`).
-- Kênh `mcp`/`rest`: bỏ chunk thuộc root `secret`; ghi một dòng `egress_log` cho mỗi lời gọi trả nội dung (cả `search` vì snippet là nội dung).
+- Kênh `mcp`/`rest`: bỏ chunk thuộc root `secret`. Cách làm (K10/K12, PR #32, #38): `tool.py` tính `shown_roots` = các root knowledge đang cấu hình và không `secret`; mọi root khác trong catalog (kể cả root vừa đổi sang `secret` hoặc đã gỡ khỏi config) bị ẩn bằng `exclude_root_ids` ở `search`, `get_context`, `search_files`, `related`; ghi một dòng `egress_log` cho mỗi lời gọi trả nội dung (cả `search` vì snippet là nội dung).
 - `get_context`: hybrid `limit=20`, bỏ hit có điểm dưới `min_relative_score` (mặc định 0,5) × điểm hit đầu (L23), rồi lấy lần lượt tới khi `ước lượng token > token_budget` với ước lượng `ceil(len(text) / 3)` (tiếng Việt tốn token hơn tiếng Anh; chọn bảo thủ). Output:
 
 ```python
@@ -351,7 +352,7 @@ Quy ước chung như file 02. Mọi card trong `packages/lfmap-knowledge/`.
 
 ### TC-K12: search_files và get_file
 - File đích: `tool.py`, `src/lfmap_knowledge/catalog.py`, `tests/test_catalog.py`
-- Việc: lọc theo `name` (fold, LIKE trên `name_folded`), `glob` (`fnmatch` trên `rel_path` sau khi lọc SQL), `extension`, `modified_after`, `root`; bỏ `deleted`; `get_file` nhận đường dẫn, `require_read` rồi tra `(root_id, rel_path)`; trả duplicates, edges, `chunk_count`, `reason_code`.
+- Việc (đã làm khác: glob nằm trong `query`, xem mục Operations): lọc theo `name` (fold, LIKE trên `name_folded`), `glob` (`fnmatch` trên `rel_path` sau khi lọc SQL), `extension`, `modified_after`, `root`; bỏ `deleted`; `get_file` nhận đường dẫn, `require_read` rồi tra `(root_id, rel_path)`; trả duplicates, edges, `chunk_count`, `reason_code`.
 - Test: `glob="**/*.pdf"`; `name="bao cao"` khớp `Báo cáo Q3.docx`; file ngoài catalog → `not_found`.
 - Độ khó: M.
 
