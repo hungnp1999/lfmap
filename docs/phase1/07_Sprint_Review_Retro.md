@@ -153,7 +153,7 @@ Release notes (tóm tắt CHANGELOG `[Unreleased]` tại `b002710`):
 
 | # | Hành động | Chủ trì | Khi nào |
 |---|---|---|---|
-| A4 | Cập nhật `docs/specs/knowledge.md` (bỏ `glob`, ghi `shown_roots`) và ADR-018 (`approvals pending`) | Claude | Chưa làm; dời sáng 23/10 (Cloud) |
+| A4 | Cập nhật `docs/specs/knowledge.md` (bỏ `glob`, ghi `shown_roots`) và ADR-018 (`approvals pending`) | Claude | Xong 2026-10-23 |
 | A5 | Gom mọi bước cần TTY vào checklist tối duy nhất; thiết lập auto-mode Claude Code trên DIEP-ANH (`/auto-mode-setup`) | Hùng | Checklist: xong 22/10; allow rule thêm 15:16Z. Giữ: lệnh TTY là kiểm soát an toàn, không vượt |
 | A6 | Sửa cảnh báo LanceDB `_distance` (L18) | Claude Code Cloud | Xong 2026-10-22, PR #40 |
 | A7 | Cập nhật hồ sơ giai đoạn trong cùng PR của từng hạng mục (1.2, 1.3 và Phase 2) thay vì cuối giai đoạn | Claude | Từ Phase 1b |
