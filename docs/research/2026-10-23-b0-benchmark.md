@@ -60,3 +60,38 @@ VRAM in use stayed at 13.2–15.1 GB; models above ~14 GB spill to system RAM. C
 | — | Disk: four models now on D: (~65 GB). `devstral-small-2:24b` (15 GB) can be removed by the owner (`ollama rm`); Claude cannot delete on that device | owner | optional |
 
 Model rows (Internal, Apache-2.0 per `ollama show --license` on 2026-10-23) for `gpt-oss:20b`, `qwen3-coder:30b`, `qwen3.8:27b` go into the License Register (project document, outside this repo).
+
+## B0b rerun (2026-10-24)
+
+The owner asked whether the B0 result came from the prompt rather than the models. Reading the raw B0 answers showed three harness faults:
+
+1. `gpt-oss:20b` returned an empty `content` in 4 of 7 cases: a reasoning model forced into a JSON schema finished thinking but wrote no answer.
+2. The seed check required the finding to quote the seeded line exactly; `qwen3.8:27b` found the missing `fold` but quoted the line next to it, so it really caught 3/3 seeds, not 2/3.
+3. The checklist had a style rule (one-line docstrings) that every real diff broke, so "rework" could be right for the wrong reason.
+
+Changes for B0b (`bench.py` options `--think`, `--no-schema`, `--reviews-only`): style no longer counts toward the verdict; a seed counts as caught when a valid finding quotes a line within 3 lines of it or names it in its explanation (keywords per case); `num_predict` 8192 and `done_reason` logged (no run ended on `length`). The case set grew to 15: the 7 B0 cases, the three modules as merged after Claude's review in PR #26 (`K4-clean`, `K6-clean`, `K7-clean`, expected `ready`) and 5 seeds on them (temp file not removed, sidecar written first, proxies not ignored, vector count not checked, userinfo accepted; the last two are security rules of the card).
+
+Run on DIEP-ANH 2026-10-24 06:52–08:35 (UTC+7), approved by the owner; the GPU was checked idle before each model (one 10-minute wait for another embed job).
+
+| Configuration | Seeds caught (of 8) | Ready cases right (of 4) | Verdicts right (of 15) | Invented quotes | Time per review |
+| --- | --- | --- | --- | --- | --- |
+| `qwen3.8:27b`, thinking on | **7** | 1 | 10 | 0 | 141–560 s |
+| `gpt-oss:20b`, reasoning low, no schema | 6 | 2 | 9 | 0 | 6–57 s |
+| `qwen3.8:27b`, thinking off | 4 | 1 | 12 | 2 | 11–261 s |
+| `qwen3-coder:30b` | 3 | 0 | 10 | 0 | 3–28 s |
+
+Seeds missed: `qwen3.8` thinking on missed only "vector count not checked" (answered `ready` after 22K characters of thinking); `gpt-oss` missed that one and "temp file not removed"; both caught the proxy and userinfo security seeds. `qwen3-coder:30b` answered `rework` on every case, so its 10/15 verdicts carry no information.
+
+### Reading B0b
+
+- **The prompt mattered for `gpt-oss:20b`**: from 4 empty answers to none, and from 1/3 to 6/8 seeds. B0 under-rated it.
+- **The ranking of `qwen3.8:27b` held**: with thinking on it is the best reviewer (7/8 = 88 % of seeds, no invented quotes), which meets both thresholds of the research note (§3: ≥ 80 % seeds, ≤ 1 invented finding per 10 reviews). Thinking off is faster but catches half the seeds and invents quotes; not for review.
+- **Verdict counts mislead**; seeds caught is the measure that matters, because a Leading Agent that says `rework` too often only costs local time, while one that says `ready` on a bug pushes the bug to Claude's review.
+- **False alarms on clean code are high for every model** (`K4-clean` and `K7-clean` were flagged by all four configurations). The clean modules include Claude's review fixes, which may go beyond the card text, so the `ready` label of these cases is itself uncertain; the answers on DIEP-ANH need a read before this counts against the models.
+
+### Decision for the next step
+
+- Leading Agent for shadow mode (L2): **`qwen3.8:27b` with thinking on**, batch mode (about 5 minutes per review, a batch of 10 overnight).
+- `gpt-oss:20b` (reasoning low) as a fast second opinion: 10× faster and right on 2 of the 4 ready cases (the others on at most 1); running both and taking the union of findings catches 7/8 seeds with a quick first answer.
+- `qwen3-coder:30b`: not a reviewer; still to be tried as a Working model (L1b).
+- Before filter mode: read the clean-case answers, fix the case labels or the card text, and grow the seed set beyond 8.
