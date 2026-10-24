@@ -89,6 +89,7 @@ def reconcile(
     perms: PermissionManager,
     settings: dict[str, Any],
     extractor_version: str = "",
+    pdf_extractor_version: str | None = None,
 ) -> ScanStats:
     """Bring the files rows of one root in line with the disk; only new or changed files are hashed."""
     now = datetime.now(UTC).isoformat(timespec="seconds")
@@ -109,7 +110,10 @@ def reconcile(
             stats.unchanged += 1
             conn.execute("UPDATE files SET last_seen = ? WHERE file_id = ?", (now, row["file_id"]))
             continue
-        status, reason, content_hash = _classify(conn, path, st, settings, extractor_version)
+        version = (
+            pdf_extractor_version if pdf_extractor_version and path.suffix.lower() == ".pdf" else extractor_version
+        )
+        status, reason, content_hash = _classify(conn, path, st, settings, version)
         stats.hashed += content_hash is not None
         stats.skipped += status == "skipped"
         name_folded = unicodedata.normalize("NFC", path.name).casefold().replace("đ", "d")

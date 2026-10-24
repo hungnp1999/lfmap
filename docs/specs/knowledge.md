@@ -54,6 +54,7 @@ knowledge = ['D:\Docs', 'D:\Contracts']
 ollama_url = "http://127.0.0.1:11434"   # chỉ chấp nhận 127.0.0.1, ::1, localhost
 embed_model = "bge-m3"                  # dim 1024, đã thử trên máy anh (MIT)
 ocr = false                             # true: gọi markitdown.convert(ocr=True) cho PDF scan (cần extra [ocr])
+pdf_backend = "markitdown"              # "docling": PDF qua backend Docling của markitdown (heading_path, L21; handoff 2026-10-24)
 max_file_bytes = 209715200
 include_cloud_files = false             # OneDrive "chỉ trên cloud"
 exclude = [".git", "node_modules", ".venv", "AppData", ".ssh", "*.kdbx", ".env"]
