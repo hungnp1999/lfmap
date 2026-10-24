@@ -10,7 +10,7 @@ from pathlib import Path
 
 from lfmap_core import ToolError
 
-from .extract import cache_path
+from .extract import PDF_BACKENDS, cache_path
 from .schemas import FileInfo, GetFileOutput, SearchFilesOutput
 
 STATUSES = ("pending", "indexed", "skipped", "error", "deleted")
@@ -170,5 +170,5 @@ def get_file(
         file=_file_info(row),
         chunk_count=content["chunk_count"] if content else 0,
         duplicates=duplicates,
-        markdown_cached=cache_path(cache_dir, content_hash).exists(),
+        markdown_cached=any(cache_path(cache_dir, content_hash, b).exists() for b in PDF_BACKENDS),
     )

@@ -16,7 +16,7 @@ import lancedb
 from lfmap_core import ToolContext, ToolError
 from lfmap_knowledge import edges, fts
 from lfmap_knowledge.chunker import chunk_markdown
-from lfmap_knowledge.extract import SkipResult, extract, extractor_version
+from lfmap_knowledge.extract import SkipResult, backend_for, extract, extractor_version, pdf_backend, require_backend
 from lfmap_knowledge.scanner import reconcile
 from lfmap_knowledge.schemas import ReindexOutput, RootStatus, StatusOutput
 from lfmap_knowledge.store import connect, migrate, writer_lock
@@ -135,16 +135,18 @@ def _extract_pending(
     ctx: ToolContext, conn: sqlite3.Connection, store: LanceVectorStore | None, config: dict | None, out: dict, progress
 ) -> list[int]:
     """Extract every pending file; returns the ids of files that became indexed."""
-    version = extractor_version()
+    pdf = pdf_backend(ctx.settings)
     cache_dir = ctx.data_dir / "cache" / "md"
     ocr = bool(ctx.settings.get("ocr", False))
     pending = conn.execute(
-        "SELECT f.file_id, f.rel_path, f.content_hash, f.attempts, r.path AS root FROM files f"
+        "SELECT f.file_id, f.rel_path, f.ext, f.content_hash, f.attempts, r.path AS root FROM files f"
         " JOIN roots r USING (root_id) WHERE f.status = 'pending' ORDER BY f.file_id"
     ).fetchall()
     indexed: list[int] = []
     for i, row in enumerate(pending, 1):
         file_id, content_hash = row["file_id"], row["content_hash"]
+        backend = backend_for(row["ext"], pdf)
+        version = extractor_version(backend)
         known = conn.execute(
             "SELECT extractor_version FROM contents WHERE content_hash = ?", (content_hash,)
         ).fetchone()
@@ -153,7 +155,7 @@ def _extract_pending(
                 result = None
             else:
                 path = ctx.permissions.require_read(os.path.join(row["root"], row["rel_path"]))
-                result = extract(ctx, path, content_hash, cache_dir, ocr, config)
+                result = extract(ctx, path, content_hash, cache_dir, ocr, config, backend)
         except Exception:
             attempts = row["attempts"] + 1
             status = "error" if attempts >= MAX_ATTEMPTS else "pending"
@@ -287,6 +289,8 @@ def reindex(
         if not targets:
             raise ToolError("invalid_input", "root is not a knowledge root", {"root": root})
 
+    pdf = pdf_backend(ctx.settings)
+    require_backend(ctx, pdf, config)
     data_dir = data_dir_of(ctx)
     data_dir.mkdir(parents=True, exist_ok=True)
     out: dict[str, Any] = dict.fromkeys(
@@ -303,17 +307,21 @@ def reindex(
             if full:
                 _reset_all(conn, data_dir / "vectors")
             version = extractor_version()
+            pdf_version = extractor_version(pdf)
             conn.execute(
                 "UPDATE files SET status = 'pending' WHERE status = 'indexed' AND content_hash IN"
-                " (SELECT content_hash FROM contents WHERE extractor_version != ?)",
-                (version,),
+                " (SELECT content_hash FROM contents WHERE extractor_version != CASE WHEN files.ext = '.pdf'"
+                " THEN ? ELSE ? END)",
+                (pdf_version, version),
             )
             conn.commit()
             before = {r["file_id"]: (r["status"], r["content_hash"]) for r in conn.execute("SELECT * FROM files")}
 
             for i, target in enumerate(targets, 1):
                 if os.path.isdir(target):
-                    stats = reconcile(conn, root_ids[str(target)], target, ctx.permissions, ctx.settings, version)
+                    stats = reconcile(
+                        conn, root_ids[str(target)], target, ctx.permissions, ctx.settings, version, pdf_version
+                    )
                     out["scanned"] += stats.seen
                     for name in ("new", "changed", "unchanged", "deleted", "skipped"):
                         out[name] += getattr(stats, name)
@@ -384,4 +392,5 @@ def status(ctx: ToolContext, ollama_available: bool) -> StatusOutput:
         embed_model=ctx.settings.get("embed_model", DEFAULT_EMBED_MODEL),
         ollama_available=ollama_available,
         indexer_busy=_indexer_busy(data_dir),
+        pdf_backend=str(ctx.settings.get("pdf_backend", "markitdown")),
     )
