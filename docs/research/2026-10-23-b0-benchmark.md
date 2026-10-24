@@ -92,6 +92,6 @@ Seeds missed: `qwen3.8` thinking on missed only "vector count not checked" (answ
 ### Decision for the next step
 
 - Leading Agent for shadow mode (L2): **`qwen3.8:27b` with thinking on**, batch mode (about 5 minutes per review, a batch of 10 overnight).
-- `gpt-oss:20b` (reasoning low) as a fast second opinion: 10× faster and the only one right on 2 of 4 clean cases; running both and taking the union of findings catches 7/8 seeds with a quick first answer.
+- `gpt-oss:20b` (reasoning low) as a fast second opinion: 10× faster and right on 2 of the 4 ready cases (the others on at most 1); running both and taking the union of findings catches 7/8 seeds with a quick first answer.
 - `qwen3-coder:30b`: not a reviewer; still to be tried as a Working model (L1b).
 - Before filter mode: read the clean-case answers, fix the case labels or the card text, and grow the seed set beyond 8.
