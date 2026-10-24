@@ -48,8 +48,12 @@ PDF_BACKENDS = ("markitdown", "docling")
 
 def pdf_backend(settings: dict) -> str: ...  # default "markitdown"; anything else -> ToolError("invalid_input")
 def backend_for(ext: str, pdf: str) -> str: ...  # pdf if ext.lower() == ".pdf" else "markitdown"
-def extractor_version(backend: str = "markitdown") -> str: ...  # markitdown string unchanged; "docling/<docling-slim>/<lfmap-markitdown>"
-def cache_path(cache_dir: Path, content_hash: str, backend: str = "markitdown") -> Path: ...  # ab/<hash>.md | ab/<hash>.docling.md
+def extractor_version(
+    backend: str = "markitdown",
+) -> str: ...  # markitdown string unchanged; "docling/<docling-slim>/<lfmap-markitdown>"
+def cache_path(
+    cache_dir: Path, content_hash: str, backend: str = "markitdown"
+) -> Path: ...  # ab/<hash>.md | ab/<hash>.docling.md
 def require_backend(tool_ctx: ToolContext, backend: str, config: dict | None = None) -> None: ...  # K4
 
 
