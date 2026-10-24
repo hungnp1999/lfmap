@@ -1,0 +1,18 @@
+{
+  "id": "K6-seed-sql",
+  "card": "TC-K6",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "SQL built with an f-string: injection and breakage on quotes in chunk text"
+  ],
+  "seeded": [
+    "VALUES ({chunk_id}, '{fold(text)}')"
+  ],
+  "keywords": [
+    "inject",
+    "f-string",
+    "parameter",
+    "placeholder",
+    "quote"
+  ]
+}
