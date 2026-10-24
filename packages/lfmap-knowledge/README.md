@@ -28,6 +28,7 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    embed_model = "bge-m3"
    embed_batch = 128                        # texts per Ollama /api/embed request, 1 to 1024
    embed_concurrency = 1                    # parallel requests, 1 to 4; keep 1 for bge-m3 (see below)
+   pdf_backend = "markitdown"               # "docling": PDFs get nested headings (see below)
 
    [plugins.knowledge.settings.sensitivity]   # default "normal"
    'D:\Contracts' = "private"
@@ -37,6 +38,7 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    - `embed_concurrency` above 1 only helps when Ollama serves the model with several slots. Ollama loads bge-m3 with one slot even with `OLLAMA_NUM_PARALLEL=2`, so parallel requests gain nothing and some fail with HTTP 400 (seen on the 10k bench); a warning is logged when it is set above 1.
    - `normal` and `private`: returned on every channel. `secret`: only on `cli` and `sdk`, never over MCP.
    - Over MCP, roots that are secret or no longer in the config are hidden.
+   - `pdf_backend = "docling"` extracts PDFs with the Docling backend of `lfmap-markitdown`, so PDF chunks get a `heading_path` such as `1. Scope > 1.1 Responsibilities`. It needs the markitdown `docling` extra (`uv sync --all-packages --extra docling`) and its `docling_artifacts_path` setting; `lfmap markitdown info` shows `docling_available`. Docling takes about 3 s per page on CPU, so run the first reindex from the CLI. Switching the setting re-extracts only PDFs; each backend keeps its own Markdown cache, so switching back does not convert again. When Docling is unavailable, `reindex` fails with `backend_unavailable` (`reason_code` `docling_unavailable`) before scanning.
 
 3. Pull the embedding model once: `ollama pull bge-m3`. Without Ollama, `reindex` still catalogs and extracts, skips embedding and says why in `embed_skipped_reason`; `search` falls back to keyword mode.
 

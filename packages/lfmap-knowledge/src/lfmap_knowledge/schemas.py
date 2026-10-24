@@ -25,6 +25,7 @@ class StatusOutput(BaseModel):
     embed_model: str = Field(description="The embedding model used.")
     ollama_available: bool = Field(description="Whether Ollama is available.")
     indexer_busy: bool = Field(description="Whether the indexer is busy.")
+    pdf_backend: str = Field("markitdown", description="Converter used for PDFs: markitdown or docling.")
 
 
 class ReindexInput(BaseModel):
