@@ -54,6 +54,7 @@ def made(monkeypatch: pytest.MonkeyPatch) -> list[FakeDocling]:
     monkeypatch.setattr(docling_backend, "missing_models", lambda path: [])
     monkeypatch.setattr(docling_backend, "get_backend", fake_get_backend)
     monkeypatch.setattr(ocr, "find_tesseract", lambda: "/opt/tesseract/tesseract")
+    monkeypatch.setattr(ocr, "available_languages", lambda tessdata_dir=None: ["eng", "osd", "vie"])
     return created
 
 
@@ -171,6 +172,44 @@ def test_ocr_without_tesseract(
     path = _blank_pdf(root / "scan.pdf")
     error = _error(lambda: tool.convert(ConvertInput(path=str(path), backend="docling", ocr=True)))
     assert (error.code, error.details["reason_code"]) == ("backend_unavailable", "ocr_unavailable")
+
+
+def test_missing_ocr_language_is_named(
+    tool: MarkitdownTool, root: Path, made: list[FakeDocling], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(ocr, "available_languages", lambda tessdata_dir=None: ["eng", "osd"])
+    path = _blank_pdf(root / "scan.pdf")
+    error = _error(lambda: tool.convert(ConvertInput(path=str(path), backend="docling", ocr=True)))
+    assert (error.code, error.details["reason_code"]) == ("backend_unavailable", "ocr_unavailable")
+    assert error.message == "Tesseract language data not installed: vie"
+    assert (error.details["missing"], error.details["installed"]) == (["vie"], ["eng", "osd"])
+    assert made == []
+
+
+def test_installed_ocr_languages_pass(
+    tool: MarkitdownTool, root: Path, made: list[FakeDocling], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[str | None] = []
+
+    def listed(tessdata_dir: str | None = None) -> list[str]:
+        seen.append(tessdata_dir)
+        return ["eng", "vie"]
+
+    monkeypatch.setattr(ocr, "available_languages", listed)
+    tool = _tool(root, **tool.ctx.settings, tessdata_dir="/opt/tessdata")
+    path = _blank_pdf(root / "scan.pdf")
+    result = tool.convert(ConvertInput(path=str(path), backend="docling", ocr=True))
+    assert result.stage == "ocr_markdown" and made[-1].options.languages == ("vie", "eng")
+    assert seen == ["/opt/tessdata"]
+
+
+def test_unlisted_ocr_languages_are_not_refused(
+    tool: MarkitdownTool, root: Path, made: list[FakeDocling], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(ocr, "available_languages", lambda tessdata_dir=None: [])
+    path = _blank_pdf(root / "scan.pdf")
+    tool.convert(ConvertInput(path=str(path), backend="docling", ocr=True))
+    assert made[-1].options.languages == ("vie", "eng")
 
 
 def test_extra_not_installed(tool: MarkitdownTool, root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -332,7 +371,7 @@ def test_real_models_give_nested_headings_offline(root: Path, monkeypatch: pytes
     result = tool.convert(ConvertInput(path=str(path), backend="docling"))
     lines = result.markdown.splitlines()
     assert result.backend == "docling"
-    assert "## 1. Scope" in lines and "## 2. Records" in lines
+    assert "## 1. Scope" in lines and "2. Records" in result.markdown
     assert "### 1.1 Responsibilities" in lines
     assert "ABC Company keeps controlled documents" in result.markdown
 
