@@ -1,7 +1,7 @@
 # Working model bench W0: qwen3-coder:30b vs qwen2.5-coder:14b
 
 - Date: 2026-10-28 · Author: Claude (Managing Agent) · Requested by: Hùng
-- Status: **plan, waiting for approval**. Nothing runs on DIEP-ANH until Hùng types the sentence in §9.
+- Status: **run 2026-10-28 16:42–19:00Z, results in §11**. Rule §5 says keep `qwen2.5-coder:14b`; waiting for Hùng to confirm.
 - Question: which local model should be the main Working Agent of the qwen loop (Roadmap 1.7, ADR-004 B6 note: S cards with strict tests only)?
 - Inputs: B0/B0b (`2026-10-23-b0-benchmark.md`: `qwen3-coder:30b` ≈ 50 tok/s with RAM spill, 67–72 % on GPU, "try as Working"), the K4–K7 batch of 2026-10-21 (`qwen2.5-coder:14b`, 37–41 tok/s, peak 12.4–12.5 GB), the L1b experience store (`docs/handoff/2026-10-24-experience-store-l1b.md`) and card TC-V1.
 - No ADR changes: the bench only chooses the model behind an unchanged loop. ADR-022 (Leading tier) is not touched; one model stays resident at a time.
@@ -132,3 +132,60 @@ Everything it covers is inside the grant for `D:\Development`; it is a typed sen
 - 05 Roadmap, row 1.7: after the decision, note the chosen Working model and the W0 result.
 - 03 ADR-004 note: only if option A or B is chosen (the Working model changes or gains a second step); B6 scope (S cards only) stays.
 - 04 License Register: no change (both rows exist).
+
+## 11. Results (2026-10-28)
+
+Run on DIEP-ANH 16:42–19:00Z, 90/90 card runs, 0 Ollama crashes, kit `D:\Development\lfmap-tools\qwen-bench` (copy in project files `qwen-bench/`). Ollama 0.40.11, **flash attention off, KV cache f16** (Hùng turned FA off at 16:37Z after FA crashed Ollama with `qwen3.8:27b`; the plan assumed FA on), `OLLAMA_NUM_PARALLEL=2`, `num_ctx` 16384. TC-N1/N2 tests at commit `790748b` (prompts carry them verbatim). The run stopped once at start on a wrapper bug (`bge-m3` vs `bge-m3:latest`), fixed before any card ran.
+
+### 11.1 Numbers (7 S cards, 21 runs per block)
+
+| Block | First-round green | Green ≤ 3 rounds | Rounds (green) | tok/s | Wall s / card | Peak VRAM | On GPU |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A1 14b, store off | 2/21 (10 %) | 8/21 (38 %) | 1.8 | 27.8 | 88 | 15.0 GB | 93 % |
+| A2 14b, store on | **7/21 (33 %)** | 8/21 (38 %) | 1.2 | 25.7 | 88 | 15.0 GB | 93 % |
+| B1 30b, store off | 6/21 (29 %) | 9/21 (43 %) | 1.6 | 48.7 | 75 | 15.3 GB | 67 % |
+| B2 30b, store on | 4/21 (19 %) | 11/21 (52 %) | 2.1 | 47.8 | 105 | 15.3 GB | 67 % |
+
+Unseen cards only (V1, N1, N2, 9 runs per block), first-round / green: A1 1/3, A2 3/3, B1 4/4, B2 1/3. Large card TC-K2 (3 runs, store on): 14b green 1/3, 30b 0/3.
+
+Per card, green / first-round green out of 3:
+
+| Card | A1 | A2 | B1 | B2 |
+| --- | --- | --- | --- | --- |
+| TC-K4 | 2/1 | 1/1 | 3/2 | 3/3 |
+| TC-K5 | 0/0 | 0/0 | 0/0 | 0/0 |
+| TC-K6 | 3/0 | 1/0 | 0/0 | 3/0 |
+| TC-K7 | 0/0 | 3/3 | 2/0 | 2/0 |
+| TC-V1 | 3/1 | 3/3 | 3/3 | 3/1 |
+| TC-N1 | 0/0 | 0/0 | 1/1 | 0/0 |
+| TC-N2 | 0/0 | 0/0 | 0/0 | 0/0 |
+
+Cold load (3 tries each): 14b 4.4 s, 30b 18.0 s. Lowest free RAM: 4.9 GB during B1 (84 % memory load), 9.7 GB during A1.
+
+Failures on N1/N2 are the models' logic (wildcards `*`/`>` not handled, reserved names and empty-result errors wrong), checked in the test logs; the reference implementation passes both cards in the same loop.
+
+### 11.2 Decision rule (§5), B2 against A2
+
+| Criterion | Result | Met? |
+| --- | --- | --- |
+| 1. First-round green +15 points, or green ≤3 +15 with first-round not lower; unseen not lower | first-round 19 % vs 33 % (−14); green 52 % vs 38 % (+14) with first-round lower; unseen 1/9 vs 3/9 | **no** |
+| 2. Claude fixes not higher | not reviewed: rule 1 already fails, so the blind review cannot change the outcome (saves Claude tokens) | n/a |
+| 3. Answers outside the card not more | none seen in either model's notes | yes |
+| 4. Wall ≤ 1.5 × and 7-card batch < 30 min | 105 s vs 88 s (1.19 ×); batch ≈ 12 min | yes |
+| 5. Stable | 0 crashes; RAM went down to 4.9 GB free with 30b | yes, with RAM pressure |
+
+Outcome: **tie → keep `qwen2.5-coder:14b` + L1b (option C).** 30b is not better only on hard cards either (K5, N2 and K2 fail for both, K2 is worse), so option B (escalation) has no support from this data.
+
+### 11.3 What else the data says
+
+- **L1b helps 14b and not 30b.** Store on lifts 14b first-round green from 10 % to 33 % (the TC-V1 signal of 2026-10-28 holds over 7 cards); green within 3 rounds stays at 38 %. For 30b the store lowers first-round green (29 % → 19 %) and raises green within 3 rounds (43 % → 52 %). The lessons were written from 14b reviews and make the prompt about 8 KB longer.
+- **30b without a store is about as good as 14b with one** (first-round 29 % vs 33 %), at 1.9 × the token speed but slower end to end with the store (prompt processing with 33 % on CPU).
+- **Flash attention matters for 14b.** With FA off, 14b ran at 26–28 tok/s, 15.0 GB and 93 % on GPU; on the same day with FA on and q8_0 KV cache (TC-V1) it ran at 39–41 tok/s, 12.7–13.6 GB, fully on GPU. When Ollama is upgraded (planned by Hùng after the important tests), FA + q8_0 should come back for the Working model; a short TC-V1 rerun confirms it.
+- Small sample: 21 runs per block, so ±1–2 runs per card is noise. The direction (no clear 30b win) is consistent across blocks.
+
+### 11.4 Follow-ups
+
+- Keep 14b as default (`DEFAULT_MODEL` unchanged). Keep 30b installed: it may help as a *second opinion* in a later fix round, but that needs its own small test, not a decision from W0.
+- TC-K5 and TC-N2 are too hard for both models within 3 rounds: such cards go to Claude Code (ADR-004 B6 rule unchanged).
+- Lessons from W0 for the store (L1b thread): reserved-name / empty-result handling, wildcard token rules. Candidate `lesson add` items, after the L1b thread reviews.
+- The planned blind review of diffs (§4) was skipped as noted in 11.2; diffs are kept in `qwen-bench\out\runs\` if Hùng wants it anyway.
