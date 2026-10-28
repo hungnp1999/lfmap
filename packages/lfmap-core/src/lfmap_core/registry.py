@@ -5,9 +5,11 @@ import logging
 from dataclasses import dataclass
 from importlib.metadata import entry_points
 
+from lfmap_core import __version__
 from lfmap_core.errors import ToolError
 from lfmap_core.manifest import Manifest, parse_manifest
 from lfmap_core.tool import Tool
+from lfmap_core.versions import require_core_version
 
 ENTRY_POINT_GROUP = "lfmap.plugins"
 log = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ class PluginEntry:
 
 
 def load_entry(tool_class: type[Tool]) -> PluginEntry:
-    """Read the manifest shipped next to the tool's module and check it against the class."""
+    """Read the manifest shipped next to the tool's module and check it against the class and the core version."""
     package = tool_class.__module__.rpartition(".")[0] or tool_class.__module__
     resource = importlib.resources.files(package) / tool_class.manifest_path
     try:
@@ -29,6 +31,7 @@ def load_entry(tool_class: type[Tool]) -> PluginEntry:
     except FileNotFoundError as error:
         raise ToolError("not_found", "Manifest not found", {"package": package}) from error
     manifest = parse_manifest(text, f"{package}/{tool_class.manifest_path}")
+    require_core_version(manifest.plugin.id, manifest.plugin.min_core_version, __version__)
     declared = {op.name for op in manifest.operations}
     implemented = set(tool_class.operations())
     if declared != implemented:
