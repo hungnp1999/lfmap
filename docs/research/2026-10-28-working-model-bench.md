@@ -146,7 +146,7 @@ Run on DIEP-ANH 16:42–19:00Z, 90/90 card runs, 0 Ollama crashes, kit `D:\Devel
 | B1 30b, store off | 6/21 (29 %) | 9/21 (43 %) | 1.6 | 48.7 | 75 | 15.3 GB | 67 % |
 | B2 30b, store on | 4/21 (19 %) | 11/21 (52 %) | 2.1 | 47.8 | 105 | 15.3 GB | 67 % |
 
-Unseen cards only (V1, N1, N2, 9 runs per block), first-round / green: A1 1/3, A2 3/3, B1 4/4, B2 1/3. Large card TC-K2 (3 runs, store on): 14b green 1/3, 30b 0/3.
+Unseen cards only (V1, N1, N2, 9 runs per block), first-round green and green ≤ 3 out of 9: A1 1 and 3, A2 3 and 3, B1 4 and 4, B2 1 and 3. Large card TC-K2 (3 runs, store on): 14b green 1/3, 30b 0/3.
 
 Per card, green / first-round green out of 3:
 
