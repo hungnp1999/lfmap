@@ -4,20 +4,18 @@ import re
 
 from lfmap_core.errors import ToolError
 
+_VERSION_RE = re.compile(r"\d+\.\d+\.\d+", re.ASCII)
+
 
 def parse_version(text: str) -> tuple[int, int, int]:
-    """Parse a version string into a tuple of three integers.
+    """Parse a version string into a tuple of integers.
 
-    The version string must match the pattern X.Y.Z where X, Y, and Z are non-negative integers.
+    The version string must be exactly three groups of ASCII digits separated by single dots.
     """
     if not isinstance(text, str):
-        raise ToolError("invalid_input", f"Version must be a string, got {repr(text)}", {"version": repr(text)})
-
-    version_pattern = re.compile(r"^\d+\.\d+\.\d+$", re.ASCII)
-    match = version_pattern.fullmatch(text)
-    if not match:
-        raise ToolError("invalid_input", f"Invalid version format: {text}", {"version": text})
-
+        raise ToolError("invalid_input", f"Version must be a string, got {text!r}", {"version": repr(text)})
+    if not _VERSION_RE.fullmatch(text):
+        raise ToolError("invalid_input", f"Invalid version {text!r}, expected X.Y.Z", {"version": text})
     major, minor, patch = map(int, text.split("."))
     return (major, minor, patch)
 
@@ -27,13 +25,7 @@ def require_core_version(plugin_id: str, required: str, current: str) -> None:
 
     Raises a ToolError if the current version is older than the required version.
     """
-    try:
-        required_version = parse_version(required)
-        current_version = parse_version(current)
-    except ToolError as e:
-        raise e
-
-    if current_version < required_version:
+    if parse_version(current) < parse_version(required):
         raise ToolError(
             "invalid_input",
             f"Plugin {plugin_id!r} needs lfmap-core {required} or newer, found {current}",

@@ -246,7 +246,7 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 | # | Giới hạn | Ảnh hưởng | Xử lý |
 |---|---|---|---|
 | L8 | Chưa có REST (1.3), Docling (1.2) | Phase 1 chưa đủ hạng mục Roadmap | Phase 1b (`07` §6); 1.6 xong ở PR #43 |
-| L9 | Core không đối chiếu `min_core_version` của manifest | Plugin cần core 0.2 vẫn nạp được trên core cũ | Backlog core |
+| L9 | Core không đối chiếu `min_core_version` của manifest | Plugin cần core 0.2 vẫn nạp được trên core cũ | Đã sửa sau mốc: `load_entry` từ chối plugin cần core mới hơn (`lfmap_core.versions`, card qwen TC-V1) |
 | L10 | `audit.jsonl` luôn ở `%LOCALAPPDATA%\lfmap\`, không theo `LFMAP_CONFIG`; lần đọc bị từ chối không ghi audit | Thử nghiệm tách cấu hình vẫn ghi chung audit | Backlog core |
 | L11 | Tiến độ `reindex` in ra stderr khi kênh `cli` (tạm) | Không có hook tiến độ chung cho MCP | Chờ core có progress hook |
 | L12 | Ước lượng token `ceil(len/3)` thô; fold tiếng Việt làm "ma" khớp "mà/má/mã" | `get_context` có thể thiếu hoặc thừa; tìm từ khóa không dấu kém chính xác | Vector bù; đo trên tài liệu thật (K14) |

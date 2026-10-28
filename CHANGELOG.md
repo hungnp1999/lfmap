@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `lfmap-core` refuses a plugin whose manifest `min_core_version` is newer than the running core (L9): `load_entry` raises `invalid_input` "Plugin 'x' needs lfmap-core X.Y.Z or newer, found A.B.C" with `plugin`, `min_core_version` and `core_version` in the details, and `discover` skips that plugin with a warning. A `min_core_version` that is not plain `X.Y.Z` is refused the same way. New module `lfmap_core.versions` (`parse_version`, `require_core_version`), first module written by the local Working model through `qwen-loop` (card TC-V1) and reviewed by Claude.
+
 ### Fixed
 
 - `scripts/check_licenses.py` no longer fails when the `ocr` extra is installed: `fpdf2` and `img2pdf` (LGPL-3.0, required by `ocrmypdf` 17.13; every `ocrmypdf` since 15 needs `img2pdf`) are reviewed exceptions, used unmodified as replaceable libraries, as in MarkitdownTool. Found in the Docling real run on pc-01; CI does not install the extra.
