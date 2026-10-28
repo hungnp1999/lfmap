@@ -16,6 +16,14 @@ ROOT = Path(__file__).resolve().parent.parent
 WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-knowledge", "lfmap-markitdown", "lfmap-powershell", "lfmap-workspace"}
 # Reviewed exceptions: name -> reason. Keep in sync with 04_License_Register.md.
 EXCEPTIONS: dict[str, str] = {
+    "fpdf2": (
+        "LGPL-3.0-only; dependency of ocrmypdf in the markitdown ocr extra, used unmodified as an imported "
+        "library the user can replace; ship its license text and source link when distributing"
+    ),
+    "img2pdf": (
+        "LGPL-3.0 (classifier LGPLv3); dependency of ocrmypdf in the markitdown ocr extra, used unmodified as an imported "
+        "library the user can replace; ship its license text and source link when distributing"
+    ),
     "cffi": "MIT-0 (MIT without the attribution clause), more permissive than MIT",
     "numpy": "BSD-3-Clause plus 0BSD, MIT, Zlib, CC0-1.0 for bundled parts, all permissive",
     "pillow": "MIT-CMU (OSI-approved, permissive, MIT-style)",
