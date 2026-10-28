@@ -2,10 +2,6 @@
 
 ## [Unreleased]
 
-### Added
-
-- `lfmap-core` refuses a plugin whose manifest `min_core_version` is newer than the running core (L9): `load_entry` raises `invalid_input` "Plugin 'x' needs lfmap-core X.Y.Z or newer, found A.B.C" with `plugin`, `min_core_version` and `core_version` in the details, and `discover` skips that plugin with a warning. A `min_core_version` that is not plain `X.Y.Z` is refused the same way. New module `lfmap_core.versions` (`parse_version`, `require_core_version`), first module written by the local Working model through `qwen-loop` (card TC-V1) and reviewed by Claude.
-
 ### Fixed
 
 - `scripts/check_licenses.py` no longer fails when the `ocr` extra is installed: `fpdf2` and `img2pdf` (LGPL-3.0, required by `ocrmypdf` 17.13; every `ocrmypdf` since 15 needs `img2pdf`) are reviewed exceptions, used unmodified as replaceable libraries, as in MarkitdownTool. Found in the Docling real run on pc-01; CI does not install the extra.
@@ -22,6 +18,8 @@
 - `lfmap jobs register` writes the full path of `pwsh` into each task (`--pwsh` overrides). With PowerShell from the Microsoft Store, Task Scheduler could not start `pwsh` by name, so every job failed with `0x80070002`, even at the lock screen. `lfmap jobs doctor` gains a `pwsh` check that also flags tasks registered with plain `pwsh`.
 
 ### Added
+
+- `lfmap-core` refuses a plugin whose manifest `min_core_version` is newer than the running core (L9): `load_entry` raises `invalid_input` "Plugin 'x' needs lfmap-core X.Y.Z or newer, found A.B.C" with `plugin`, `min_core_version` and `core_version` in the details, and `discover` skips that plugin with a warning. A `min_core_version` that is not plain `X.Y.Z` is refused the same way. New module `lfmap_core.versions` (`parse_version`, `require_core_version`), first module written by the local Working model through `qwen-loop` (card TC-V1) and reviewed by Claude.
 
 - Plan for bench W0 in `docs/research/2026-10-28-working-model-bench.md`: `qwen3-coder:30b` against `qwen2.5-coder:14b` as the qwen-loop Working model on 7 S cards (4 seen, 3 unseen) plus one larger card, 3 repeats with and without a frozen copy of the L1b store, first-round green rate as the primary metric, blind Claude review, decision thresholds written before the run, about 3 GPU hours on DIEP-ANH after B0c, TC-V1 and D2c.
 - `ARCHITECTURE.md`: short module map, main flows and invariants, linked from `CLAUDE.md`; the `CLAUDE.md` workflow adds keeping it current, `/security-review` before merging sensitive code PRs and a diagram review at each phase end (`docs/research/2026-10-28-vibe-coding-tools.md`).
