@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code sessions working on LFMAP.
+Guidance for Claude Code sessions working on LFMAP. Module map, main flows and invariants: `ARCHITECTURE.md`.
 
 ## Working from handoffs
 
@@ -41,3 +41,6 @@ uv sync --no-dev ; uv run --no-sync python scripts/check_licenses.py ; uv sync
 
 1. Branch from up-to-date `main`; update `CHANGELOG.md` (`[Unreleased]`).
 2. Open a PR. It may be merged without waiting for the maintainer only when every CodeQL check and the test suite pass and the PR is not a draft.
+3. A PR that changes the module map, a main flow or an invariant updates `ARCHITECTURE.md` in the same PR.
+4. Before merging a code PR that touches caller-supplied paths, adapters, network calls, subprocesses or `.claude/`, run `/security-review` and fix or answer its findings. Docs-only PRs skip it.
+5. At the end of each Roadmap phase and after a large refactor, redraw the architecture diagram (Artifact page) and note any drift from `ARCHITECTURE.md`.
