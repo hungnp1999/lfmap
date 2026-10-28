@@ -20,3 +20,7 @@
 ### Changed
 
 - Manifest `min_core_version` raised to 0.2.0: the plugin needs settings, temp folders and approvals from lfmap-core 0.2.
+
+### Fixed
+
+- Docling OCR with a language whose Tesseract data is not installed (for example `--ocr-languages vie`) now fails before the converter is built with `backend_unavailable` / `ocr_unavailable`, "Tesseract language data not installed: vie" and the `missing` and `installed` languages, instead of `internal` "Conversion failed: OcrLanguageNotSupportedError". When Tesseract cannot list its languages the check is skipped.

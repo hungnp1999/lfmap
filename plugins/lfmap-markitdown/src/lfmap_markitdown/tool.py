@@ -74,6 +74,14 @@ def _internal(error: Exception, path: Path) -> ToolError:
     return ToolError("internal", f"Conversion failed: {type(error).__name__}", {"path": str(path)})
 
 
+def _require_languages(requested: list[str], installed: list[str]) -> None:
+    """An empty `installed` means Tesseract could not list them; Tesseract then reports problems itself."""
+    missing = [code for code in requested if code not in installed]
+    if installed and missing:
+        details = {"reason_code": "ocr_unavailable", "missing": missing, "installed": installed}
+        raise ToolError("backend_unavailable", f"Tesseract language data not installed: {', '.join(missing)}", details)
+
+
 def _version(package: str) -> str:
     try:
         return version(package)
@@ -156,11 +164,13 @@ class MarkitdownTool(Tool):
         tesseract = ocr.find_tesseract()
         if tesseract is None:
             raise ToolError("backend_unavailable", "Tesseract was not found", {"reason_code": "ocr_unavailable"})
+        requested = self._languages(languages)
+        _require_languages(requested, ocr.available_languages(settings.get("tessdata_dir")))
         return replace(
             options,
             ocr=True,
             full_page_ocr=full_page_ocr,
-            languages=tuple(self._languages(languages)),
+            languages=tuple(requested),
             tesseract_cmd=tesseract,
             tessdata_dir=settings.get("tessdata_dir"),
         )
