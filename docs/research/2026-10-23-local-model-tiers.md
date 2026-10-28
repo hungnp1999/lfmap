@@ -151,6 +151,7 @@ Nothing leaves the machine; no new dependency (TOML via `tomllib`, embeddings vi
 | L1 | Extend `qwen-loop` with package/standard/report files and the quote check | Cloud (code) + Local (run) | unit tests green; dry run on a past package | no |
 | L1b | Experience store (§9a): `lessons.toml`, `examples/`, retrieval of 1–2 similar accepted examples with `bge-m3`, first-round green metric; seed lessons from the K-batch reviews | Cloud (code, Claude Code session) + Local (run) | unit tests green; next qwen batch logs which lessons and examples each prompt carried | no |
 | L2 | Shadow run inside the 2a.1 spike on a real batch | Local + Claude review | §3 thresholds measured | no |
+| B0c | Same 15 cases with `qwen3.8:27b` at Q3_K_M, flash attention on and `OLLAMA_KV_CACHE_TYPE=q8_0` (§12.4) | Local (DIEP-ANH) | seeds caught, invented quotes, GPU share and time per review next to the Q4_K_M row | **yes**: download and environment change |
 | L3 | Decide ADR-022 | owner | Accepted or Rejected | **yes** |
 
 Sentence the owner writes himself in the Remote Control thread (the device classifier accepts only his own words there):
@@ -162,11 +163,61 @@ Removing the models afterwards (`ollama rm`) is blocked for Claude on that devic
 ## 11. ADR draft
 
 ### ADR-022: Local Leading Agent tier between Claude and local Working Agents
-- Status: Proposed (Claude, 2026-10-23)
+- Status: Proposed (Claude, 2026-10-23; revised 2026-10-28 after the owner's hybrid notes, §12)
 - Context: Claude's quota is the bottleneck while the local GPU idles. `qwen-loop` proved a local Working tier for S cards (K4–K7). The owner wants a larger local model to split Claude's work packages, brief Working models and pre-review their output. B6 and Blueprint §4.4 keep review in the cloud.
-- Decision: Add a local Leading tier, plain Python in `lfmap-tools` (outside the product, no framework, ADR-004 unchanged). Claude issues work packages with frozen acceptance tests and a QA standard; the Leading model splits them into S cards, runs the Working loop and writes a review report. The Leading tier may mark cards `ready`, `rework` or `escalate`, never accept or merge. Claude still reviews every ready diff and merges; security, permission and test code stay with Claude. Rollout: benchmark B0 → shadow mode (2a.1) → filter mode once §3 thresholds are met. Models rotate by batch phase in Ollama; one model resident at a time.
-- Options considered: Qwen2.5 32B dense as Leading (too slow with offload on 16 GB); Leading tier with authority to accept (hallucinated reviews would reach `main`); no Leading tier (keeps Claude as the bottleneck); an agent framework now (ADR-004, decided by the 2a.1 spike).
+- Decision: Add a local Leading tier, plain Python in `lfmap-tools` (outside the product, no framework, ADR-004 unchanged). Claude issues work packages with frozen acceptance tests and a QA standard; the Leading model splits them into S cards, runs the Working loop and writes a review report. The Leading tier may mark cards `ready`, `rework` or `escalate`, never accept or merge. Claude still reviews every ready diff and merges; security, permission and test code stay with Claude. Rollout: benchmark B0 → shadow mode (2a.1) → filter mode once §3 thresholds are met. Models rotate by batch phase in Ollama (never per task); one model resident at a time; the Leading model runs with `num_ctx` of at least 8K (16K by default) and at the smallest quantisation that keeps the §3 thresholds on the bench (Q4_K_M today; Q3_K_M if B0c passes). Failed reviews feed the experience store as rules for the Working prompt (§9a). Orchestration stays plain Python; no n8n or LangChain (ADR-006/021). A second GPU node, when there is one, runs the Working tier over HTTP to an Ollama bound to its LAN address and firewalled to the first node; the Leading tier never stands in for Claude.
+- Options considered: Qwen2.5 32B dense as Leading (too slow with offload on 16 GB); Leading tier with authority to accept (hallucinated reviews would reach `main`); no Leading tier (keeps Claude as the bottleneck); an agent framework now (ADR-004, decided by the 2a.1 spike); per-task rotation, Q2_K or a 1–2K context for the Leading model, and third-party context tools (CodeGraph, Claude-Mem, Archify, security-audit skills), see §12.
 - Consequences: amends the ADR-004 B6 note and Blueprint §4.4 ("first-pass review may be local; final review is cloud"). New model rows in the License Register as Internal. If the 2a.1 spike picks a framework, the Leading tier moves onto it.
+
+## 12. Review of the owner's hybrid notes (2026-10-28)
+
+Before ADR-022 is decided, the owner shared three notes: a 3-tier hybrid design on one 16 GB GPU, the same design on several PCs over LAN, and a list of tools that cut Claude's context use. Each claim was checked against B0/B0b, ADR-004/006/021 and the License Register.
+
+### 12.1 Single GPU
+
+| Claim in the notes | Check | Keep? |
+| --- | --- | --- |
+| Never run two local models at once; unload with `keep_alive: 0` | Same as §5 (one model resident) | yes |
+| Leader is `Qwen3.5-27B` | Real model (Feb 2026, Apache-2.0, dense, thinking by default). B0 used its successor `qwen3.8:27b` (Aug 2026, same size class) | use `qwen3.8:27b` |
+| Leader at Q3_K_M or Q2_K, 10–13 GB | B0b ran Q4_K_M (17.7 GB, 67 % on GPU, 14 tok/s) and caught 7/8 seeds. Q3_K_M would likely fit the GPU and run faster; Q2_K loses clearly more quality on a 27B model. Untested on our cases | Q3_K_M only after a bench (B0c); Q2_K no |
+| Leader `num_ctx` 1024–2048 | Too small: a review prompt (standard, card, diff, test log) is 9–17K characters, about 3–5K tokens, and thinking adds up to ~6K tokens. Ollama silently drops the start of a prompt that does not fit, so the Leader would review a truncated diff | no; keep 16K (8K minimum) |
+| Worker with `OLLAMA_FLASH_ATTENTION=1`, `num_ctx` 8192 | Sound; flash attention also allows `OLLAMA_KV_CACHE_TYPE=q8_0`, which halves KV memory. It was approved on 2026-10-24 but not applied (device classifier). Check Ollama's log first: recent Ollama versions turn it on by default for several model families | yes, measured in B0c |
+| Rotate Leader → Worker → Leader for every task | B0 measured 15–47 s cold load and 6–16 s warm (not 3–10 s), plus 2–9 min per Leader review. Per-task rotation spends much of the batch loading models | no; rotate per batch phase (split all, work all, review all), as §5 |
+| On a fail, the Leader writes a "hard rule" injected into the Worker's prompt | Same idea as the experience store (§9a, `lessons.toml`) | yes, through L1b |
+| Stateless Leader, JSON in and out | Same as §6; JSON-schema `format` gave empty answers with reasoning models (B0b), so JSON is asked for in the prompt | yes |
+| Orchestrator in n8n or LangChain | ADR-004 (plain Python until the 2a.1 spike), ADR-006/021 (n8n replaced by in-house LFMAP Flows) | no; plain Python in `lfmap-tools` |
+| Worker uses MCP tools to read and write files | A 14B model with file tools widens what a bad answer can do. Today the script gives the Worker the card, writes its answer into a scratch copy and runs frozen tests | not now; read-only tools later if a card needs them |
+| Cloud API with prompt caching | Claude Code on the Pro plan already caches; an API key is a paid service | no change |
+
+### 12.2 Several PCs
+
+Leader on PC 1 and Worker on PC 2 removes the rotation cost and is the natural next step once a second GPU exists. Two changes to the notes:
+
+- `OLLAMA_HOST=0.0.0.0` opens Ollama to the whole LAN without authentication. Bind to the PC's LAN address and allow port 11434 in the firewall only from PC 1 (or tunnel over SSH).
+- "PC 1 takes over as Manager when the cloud is down" contradicts the rule that the Leading tier never accepts or merges. While the cloud is down, work queues.
+
+Transport stays plain HTTP to Ollama; NATS only when ADR-021's multi-machine EventBus is needed. No hardware decision is needed now.
+
+### 12.3 Context tools for Claude
+
+| Tool | Licence / source | Overlap | Verdict |
+| --- | --- | --- | --- |
+| CodeGraph (tree-sitter graph in SQLite over MCP) | Several unrelated projects use the name; the matching ones are small MIT repositories | `lfmap-knowledge` already serves FTS + vector `get_context` with a token budget | no; a symbol and caller index could become an in-house `lfmap-knowledge` extension later (`tree-sitter`, MIT) |
+| Claude-Mem | Licence unclear (sources say Apache-2.0, or AGPL-3.0 with a PolyForm Noncommercial part); hooks into every Claude Code session and stores transcripts | project memory | no |
+| Milvus + AST chunking | Apache-2.0, a server to run | LanceDB in `lfmap-knowledge` | no |
+| Repomix / AI-Digest | MIT | Claude Code reads files selectively | no |
+| Archify (diagram skill) | MIT, Node.js, third-party skill | Claude draws diagrams as pages on request | optional, after reading the skill and adding a License Register row |
+| CodeSee, CodeScene, Understand | commercial or SaaS; code leaves the machine | none | no |
+| `shaxbozaka/security-audit` | not found | Claude Code `/security-review`, CodeQL on every PR | no |
+| `agentnode-dev/skills-security-audit` | about 30 installs | same | no |
+
+A skill or MCP server runs with Claude's permissions on the owner's machines, so third-party ones are the larger risk: install one only after reading its code, checking the licence and adding a License Register row. The notes' working rules (a short `ARCHITECTURE.md`, narrow tasks, never "read the whole project") are already how the repositories work (`CLAUDE.md`, handoffs).
+
+### 12.4 Options
+
+- **A. Keep ADR-022 as drafted** and take the compatible ideas: hard rules through L1b, stateless JSON, small cards, safe LAN binding for later. No new tools.
+- **B. A plus bench B0c** (recommended): the same 15 cases with `qwen3.8:27b` at Q3_K_M, flash attention and q8_0 KV cache. Keep Q3_K_M if it catches at least 7/8 seeds with no invented quotes; it should fit the GPU and shorten the overnight batch. L1b and L2 start meanwhile on Q4_K_M.
+- **C. Adopt the notes as written** (per-task rotation, Q2/Q3, 2K context, n8n or LangChain, the listed tools): not recommended; it conflicts with ADR-004/006/021, truncates review prompts and adds unreviewed third-party code.
 
 ## Sources
 
@@ -180,3 +231,9 @@ Removing the models afterwards (`ollama rm`) is blocked for Claude on that devic
 - [Qwen2.5-32B-Instruct](https://apxml.com/models/qwen2-5-32b)
 - [Ollama FAQ (keep_alive, loaded models)](https://ollama.readthedocs.io/en/faq/)
 - [Ollama model reloading and swapping](https://runaihome.com/blog/ollama-model-keeps-reloading-vram-fix-2026/)
+- [Qwen3.5 27B (model listing)](https://apxml.com/models/qwen35-27b)
+- [claude-mem on GitHub (licence notes)](https://horadecodar.com.br/claude-mem-github/)
+- [claudekit: claude-mem](https://claudekit.io/en/tools/claude-mem/)
+- [Archify agent skill](https://betterstack.com/community/guides/ai/archify-architecture/)
+- [codegraph-rust](https://awesome.ecosyste.ms/projects/github.com%2Fsunerpy%2Fcodegraph-rust)
+- [agentnode-dev skills-security-audit](https://www.skills.sh/agentnode-dev/skills-security-audit/skills-security-audit)
