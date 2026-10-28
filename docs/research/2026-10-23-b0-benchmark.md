@@ -95,3 +95,22 @@ Seeds missed: `qwen3.8` thinking on missed only "vector count not checked" (answ
 - `gpt-oss:20b` (reasoning low) as a fast second opinion: 10× faster and right on 2 of the 4 ready cases (the others on at most 1); running both and taking the union of findings catches 7/8 seeds with a quick first answer.
 - `qwen3-coder:30b`: not a reviewer; still to be tried as a Working model (L1b).
 - Before filter mode: read the clean-case answers, fix the case labels or the card text, and grow the seed set beyond 8.
+
+## B0c: flash attention and q8_0 KV cache (2026-10-28)
+
+Option B of the research note §12.4. No Q3_K_M build of `qwen3.8:27b` exists from an approved source (the Ollama library has only q4, q8, bf16, mxfp8, nvfp4 and mlx tags; the Qwen organisation on Hugging Face publishes safetensors and FP8, no GGUF), so nothing was downloaded. The bench reran the Q4_K_M model with `OLLAMA_FLASH_ATTENTION=1` and `OLLAMA_KV_CACHE_TYPE=q8_0` (Ollama 0.40.11, confirmed in the server log; flash attention was off before), thinking on and schema on, as in B0b. Valid run: `out\20261028-201005`.
+
+| | B0b (FA off, f16 KV) | B0c (FA on, q8_0 KV) |
+| --- | --- | --- |
+| On GPU at 8K / 16K | 68.9 % / 66.9 % | 70.4 % / 69.0 % |
+| VRAM in use at 8K / 16K | 14.4 / 14.5 GB | 14.9 / 14.8 GB |
+| Gen tok/s at 8K / 16K | 14.0 / 13.9 | 14.4 / 14.0 |
+| Seeds caught (of 8) | 7 | 7 (still misses "vector count not checked") |
+| Ready cases right (of 4) | 1 | 1 |
+| Verdicts right (of 15) | 10 | 10 |
+| Invented quotes | 0 | 1 (K5-red) |
+| Time per review | 141–560 s | 150–483 s |
+
+Flash attention with a q8_0 KV cache gains about 2 points of GPU share and 0.3 tok/s; review quality is unchanged and the model still does not fit the 16 GB card. It also crashed Ollama twice in four model loads (once silently during a review, once with `CUDA error: shared object initialization failed` in the flash-attention kernel); a clean restart then ran through. Void runs kept on the device: `20261028-195657`, `-200809`, `-200845`.
+
+Decision for the next step: the Leading model stays Q4_K_M; the quantisation question is closed until a Q3 build exists from an approved source. Whether to keep flash attention for the other local jobs is the owner's call (it affects every job on the machine).
