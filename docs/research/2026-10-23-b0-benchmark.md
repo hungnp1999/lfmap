@@ -113,4 +113,4 @@ Option B of the research note §12.4. No Q3_K_M build of `qwen3.8:27b` exists fr
 
 Flash attention with a q8_0 KV cache gains about 2 points of GPU share and 0.3 tok/s; review quality is unchanged and the model still does not fit the 16 GB card. It also crashed Ollama twice in four model loads (once silently during a review, once with `CUDA error: shared object initialization failed` in the flash-attention kernel); a clean restart then ran through. Void runs kept on the device: `20261028-195657`, `-200809`, `-200845`.
 
-Decision for the next step: the Leading model stays Q4_K_M; the quantisation question is closed until a Q3 build exists from an approved source. Whether to keep flash attention for the other local jobs is the owner's call (it affects every job on the machine).
+Decision for the next step: the Leading model stays Q4_K_M; the quantisation question is closed until a Q3 build exists from an approved source. The owner chose on 2026-10-28 to remove both settings again (small gain, crashes hit every job on the machine); jobs run before the removal is applied record that they ran with them on.
