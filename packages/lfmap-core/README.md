@@ -43,11 +43,14 @@ For the system-wide design, main execution flows, and architecture invariants, s
 from lfmap_core import Tool, ToolContext, ToolError, operation
 from pydantic import BaseModel
 
+
 class GreetInput(BaseModel):
     name: str
 
+
 class GreetOutput(BaseModel):
     greeting: str
+
 
 class GreetTool(Tool):
     @operation("greet")
