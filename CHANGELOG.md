@@ -4,6 +4,7 @@
 
 ### Added
 
+- `docs/research/2026-10-29-operating-model-review.md`: review of the proposed operating model (GitHub Issues as task record, approval gates) against current governance, with three options and the evidence from the qwen card batches.
 - `AGENTS.md`: rules for Google Antigravity as a Deputy agent on `ag/*` branches (scope, data, commits, checks); `CLAUDE.md` gains a review checklist for those branches and `docs/DEVELOPMENT_PROVENANCE.md` the `AI-Agent` trailer. Handoff `docs/handoff/2026-10-29-antigravity-deputy.md`.
 - `lfmap-knowledge` bench `bench/iso-vi`: 30 synthetic Vietnamese ISO documents of a fictional company, 9 questions with gold documents, and `context_bench.py` scoring `get_context` precision and recall per `min_relative_score`. First run on DIEP-ANH (133 chunks): at 0.5 keyword questions use 671 tokens on average instead of 1,782 with precision 0.88 instead of 0.57, semantic questions 1,109 instead of 1,894 with precision 0.56 instead of 0.44, and no gold file is lost against 0. The default stays 0.5; 0.3 changes nothing on semantic questions.
 
