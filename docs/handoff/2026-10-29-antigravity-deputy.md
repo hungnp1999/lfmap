@@ -64,13 +64,13 @@ Ví dụ `[AG]`: README, docstring, hướng dẫn sử dụng; test theo đặc
 ### Quy trình một task `[AG]`
 
 1. Project soạn thẻ theo mẫu dưới, đặt trong handoff của tính năng, merge vào `main`.
-2. Tạo worktree trên DIEP-ANH (Claude qua Remote Control hoặc Hùng chạy một lệnh):
+2. Tạo worktree trên DIEP-ANH (Antigravity chạy trong project tạm có thư mục `D:\Development\lfmap`, chế độ Local, Hùng duyệt từng lệnh; hoặc Claude qua Remote Control):
    ```powershell
    git -C D:\Development\lfmap fetch origin
    git -C D:\Development\lfmap worktree add -b ag/<task> D:\Development\lfmap-ag origin/main
    ```
    Worktree dùng chung `.git/config` của repo chính nên `core.hooksPath` và khoá ký vẫn áp dụng.
-3. Hùng mở `D:\Development\lfmap-ag` trong Antigravity, dán prompt khởi động (cuối file).
+3. Hùng tạo project `lfmap-ag` (Folders: `D:\Development\lfmap-ag`), mở hội thoại Local, dán prompt khởi động (cuối file).
 4. Antigravity làm, commit từng bước nhỏ (bắt buộc commit trước khi đổi model), chạy kiểm tra trong thẻ, `git push -u origin ag/<task>`.
 5. Project mở PR từ `ag/<task>`, review theo checklist dưới; ĐẠT thì merge khi CI xanh, CẦN SỬA thì ghi danh sách lỗi vào PR để Antigravity sửa trên cùng nhánh.
 6. Dọn: `git worktree remove D:\Development\lfmap-ag`, xoá nhánh đã merge.
@@ -98,21 +98,23 @@ Ví dụ `[AG]`: README, docstring, hướng dẫn sử dụng; test theo đặc
 
 ### Cấu hình Antigravity trên DIEP-ANH
 
-Tên mục lấy theo tài liệu và bài viết bên thứ ba; đối chiếu lại trên UI khi cài.
+Dùng **Antigravity App** (desktop, bản 2.x, tài khoản cá nhân), không dùng CLI ở đợt thử. Tên mục theo tài liệu chính thức `antigravity.google/docs/settings` và `docs/agent-settings` (Hùng gửi 2026-10-29). Bấm tay, không để agent tự đổi cấu hình của chính nó.
 
-| Mục | Giá trị | Lý do |
+| Mục (App) | Giá trị | Lý do |
 | --- | --- | --- |
-| Account → Enable Telemetry | Tắt | Giảm dữ liệu Google giữ lại |
-| Terminal execution | Request review (hỏi trước mọi lệnh) | Lỗi PromptArmor dùng `cat .env`; allow list có lỗi đã báo |
-| Allow list lệnh (nếu muốn bớt hỏi) | `git status`, `git diff`, `git log`, `git add`, `git commit`, `uv run pytest`, `uv run ruff` | Lệnh chỉ đọc hoặc chỉ ghi trong worktree |
-| Deny list lệnh | `git push origin main`, `git merge`, `git rebase`, `git reset`, `git push --force`, `gh`, `curl`, `Invoke-WebRequest`, `Remove-Item -Recurse` | Chặn merge/ghi đè và gửi dữ liệu ra ngoài |
-| File ngoài workspace | Deny | Không đọc `~/.ssh`, `%LOCALAPPDATA%`, tài liệu thật |
-| Browser agent / URL | Tắt; nếu cần, chỉ cho tài liệu thư viện | Kênh rò rỉ chính của các lỗi đã công bố |
-| MCP server | Không thêm | Không mở rộng quyền |
-| Model mặc định | Gemini Flash | Tiết kiệm hạn mức |
-| Thư mục mở | Chỉ `D:\Development\<repo>-ag` | Antigravity không thấy repo chính, sổ L1b, dữ liệu bench |
+| Settings › Account › Enable Telemetry | Tắt | Google không thu tương tác để cải thiện model |
+| Settings › General › Global Permissions › Permission Preset | **Request Review** | Mọi lệnh terminal phải duyệt; agent chỉ đọc/ghi trong thư mục project, mọi thứ khác phải hỏi. Không chọn Default/Auto (cần sandbox, chưa có trên Windows) hay Turbo |
+| Global Permissions › rules (deny) | `command(git push --force)`, `command(git push -f)`, `command(git push origin main)`, `command(git merge)`, `command(git rebase)`, `command(git reset)`, `command(gh)`, `command(curl)`, `command(Invoke-WebRequest)`, `command(Invoke-RestMethod)` | Deny thắng ask/allow và chặn ở mọi preset |
+| Global Permissions › rules (allow, tuỳ chọn) | `command(git status)`, `command(git diff)`, `command(git log)`, `command(uv run pytest)`, `command(uv run ruff)` | Lệnh chỉ đọc hoặc chỉ kiểm tra, bớt bấm duyệt |
+| Settings › Projects › (project) › Permission Preset | Inherit Global | Một chỗ cấu hình |
+| Project-level permissions | Không bấm "luôn cho phép" với lệnh rộng (`git`, `powershell`, `*`) | Quyền tích luỹ khi duyệt sẽ vào đây |
+| Browser integration | Tắt, hoặc chỉ cho trang tài liệu thư viện | Kênh rò rỉ chính của các lỗi đã công bố |
+| Customizations (MCP, skills, plugins) | Không thêm | Không mở rộng quyền |
+| Model usage | Gemini Flash mặc định | Tiết kiệm hạn mức |
+| Artifact review (nếu có) | Luôn chờ duyệt | Duyệt kế hoạch trước khi agent làm |
+| Projects › Folders | Project `lfmap-ag` chỉ có `D:\Development\lfmap-ag`; hội thoại chọn **Local** | Antigravity không thấy repo chính, sổ L1b, dữ liệu bench |
 
-Repo không có `GEMINI.md`; không đặt quy tắc toàn cục trong `~/.gemini/` để tránh hai nguồn.
+Không dùng chế độ **Worktree** của App: chưa rõ App đặt worktree ở đâu và đặt tên nhánh thế nào, trong khi quy trình cần nhánh `ag/<task>`. Sandbox terminal chỉ có trên macOS/Linux nên không giúp gì trên DIEP-ANH. Repo không có `GEMINI.md`; không đặt quy tắc toàn cục trong `~/.gemini/` để tránh hai nguồn.
 
 ## Danh sách task
 
