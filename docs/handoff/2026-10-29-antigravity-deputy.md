@@ -31,7 +31,7 @@ Tiêu chí hoàn thành của đợt chuẩn bị: PR tài liệu đã merge ở
 | 4 | Commit của Antigravity giữ hook `Dev-Environment: pc-01`, chữ ký SSH của pc-01, và thêm trailer `AI-Agent: antigravity/<model>` | Đúng quy tắc provenance (máy cá nhân được khai báo), tách được phần AI nào viết cho hồ sơ bản quyền | Tiền tố `[AG]` trong tiêu đề commit: trái Conventional Commits của isomp, không nằm trong chữ ký trailer |
 | 5 | Mỗi task Antigravity chạy trong **git worktree riêng** `D:\Development\<repo>-ag`, mở đúng thư mục đó trong Antigravity | Không tranh file với Claude Code; Antigravity không thấy phần còn lại của `D:\Development` | Mở cả repo chính hoặc cả `D:\Development` |
 | 6 | Phân việc ba tầng: thẻ S có test chặt → qwen (local, không rời máy); việc phụ đặc tả rõ → Antigravity; còn lại → Claude Code | Tầng 0 (model local) đã chạy, rẻ nhất và không gửi dữ liệu ra ngoài | Bỏ qua qwen như bản gốc |
-| 7 | Phạm vi dữ liệu: **chờ Hùng chọn** (card trong thread "Thiết lập Google Antigravity hỗ trợ dự án"). Đề xuất: chỉ lfmap + MarkitdownTool (đã public), telemetry tắt, 3 tuần | Gửi code lên Google là gửi dữ liệu ra ngoài, cần Hùng duyệt phạm vi và hạn | Cả isomp (private, hồ sơ bản quyền rủi ro trung bình); hoãn tới khi có Workspace/GCP |
+| 7 | Phạm vi dữ liệu: **chỉ lfmap + MarkitdownTool** (đã public), telemetry tắt, thử 3 tuần (30/10 – 20/11). isomp loại trừ (`AGENTS.md` chặn) | Hùng chọn trên card 2026-10-29 03:21Z; gửi code lên Google là gửi dữ liệu ra ngoài, cần duyệt phạm vi và hạn | Cả isomp (private, hồ sơ bản quyền rủi ro trung bình); hoãn tới khi có Workspace/GCP |
 
 Không mâu thuẫn ADR nào: ADR-004 nói về framework agent trong sản phẩm, Antigravity là công cụ phát triển như Claude Code, không vào sản phẩm.
 
@@ -166,9 +166,8 @@ Repo không có `GEMINI.md`; không đặt quy tắc toàn cục trong `~/.gemin
 
 ## Câu hỏi còn mở
 
-1. Phạm vi repo cho Antigravity (card đang chờ Hùng).
-2. Bật ruleset "Require a pull request before merging" trên `main` của 3 repo? Ảnh hưởng: mọi thay đổi phải qua PR (hiện đã là quy ước).
-3. Mốc hạn mức Claude (`/usage`) ngày 30/10 để so sánh.
+1. Bật ruleset "Require a pull request before merging" trên `main` của 3 repo? Ảnh hưởng: mọi thay đổi phải qua PR (hiện đã là quy ước).
+2. Mốc hạn mức Claude (`/usage`) ngày 30/10 để so sánh.
 
 ## Cập nhật tài liệu dự án
 
