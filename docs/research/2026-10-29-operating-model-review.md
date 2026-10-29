@@ -1,7 +1,7 @@
 # Operating Model v1: review against how the project runs today
 
 - Date: 2026-10-29 · Author: Claude (Managing Agent) · Requested by: Hùng
-- Status: **proposed**, waiting for Hùng to pick an option (§4).
+- Status: **decided**. Hùng chose option B (§4) on 2026-10-29. Approval windows and ADR-023 vs instructions-only are still open (§7).
 - Input: the owner's proposal "LFMAP Operating Model v1" (GitHub Issues as the single source of task state, Agent View, two approval gates, a `pm.ps1` status script) and the "Planning Platform" concept v0.1 (kept outside this public repository).
 - Baseline: governance of 2026-10-22 (the project's coordinator and threads act as Managing Agent and open Working Agent sessions themselves), grants of the same day (Claude merges when tests and CodeQL are green), provenance rules (`docs/DEVELOPMENT_PROVENANCE.md`), the Antigravity Deputy trial 2026-10-30 to 2026-11-20 (`docs/handoff/2026-10-29-antigravity-deputy.md`), ADR-001..021.
 - Facts about Claude Code features that could not be checked from the cloud session are marked **[verify]**.
@@ -44,7 +44,7 @@ Overlaps with no conflict: file scope per task (already in `[AG]` cards), `needs
 **A. Adopt v1 as written.** Issues + board + Agent View + owner-driven two gates + `pm.ps1`.
 Pros: complete, close to the document. Cons: C1, C2 and C7 conflict with current rules; the owner becomes the bottleneck again and needs DIEP-ANH for every task start; pwsh script cannot run in the cloud.
 
-**B. Adapted v1 ("Managing Agent drives, GitHub records") — recommended.**
+**B. Adapted v1 ("Managing Agent drives, GitHub records") — recommended, chosen.**
 1. GitHub is the record: one Issue per task, one Projects board for all three repositories (Projects v2 is user-level), Milestones per open phase, labels `exec:CC/AG/QW/PO`, `P1..P3`, `res:gpu/office`, `blocked`, `needs-decision`, `gate:po`, `security-review`.
 2. The Managing Agent turns each approved handoff into Issues, starts sessions, keeps the board current, merges green PRs within the grants. The owner's two gates: **handoff approval** (per feature) and **`gate:po` PRs** (risk class), both in the two daily windows.
 3. Zero-token status = board views ("Next", "Waiting for me", "Blocked", "Running") + the daily report. No script for two weeks.
@@ -92,6 +92,6 @@ Pros: zero setup. Cons: V1, V3, V4 stay; status still costs tokens.
 
 ## 7. Open questions for the owner
 
-1. Option A, B or C (recommended B)?
+1. ~~Option A, B or C~~: B, chosen 2026-10-29.
 2. Approval windows: 09:00 and 17:00 Vietnam time, or other times?
 3. Record as ADR-023, or as a project-instruction change only?
