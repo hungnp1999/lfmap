@@ -2,6 +2,10 @@
 
 <!-- What changed and why. -->
 
+Closes #<!-- issue number, or remove the line -->
+
+- Executor: <!-- Claude Code (model) | Antigravity (model) | qwen + Claude review -->
+
 ## Development environment
 
 <!-- Labels from docs/DEVELOPMENT_PROVENANCE.md where the commits in this PR were made. -->

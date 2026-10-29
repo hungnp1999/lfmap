@@ -8,6 +8,7 @@ Guidance for Claude Code sessions working on LFMAP. Module map, main flows and i
 - Do one task at a time and meet its completion criteria. If the handoff conflicts with the code, an ADR or this file, stop and ask; do not pick a side silently.
 - "Cập nhật tài liệu dự án" items: list them in the PR body; do not create ROADMAP/DECISIONS files here.
 - Handoff files are in Vietnamese; keep them so.
+- Each handoff task becomes a GitHub Issue (`.github/ISSUE_TEMPLATE/task.md`, labels `exec:*`, `P1..P3`, `res:*`, `gate:po`) on the "LFMAP work" board; the PR says `Closes #N`. Operating model: `docs/research/2026-10-29-operating-model-review.md` (option B).
 
 ## Conventions
 
