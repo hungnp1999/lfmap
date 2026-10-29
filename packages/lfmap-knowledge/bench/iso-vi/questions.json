@@ -1,0 +1,65 @@
+[
+  {
+    "id": "S1",
+    "type": "semantic",
+    "question": "Khi phát hiện hàng lỗi trong sản xuất thì phải làm gì và ai quyết định cách xử lý?",
+    "gold": ["QT-08", "BM-08-01"],
+    "acceptable": ["QT-09", "BB-DGNB-01", "QT-06", "QT-10"]
+  },
+  {
+    "id": "S2",
+    "type": "semantic",
+    "question": "Ai có thẩm quyền phê duyệt một quy trình mới trước khi ban hành?",
+    "gold": ["QT-01", "BM-01-01"],
+    "acceptable": ["STCL-01"]
+  },
+  {
+    "id": "S3",
+    "type": "semantic",
+    "question": "Giấy tờ lưu trữ được giữ bao lâu và hết hạn thì tiêu hủy thế nào?",
+    "gold": ["QT-02", "BM-02-01"],
+    "acceptable": ["QT-01"]
+  },
+  {
+    "id": "S4",
+    "type": "semantic",
+    "question": "Công ty kiểm tra nội bộ hệ thống bao lâu một lần và người đi kiểm tra cần điều kiện gì?",
+    "gold": ["QT-03", "KH-DGNB-2026"],
+    "acceptable": ["BB-DGNB-01", "BB-DGNB-02", "BB-DGNB-03", "QT-05", "BM-05-01", "STCL-01"]
+  },
+  {
+    "id": "S5",
+    "type": "semantic",
+    "question": "Làm sao chọn được nơi cung cấp giấy mới và theo dõi họ hằng năm?",
+    "gold": ["QT-06", "BM-06-01"],
+    "acceptable": ["BB-DGNB-02", "BB-XXLD-2025"]
+  },
+  {
+    "id": "K1",
+    "type": "keyword",
+    "question": "khí thải lò hơi",
+    "gold": ["HD-MT-02"],
+    "acceptable": ["QT-11", "BB-DGNB-03"]
+  },
+  {
+    "id": "K2",
+    "type": "keyword",
+    "question": "bình chữa cháy",
+    "gold": ["HD-AT-03", "BM-AT-03-01"],
+    "acceptable": ["BB-DGNB-02", "QT-13"]
+  },
+  {
+    "id": "K3",
+    "type": "keyword",
+    "question": "hiệu chuẩn thiết bị đo",
+    "gold": ["QT-07", "BM-07-01"],
+    "acceptable": ["BB-DGNB-01", "BB-DGNB-03"]
+  },
+  {
+    "id": "K4",
+    "type": "keyword",
+    "question": "khiếu nại khách hàng",
+    "gold": ["QT-10", "BM-10-01"],
+    "acceptable": ["QT-09", "BB-XXLD-2025", "QT-04", "STCL-01"]
+  }
+]
