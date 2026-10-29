@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `lfmap-knowledge` bench `bench/iso-vi`: 30 synthetic Vietnamese ISO documents of a fictional company, 9 questions with gold documents, and `context_bench.py` scoring `get_context` precision and recall per `min_relative_score`. First run on DIEP-ANH (133 chunks): at 0.5 keyword questions use 671 tokens on average instead of 1,782 with precision 0.88 instead of 0.57, semantic questions 1,109 instead of 1,894 with precision 0.56 instead of 0.44, and no gold file is lost against 0. The default stays 0.5; 0.3 changes nothing on semantic questions.
+
 ### Fixed
 
 - `scripts/check_licenses.py` no longer fails when the `ocr` extra is installed: `fpdf2` and `img2pdf` (LGPL-3.0, required by `ocrmypdf` 17.13; every `ocrmypdf` since 15 needs `img2pdf`) are reviewed exceptions, used unmodified as replaceable libraries, as in MarkitdownTool. Found in the Docling real run on pc-01; CI does not install the extra.
