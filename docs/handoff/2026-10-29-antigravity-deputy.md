@@ -104,8 +104,12 @@ Dùng **Antigravity App** (desktop, bản 2.x, tài khoản cá nhân), không d
 | --- | --- | --- |
 | Settings › Account › Enable Telemetry | Tắt | Google không thu tương tác để cải thiện model |
 | Settings › General › Global Permissions › Permission Preset | **Request Review** | Mọi lệnh terminal phải duyệt; agent chỉ đọc/ghi trong thư mục project, mọi thứ khác phải hỏi. Không chọn Default/Auto (cần sandbox, chưa có trên Windows) hay Turbo |
-| Global Permissions › rules (deny) | `command(git push --force)`, `command(git push -f)`, `command(git push origin main)`, `command(git merge)`, `command(git rebase)`, `command(git reset)`, `command(gh)`, `command(curl)`, `command(Invoke-WebRequest)`, `command(Invoke-RestMethod)` | Deny thắng ask/allow và chặn ở mọi preset |
-| Global Permissions › rules (allow, tuỳ chọn) | `command(git status)`, `command(git diff)`, `command(git log)`, `command(uv run pytest)`, `command(uv run ruff)` | Lệnh chỉ đọc hoặc chỉ kiểm tra, bớt bấm duyệt |
+| Global Permissions › Terminal Commands (deny) | `command(git push --force)`, `command(git push -f)`, `command(git push origin main)`, `command(git merge)`, `command(git rebase)`, `command(git reset)`, `command(gh)`, `command(curl)`, `command(Invoke-WebRequest)`, `command(Invoke-RestMethod)` | Deny thắng ask/allow và chặn ở mọi preset |
+| Global Permissions › Terminal Commands (allow, tuỳ chọn) | `command(git status)`, `command(git diff)`, `command(git log)`, `command(uv run pytest)`, `command(uv run ruff)` | Lệnh chỉ đọc hoặc chỉ kiểm tra, bớt bấm duyệt |
+| Global Permissions › File Access Rules › File Reads (deny) | `C:\Users\Admin\.ssh`, `C:\Users\Admin\.git-credentials`, `C:\Users\Admin\AppData\Roaming\GitHub CLI`, `C:\Users\Admin\.claude`, `C:\Users\Admin\AppData\Local\lfmap`, `D:\Development\lfmap-tools`, `**/.env` | Khoá ký, token GitHub, cấu hình Claude/lfmap, sổ L1b. Lệnh terminal đọc các đường dẫn này (`type`, `Get-Content`) vẫn phải bị từ chối khi duyệt |
+| Global Permissions › File Access Rules › File Writes (deny) | Như File Reads, thêm `D:\Development\lfmap`, `D:\Development\MarkitdownTool`, `**/.git/**`, `**/.githooks/**`, `**/.github/**`, `**/.claude/**`, `**/AGENTS.md`, `**/CLAUDE.md` | Chỉ sửa trong worktree `-ag`; không tự sửa hook, CI, cấu hình Claude và quy tắc của chính nó |
+| Global Permissions › Terminal Commands (ask) | `git push`, `git commit` | Hùng xem nhánh và nội dung commit trước khi duyệt |
+| Global Permissions › MCP Tools | Để trống | Không cài MCP |
 | Settings › Projects › (project) › Permission Preset | Inherit Global | Một chỗ cấu hình |
 | Project-level permissions | Không bấm "luôn cho phép" với lệnh rộng (`git`, `powershell`, `*`) | Quyền tích luỹ khi duyệt sẽ vào đây |
 | Browser integration | Tắt, hoặc chỉ cho trang tài liệu thư viện | Kênh rò rỉ chính của các lỗi đã công bố |
