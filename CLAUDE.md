@@ -28,6 +28,11 @@ Guidance for Claude Code sessions working on LFMAP. Module map, main flows and i
 - Every commit ends with `Dev-Environment: <label>`; `.githooks/prepare-commit-msg` adds it once the SessionStart hook has run. Cloud commits also keep `Claude-Session:`. The `Provenance` workflow fails a PR otherwise.
 - Merging through the API: put `Dev-Environment:` and `Claude-Session:` in the merge or squash commit message.
 
+## Deputy agent (Antigravity)
+
+- Tasks marked `[AG]` in a handoff are done by Google Antigravity on `ag/<task>` branches in a separate worktree; its rules are in `AGENTS.md`. Workflow and review checklist: `docs/handoff/2026-10-29-antigravity-deputy.md`.
+- Reviewing an `ag/*` branch: only files listed in the card changed, every commit has `Dev-Environment` and `AI-Agent` trailers and a verified signature, completion criteria met, no new dependency or architecture change. Conclude ĐẠT (merge through the normal PR rules) or CẦN SỬA (list each fix in the PR). Do not fix code on `ag/*` unless asked.
+
 ## Commands (Windows, repo root)
 
 ```powershell
