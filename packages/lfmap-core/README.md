@@ -12,7 +12,7 @@ For the system-wide design, main execution flows, and architecture invariants, s
 
 | Module | Role |
 | --- | --- |
-| `__init__.py` | Top-level exports for `Tool`, `@operation`, `ToolContext`, `ToolError`, and `ErrorCode`. |
+| `__init__.py` | Top-level exports for `Tool`, `@operation`, `ToolContext`, `ToolError`, `ErrorCode`, `OperationSpec`, `invoke`, and `__version__`. |
 | `approval.py` | Evaluates risk tiers (T0–T3), enforces channel policies, and records decisions in `audit.jsonl`. |
 | `approvals.py` | Manages the file-based proposal queue for scheduled job approvals (`%LOCALAPPDATA%\lfmap\approvals\`). |
 | `cli.py` | Generates Typer CLI commands dynamically from plugin manifests and exposes core commands. |
@@ -34,7 +34,7 @@ For the system-wide design, main execution flows, and architecture invariants, s
 ## How plugins use it
 
 1. **Subclass `Tool`**: Define business logic in a `Tool` subclass and decorate methods with `@operation("name")` using typed Pydantic models.
-2. **Use `ToolContext`**: Access injected runtime facilities via `self.context`, including `permissions` (`require_read`, `require_write`), `data_dir`, and `settings`.
+2. **Use `ToolContext`**: Access injected runtime facilities via `self.ctx`, including `permissions` (`require_read`, `require_write`), `data_dir`, and `settings`.
 3. **Handle errors**: Raise `ToolError` with a standard `ErrorCode` (`invalid_input`, `permission_denied`, `not_found`, etc.) rather than leaking raw exceptions.
 4. **Declare `lfmap.toml`**: Specify plugin metadata, operations, side effect tiers (`none`, `local_write`, `external`), permissions, and adapters.
 5. **Register entry point**: Expose the tool class in `pyproject.toml` under the `[project.entry-points."lfmap.plugins"]` group.
