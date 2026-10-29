@@ -97,3 +97,22 @@ Không có câu hỏi chặn. Việc chạy Q2 nằm trong phạm vi đã cấp 
 ## Prompt khởi động cho Claude Code (Q3)
 
 > Review kết quả qwen của thẻ TC-O1..O3 trong `/mnt/project-files/qwen-loop/runs/2026-10-29-O/` theo `docs/handoff/2026-10-29-qwen-cards-organizer-naming.md`. Chọn lần xanh đầu tiên của mỗi thẻ, ghi `claude_fixes`, so với `packages/lfmap-core/src/lfmap_core/naming.py` trên `main`. Nếu bản qwen ghép lại (thêm `safe_filename`) qua mọi test `test_naming*.py` và không kém hơn, mở PR thay module và sửa dòng `docs/PROVENANCE.md`; nếu không, chỉ ghi kết quả.
+
+## Kết quả đợt EO (2026-10-29)
+
+Chạy trên pc-01 lúc 02:23–02:39Z bằng `Run-BatchEO.ps1` (`qwen2.5-coder:14b`, Ollama 0.40.11, flash attention tắt, sổ L1b bật với bản chụp cho mỗi lần, 5 bài học và 2 ví dụ mỗi thẻ), gồm 6 thẻ × 3 lần.
+
+| Thẻ | Xanh vòng đầu | Xanh trong 3 vòng | Thời gian / thẻ |
+| --- | --- | --- | --- |
+| TC-O1 | 3/3 | 3/3 | 29–30 s |
+| TC-O2 | 3/3 | 3/3 | 32–33 s |
+| TC-O3 | 3/3 | 3/3 | 31–32 s |
+| TC-E1 (thread EventBus) | 0/3 | 0/3 | no_progress |
+| TC-E2 | 1/3 | 1/3 | |
+| TC-E3 | 0/3 | 0/3 | no_progress |
+
+So với TC-N2 ở W0 (cùng chức năng, một thẻ, 0/3 với sổ): tách thẻ và ghi thuật toán từng bước đưa 14b từ 0/3 lên 9/9. Như đã nói ở phần Rủi ro, thẻ gần như đọc chính tả nên kết quả này cho thấy cách viết thẻ hiệu quả, chưa cho thấy 14b tự giải được N2.
+
+Review (lần chạy r1, code giống r2/r3 về logic): `claude_fixes` = 0 cho cả ba thẻ. Ghép module: giữ `split_extension` của O3 (bản chép từ prompt, có hằng `MAX_EXTENSION`), bỏ bản trùng của O1, gộp import và hằng số, thêm `safe_filename`. Một chỗ khác bản tham chiếu: O2 kiểm `replacement.isspace()` thay vì `== " "`, nên từ chối thêm các khoảng trắng Unicode khác. Chặt hơn và hợp với tên file, nên giữ. Module ghép qua cả 152 test `test_naming*.py` và thay bản tham chiếu trên `main`.
+
+Bài học cho sổ L1b và mẫu thẻ (thread EventBus nhận việc này): thẻ S nên viết thành thuật toán từng bước có đánh số, có tên biến và hằng số viết sẵn.
