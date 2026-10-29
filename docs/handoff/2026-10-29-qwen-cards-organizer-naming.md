@@ -10,7 +10,7 @@ Ngày chốt: 2026-10-29. Hùng chọn việc "soạn thẻ S tiếp theo cho qw
 
 ## Mục tiêu
 
-1. Có module `lfmap_core.naming` (tên file Windows an toàn và không trùng) cho plugin `organizer` của Phase 2a (2a.6, ADR-012), do Working model viết.
+1. Có module `lfmap_core.naming` (tên file Windows an toàn và không trùng) cho plugin `organizer` của Phase 2a (2a.6, ADR-012). Hùng yêu cầu CI xanh ngay (2026-10-29 01:55Z), nên bản tham chiếu của Claude được merge trước; bản qwen thay vào nếu review thấy tốt hơn hoặc ngang bằng.
 2. Đo một giả thuyết về cách viết thẻ: **tách thẻ trượt thành thẻ một chức năng, ghi thuật toán thành từng bước đánh số**, thì 14b có xanh không. So với TC-N2 ở W0 (cùng chức năng, 0/3 xanh với sổ).
 
 Tiêu chí hoàn thành:
@@ -53,15 +53,15 @@ Mọi lỗi là `ToolError("invalid_input", ...)`; đầu vào không phải `st
 | --- | --- | --- | --- |
 | Q1 | Soạn thẻ + test đóng băng + bản tham chiếu (thread này) | Cloud | Xong 2026-10-29: 35 + 41 + 27 test, tham chiếu xanh, module ghép qua cả 49 test N2 (152 test) |
 | Q2 | Chạy 3 thẻ × 3 lần với sổ L1b (bản chụp sổ cho mỗi lần, như W0) | qwen trên DIEP-ANH (cần GPU) | `summary.csv` + `out\` chép về `/mnt/project-files/qwen-loop/runs/2026-10-29-O/` |
-| Q3 | Review (checklist thường lệ), ghép `naming.py`, thêm `safe_filename`, thêm `test_naming.py` của N2, dòng `docs/PROVENANCE.md` (ADR-021), CHANGELOG, ghi `claude_fixes`; `lesson bump`/`lesson add`, `accept` thẻ tốt | Cloud (+ folder tools cho sổ) | PR này hết draft, CI xanh, merge |
+| Q3 | Review (checklist thường lệ), ghi `claude_fixes`; `lesson bump`/`lesson add`, `accept` thẻ tốt. Nếu bản qwen ghép lại tốt hơn hoặc ngang bản đang ở `main`: PR mới thay `naming.py` và sửa dòng `docs/PROVENANCE.md` | Cloud (+ folder tools cho sổ) | Kết quả đợt O ghi vào handoff này hoặc docs research |
 
 Q2 có thể chạy chung một lệnh với TC-E1..E3 của thread Phase 2a nếu chúng xong trước (6 thẻ, khoảng 30 phút GPU với flash attention tắt).
 
 ## Chuẩn bị sẵn
 
 - Thẻ: `/mnt/project-files/qwen-loop/cards/TC-O1/`, `TC-O2/`, `TC-O3/` (`card.toml`, `prompt.md` 5,2–5,6 KB), đã chép sẵn vào `D:\Development\lfmap-tools\qwen-loop\cards\` trên DIEP-ANH. Đã nạp thử bằng `load_card` của `qwen_loop.py` bản L1b.
-- `base_ref = origin/claude/project-thread-ijq0vh` (nhánh của PR này). Trên đó chưa có `naming.py`, nên cả ba file test đỏ (ImportError) đúng thiết kế; CI của PR đỏ cho đến Q3.
-- Bản tham chiếu (không đưa vào repo trước khi review): `/mnt/project-files/qwen-loop/reference/2026-10-29-TC-O/` (`TC-O1-naming.py`, `TC-O2-naming.py`, `TC-O3-naming.py`, `naming-assembled.py`).
+- `base_ref = b141f5c798baaa819f02c21c2a626afe6b692b51`: commit chỉ có test, chưa có `naming.py`, nên cả ba file test đỏ ở đó đúng thiết kế. Commit sau của PR #86 thêm bản tham chiếu để CI xanh. **Giữ nhánh `claude/project-thread-ijq0vh` sau khi squash merge** để commit này còn fetch được.
+- Bản tham chiếu: `/mnt/project-files/qwen-loop/reference/2026-10-29-TC-O/` (`TC-O1-naming.py`, `TC-O2-naming.py`, `TC-O3-naming.py`, `naming-assembled.py`); bản ghép nằm trong repo. Không đưa nó vào sổ L1b làm ví dụ (ví dụ chỉ nhận code do Working model viết).
 - Test nghiệm thu khi ghép: `git show 790748b:packages/lfmap-core/tests/test_naming.py` (nhánh `claude/project-thread-il17dd` phải còn giữ).
 
 ## Lệnh chạy Q2 (DIEP-ANH, PowerShell, trong `D:\Development\lfmap-tools\qwen-loop`)
@@ -92,8 +92,8 @@ Không có câu hỏi chặn. Việc chạy Q2 nằm trong phạm vi đã cấp 
 
 - 05 Roadmap, dòng 1.7: sau Q3 ghi kết quả đợt O (xanh vòng đầu so với N2 ở W0).
 - 03 ADR: không đổi.
-- `docs/PROVENANCE.md`: thêm dòng `lfmap_core.naming` ở Q3 (qwen2.5-coder:14b viết, Claude review).
+- `docs/PROVENANCE.md`: dòng `lfmap_core.naming` đã thêm (Claude, bản tham chiếu); sửa ở Q3 nếu bản qwen thay vào.
 
 ## Prompt khởi động cho Claude Code (Q3)
 
-> Review kết quả qwen của thẻ TC-O1..O3 trong `/mnt/project-files/qwen-loop/runs/2026-10-29-O/` theo `docs/handoff/2026-10-29-qwen-cards-organizer-naming.md`. Chọn lần xanh đầu tiên của mỗi thẻ, ghép thành `packages/lfmap-core/src/lfmap_core/naming.py`, thêm `safe_filename`, thêm `test_naming.py` từ `790748b`, chạy `uv run pytest packages/lfmap-core` và ruff, ghi `claude_fixes` từng thẻ, cập nhật CHANGELOG và `docs/PROVENANCE.md`, đẩy lên nhánh `claude/project-thread-ijq0vh`, bỏ draft PR.
+> Review kết quả qwen của thẻ TC-O1..O3 trong `/mnt/project-files/qwen-loop/runs/2026-10-29-O/` theo `docs/handoff/2026-10-29-qwen-cards-organizer-naming.md`. Chọn lần xanh đầu tiên của mỗi thẻ, ghi `claude_fixes`, so với `packages/lfmap-core/src/lfmap_core/naming.py` trên `main`. Nếu bản qwen ghép lại (thêm `safe_filename`) qua mọi test `test_naming*.py` và không kém hơn, mở PR thay module và sửa dòng `docs/PROVENANCE.md`; nếu không, chỉ ghi kết quả.
