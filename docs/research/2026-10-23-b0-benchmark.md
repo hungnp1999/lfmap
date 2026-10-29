@@ -114,3 +114,31 @@ Option B of the research note §12.4. No Q3_K_M build of `qwen3.8:27b` exists fr
 Flash attention with a q8_0 KV cache gains about 2 points of GPU share and 0.3 tok/s; review quality is unchanged and the model still does not fit the 16 GB card. It also crashed Ollama twice in four model loads (once silently during a review, once with `CUDA error: shared object initialization failed` in the flash-attention kernel); a clean restart then ran through. Void runs kept on the device: `20261028-195657`, `-200809`, `-200845`.
 
 Decision for the next step: the Leading model stays Q4_K_M; the quantisation question is closed until a Q3 build exists from an approved source. The owner chose on 2026-10-28 to remove both settings again (small gain, crashes hit every job on the machine); jobs run before the removal is applied record that they ran with them on.
+
+## B0d: more layers on the GPU with `num_gpu` (2026-10-29)
+
+The owner saw only about 14.5 of 16 GB VRAM in use during B0c. With no model loaded, Windows and the desktop take about 0.9 GB. Ollama's own estimate puts 46 of 66 layers of `qwen3.8:27b` on the GPU and keeps a larger reserve than the model needs; `num_gpu` (a per-request option, no environment change) overrides it. Ollama 0.40.11, flash attention off again, `num_ctx` 16384. Data: `out\numgpu-20261029-075522.csv`, `out\numgpu-20261029-080031.csv`, reviews in `out\20261029-082240`.
+
+| `num_gpu` | VRAM in use | Gen tok/s (600-token prompt) |
+| --- | --- | --- |
+| default (46/66) | 14.7 GB | 13.6–14.1 |
+| 50 | 14.5 GB | 16.6 |
+| 52 | 15.0 GB | 18.4 |
+| 54 | 15.5 GB | 20.0 |
+| 56 | 15.8 GB | 21.9 (under 0.5 GB free) |
+
+The 15 reviews rerun at `num_gpu` 54:
+
+| | B0c (46 layers) | B0d (54 layers) |
+| --- | --- | --- |
+| Seeds caught (of 8) | 7 | 6 |
+| Ready cases right (of 4) | 1 | 2 |
+| Verdicts right (of 15) | 10 | 13 |
+| Invented quotes | 1 | 0 |
+| Time per review / total | 150–483 s / 72 min | 109–312 s / 49 min |
+| Review gen tok/s | 10.3–12.7 | 15.6–18.1 |
+| Peak VRAM | ~14.8 GB | 15.4 GB |
+
+Seeds missed: "temp file not removed" (caught in B0c) and "vector count not checked" (missed in every run). A different layer split changes the floating-point order, so answers differ even at temperature 0; the quality differences between single runs are within run-to-run noise, the speed gain is not.
+
+Decision: the Leading model runs with `num_gpu` 54 (about 45 % faster, about 0.85 GB headroom) and nothing else on the GPU at the same time. Seed catch over single runs is now 7, 7 and 6 of 8 (B0b, B0c, B0d), close to the 80 % threshold of the research note §3; before filter mode, measure it over repeated runs and more seeds instead of single runs. `bench.py` gained `--num-gpu`.
