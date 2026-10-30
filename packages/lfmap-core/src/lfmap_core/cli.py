@@ -3,6 +3,7 @@
 import dataclasses
 import inspect
 import json
+import secrets
 import subprocess
 import sys
 import types
@@ -25,6 +26,8 @@ from lfmap_core.tool import OperationSpec
 
 _FLAT = (str, int, float, bool, Path)
 _WINDOWS = sys.platform == "win32"
+CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O or 1/I
+CODE_LENGTH = 6
 
 
 def _is_flat(annotation: Any) -> bool:
@@ -49,12 +52,44 @@ def _console_stdin() -> bool:
         return False
 
 
-def _interactive() -> bool:
-    """A person at a terminal. Agents and scripts calling the CLI get no prompts and no extra rights."""
+def _console_window() -> bool:
+    """Windows: the console has a window a person can see. Hidden consoles of agent shells have none."""
     try:
-        return _console_stdin() if _WINDOWS else sys.stdin.isatty()
+        import ctypes  # Windows-only modules, imported here
+        from ctypes import wintypes
+
+        get_window = ctypes.WINFUNCTYPE(wintypes.HWND)(("GetConsoleWindow", ctypes.windll.kernel32))
+        return bool(get_window())
+    except Exception:  # noqa: BLE001 - anything unexpected means nobody is known to be there
+        return False
+
+
+def _interactive() -> bool:
+    """A person at a terminal. Agents and scripts calling the CLI get no prompts and no extra rights.
+
+    This stops scripts and accidents, not an agent of the same user that drives a real console (#108).
+    """
+    try:
+        return _console_stdin() and _console_window() if _WINDOWS else sys.stdin.isatty()
     except Exception:  # noqa: BLE001 - a closed or replaced stdin is not a person
         return False
+
+
+def _confirm_code() -> str:
+    return "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
+
+
+def _require_code(action: str, record: dict[str, Any]) -> None:
+    """The person types back a fresh random code; a mismatch or end of input refuses and is audited."""
+    code = _confirm_code()
+    typer.echo(f"To {action}, type this code: {code}")
+    try:
+        typed = typer.prompt("Code", default="", show_default=False)
+    except (EOFError, typer.Abort):
+        typed = ""
+    if typed.strip().upper() != code:
+        audit({"channel": "cli", **record, "decision": "deny", "reason": f"{action}: confirmation code not typed"})
+        raise ToolError("permission_denied", f"{action} cancelled: the confirmation code did not match")
 
 
 def _print_output(output: BaseModel, as_json: bool) -> None:
@@ -172,7 +207,10 @@ def build_app(registry: Registry) -> typer.Typer:
     ) -> None:
         """Approve PLUGIN.OPERATION up to TIER for a limited time."""
         plugin, op = require_person("grant", key)
-        record = grants.add(key, tier, grants.parse_duration(duration))
+        length = grants.parse_duration(duration)
+        grants.check(tier, length)
+        _require_code(f"grant {key} up to {tier} for {duration}", {"plugin": plugin, "operation": op, "tier": tier})
+        record = grants.add(key, tier, length)
         audit(
             {
                 "channel": "cli",
@@ -189,6 +227,7 @@ def build_app(registry: Registry) -> typer.Typer:
     def revoke(key: Annotated[str, typer.Argument(metavar="PLUGIN.OPERATION")]) -> None:
         """Remove every grant for PLUGIN.OPERATION."""
         plugin, op = require_person("revoke", key)
+        _require_code(f"revoke {key}", {"plugin": plugin, "operation": op})
         removed = grants.revoke(key)
         audit({"channel": "cli", "plugin": plugin, "operation": op, "decision": "revoke"})
         typer.echo(f"Revoked {removed} grant(s) for {key}")
@@ -327,6 +366,7 @@ def build_app(registry: Registry) -> typer.Typer:
         """Add a folder to the configuration."""
         if not _interactive():
             raise ToolError("permission_denied", "config add-folder only works in an interactive terminal")
+        _require_code(f"add {folder} as {name}", {"target": folder})
         root = add_folder(name, folder)
         audit({"channel": "cli", "decision": "grant", "reason": f"add-folder {name}", "target": root})
         typer.echo(root)

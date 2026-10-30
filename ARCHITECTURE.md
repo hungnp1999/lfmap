@@ -51,7 +51,7 @@ flowchart LR
 
 - Adapters stay generic: no plugin-specific code in `cli.py` or `mcp_adapter.py`. Plugins call each other through the SDK (`context_for`), never through CLI or MCP.
 - Every caller-supplied path goes through `PermissionManager.require_read` / `require_write` before file-system access; the final check is `realpath` plus an inline `startswith` guard. UNC, `\\?\`, `\\.\` and `//` paths are refused before any I/O.
-- Folders come only from the user's `config.toml`; no operation writes it. Self-granting commands (`config add-folder`, `approvals grant/revoke/approve/reject`) and the queue-changing `events retry/prune` run only at a TTY and have no MCP form.
+- Folders come only from the user's `config.toml`; no operation writes it. Self-granting commands (`config add-folder`, `approvals grant/revoke/approve/reject`) and the queue-changing `events retry/prune` run only at a TTY and have no MCP form. On Windows a TTY means a console stdin (`GetConsoleMode`) with a visible console window; `grant`, `revoke` and `add-folder` also need a random 6-character code typed back. This gate stops scripts, piped or `NUL` stdin and accidents, not an agent of the same Windows user that drives a real console (issue #108; separate-user ADR pending).
 - T3 is never covered by `--yes`, `--approve` or elicitation.
 - No network beyond loopback: markitdown converts opened streams only, the embedder accepts loopback URLs and ignores proxy variables.
 - Runtime dependencies must carry a licence in the manifest's `allowed` list (`scripts/check_licenses.py`).

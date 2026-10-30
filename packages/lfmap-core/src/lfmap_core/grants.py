@@ -70,11 +70,15 @@ def active(operation: str, tier: str, path: Path | None = None, now: datetime | 
     return False
 
 
-def add(operation: str, tier: str, duration: timedelta, path: Path | None = None) -> dict[str, Any]:
+def check(tier: str, duration: timedelta) -> None:
     if tier not in MAX_DURATION:
         raise ToolError("invalid_input", "Tier must be T1, T2 or T3", {"tier": tier})
     if duration > MAX_DURATION[tier]:
         raise ToolError("invalid_input", f"A {tier} grant lasts at most {MAX_DURATION[tier]}", {"tier": tier})
+
+
+def add(operation: str, tier: str, duration: timedelta, path: Path | None = None) -> dict[str, Any]:
+    check(tier, duration)
     path = path or grants_path()
     now = datetime.now(UTC)
     grant = {"operation": operation, "tier": tier, "expires_at": (now + duration).isoformat(timespec="seconds")}

@@ -11,8 +11,8 @@ from lfmap_core.config import add_folder, load_config
 from lfmap_core.errors import ToolError
 
 
-def run(registry, *args):
-    return CliRunner().invoke(build_app(registry), list(args))
+def run(registry, *args, input=None):
+    return CliRunner().invoke(build_app(registry), list(args), input=input)
 
 
 def test_plugins_health(registry):
@@ -36,14 +36,15 @@ def test_add_folder_needs_a_terminal(user_dirs, registry, tmp_path):
 
 def test_add_folder_keeps_comments(user_dirs, registry, monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "_interactive", lambda: True)
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
     docs, scans = tmp_path / "Tài liệu", tmp_path / "scans"
     docs.mkdir()
     scans.mkdir()
     config = user_dirs / "config.toml"
     config.write_text('# my settings\n[paths]\nexports = []\n\n[plugins.x.settings]\nk = "v"\n', encoding="utf-8")
-    assert run(registry, "config", "add-folder", str(docs), "--as", "documents").exit_code == 0
-    assert run(registry, "config", "add-folder", str(scans), "--as", "documents").exit_code == 0
-    assert run(registry, "config", "add-folder", str(docs), "--as", "documents").exit_code == 0
+    assert run(registry, "config", "add-folder", str(docs), "--as", "documents", input="ABC234\n").exit_code == 0
+    assert run(registry, "config", "add-folder", str(scans), "--as", "documents", input="ABC234\n").exit_code == 0
+    assert run(registry, "config", "add-folder", str(docs), "--as", "documents", input="ABC234\n").exit_code == 0
     text = config.read_text(encoding="utf-8")
     assert text.startswith("# my settings\n")
     loaded = load_config(config)
@@ -90,3 +91,13 @@ def test_audit_tail(user_dirs, registry):
 
 def test_audit_tail_without_a_log(user_dirs, registry):
     assert json.loads(run(registry, "audit", "tail", "--json").output) == []
+
+
+def test_add_folder_with_wrong_code_writes_nothing(user_dirs, registry, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "_interactive", lambda: True)
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    result = run(registry, "config", "add-folder", str(tmp_path), "--as", "documents", input="ABC235\n")
+    assert result.exception.code == "permission_denied"
+    assert not (user_dirs / "config.toml").exists()
+    [record] = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
+    assert (record["decision"], record["target"]) == ("deny", str(tmp_path))
