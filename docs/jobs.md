@@ -39,6 +39,9 @@ queued under the job's id; one stopped by the event ceiling is queued under `eve
 A job never runs with `--yes`, never asks anyone and ignores grants, `serve mcp --approve` and preapproved
 destinations. What a call does depends on its tier (ADR-017) and the job's `max_tier`:
 
+See [docs/events.md](events.md) for the full event bus user guide, including publishing from a plugin, topic
+rules, idempotency, `[events] max_tier`, and the `lfmap events` commands.
+
 | Tier | `max_tier = 0` | `max_tier = 1` |
 |---|---|---|
 | T0 (no side effects) | runs | runs |
