@@ -1,4 +1,4 @@
-"""`lfmap` command line: plugin listing, generated operation commands, `serve mcp` and scheduled jobs."""
+"""`lfmap` command line: plugin listing, generated operation commands, `serve mcp`, scheduled jobs and events."""
 
 import dataclasses
 import inspect
@@ -18,6 +18,7 @@ from lfmap_core import approvals, grants, jobs, jobs_doctor
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
+from lfmap_core.events_adapter import drain_after_job, open_bus, run_adapter
 from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import build_tool, call_tier, run_operation
 from lfmap_core.tool import OperationSpec
@@ -126,12 +127,14 @@ def build_app(registry: Registry) -> typer.Typer:
     config_app = typer.Typer(help="Manage configuration.")
     audit_app = typer.Typer(help="Audit logs.")
     jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
+    events_app = typer.Typer(help="The event bus: run the event adapter, inspect and repair the queue.")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
     app.add_typer(config_app, name="config")
     app.add_typer(audit_app, name="audit")
     app.add_typer(jobs_app, name="jobs")
+    app.add_typer(events_app, name="events")
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
     def require_person(action: str, key: str) -> tuple[str, str]:
@@ -359,9 +362,21 @@ def build_app(registry: Registry) -> typer.Typer:
     def jobs_run(
         job_id: Annotated[str, typer.Argument(metavar="ID")],
         json_output: Annotated[bool, typer.Option("--json")] = False,
+        max_events: Annotated[
+            int, typer.Option("--max-events", min=1, help="Handler calls allowed when draining the event bus.")
+        ] = 1000,
     ) -> None:
-        """Run one job now, as Task Scheduler would."""
-        _print_output(jobs.run_job(registry, job_id), json_output)
+        """Run one job now, as Task Scheduler would, then drain the event bus (bounded by --max-events)."""
+        try:
+            _print_output(jobs.run_job(registry, job_id), json_output)
+        finally:
+            try:
+                handled = drain_after_job(registry, max_events)
+            except ToolError as error:
+                typer.echo(f"Warning: events were not drained: {error}", err=True)
+            else:
+                if handled:
+                    typer.echo(f"Handled {handled} event(s)", err=True)
 
     @jobs_app.command("register")
     def jobs_register(
@@ -404,6 +419,82 @@ def build_app(registry: Registry) -> typer.Typer:
                 typer.echo(f"{check.name:<{width}}  {status:<4}  {check.detail}{fix}")
         if any(check.ok is False for check in checks):
             raise typer.Exit(1)
+
+    def require_terminal(action: str) -> None:
+        if not _interactive():
+            raise ToolError("permission_denied", f"events {action} only works in an interactive terminal")
+
+    @events_app.command("status")
+    def events_status(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Deliveries per subscription and state."""
+        bus = open_bus()
+        try:
+            counts = bus.counts()
+        finally:
+            bus.close()
+        if json_output:
+            typer.echo(json.dumps(counts, indent=2))
+            return
+        for name, states in counts.items():
+            typer.echo(approvals.visible(f"{name}  " + "  ".join(f"{s}={n}" for s, n in states.items())))
+
+    @events_app.command("dead")
+    def events_dead(
+        subscription: Annotated[str | None, typer.Option("--subscription", help="Only this subscription.")] = None,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """List dead letters (events a handler gave up on)."""
+        bus = open_bus()
+        try:
+            letters = bus.dead_letters(subscription)
+        finally:
+            bus.close()
+        if json_output:
+            typer.echo(json.dumps([letter.model_dump(mode="json") for letter in letters], indent=2))
+            return
+        for letter in letters:
+            line = f"{letter.event.id}  {letter.subscription}  {letter.event.topic}  attempts={letter.attempts}"
+            typer.echo(approvals.visible(f"{line}  {letter.error}"))
+
+    @events_app.command("retry")
+    def events_retry(
+        event_id: Annotated[str, typer.Argument(metavar="EVENT_ID")],
+        subscription: Annotated[str, typer.Argument(metavar="SUBSCRIPTION")],
+    ) -> None:
+        """Put one dead letter back in the queue (interactive terminal only)."""
+        require_terminal("retry")
+        bus = open_bus()
+        try:
+            bus.retry(event_id, subscription)
+        finally:
+            bus.close()
+        typer.echo(approvals.visible(f"Queued {event_id} for {subscription} again"))
+
+    @events_app.command("prune")
+    def events_prune(
+        days: Annotated[int, typer.Option("--days", min=0, help="Keep events younger than this.")] = 7,
+    ) -> None:
+        """Delete handled events older than --days; dead letters and pending work stay (interactive terminal only)."""
+        require_terminal("prune")
+        bus = open_bus()
+        try:
+            removed = bus.prune(older_than=days * 86400)
+        finally:
+            bus.close()
+        typer.echo(f"Deleted {removed} event(s)")
+
+    @events_app.command("run")
+    def events_run(
+        until_idle: Annotated[bool, typer.Option("--until-idle", help="Stop when nothing is ready.")] = False,
+        max_seconds: Annotated[int, typer.Option("--max-seconds", min=1, help="Stop after this long.")] = 60,
+    ) -> None:
+        """Attach the event adapter and run handlers for queued events."""
+        bus = open_bus()
+        try:
+            handled = run_adapter(registry, bus, max_seconds=max_seconds, until_idle=until_idle)
+        finally:
+            bus.close()
+        typer.echo(f"Handled {handled} event(s)")
 
     for entry in registry.all():
         if not entry.manifest.adapters.cli:

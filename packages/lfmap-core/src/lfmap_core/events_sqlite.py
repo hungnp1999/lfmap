@@ -24,6 +24,7 @@ from lfmap_core.events_retry import after_failure, backoff_seconds, describe_err
 from lfmap_core.topics import topic_matches
 
 SCHEMA_VERSION = 1
+STATES = ("ready", "leased", "done", "dead")
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -254,6 +255,23 @@ class SqliteBus:
         )
         if not changed:
             raise ToolError("not_found", "No such dead letter", {"event": event_id, "subscription": subscription})
+
+    def counts(self) -> dict[str, dict[str, int]]:
+        """Deliveries per subscription and state, every durable subscription included."""
+        rows = (
+            self._conn()
+            .execute(
+                "SELECT s.name, d.state, COUNT(d.state) FROM subscriptions s"
+                " LEFT JOIN deliveries d ON d.subscription = s.name GROUP BY s.name, d.state ORDER BY s.name"
+            )
+            .fetchall()
+        )
+        result: dict[str, dict[str, int]] = {}
+        for name, state, count in rows:
+            states = result.setdefault(name, dict.fromkeys(STATES, 0))
+            if state is not None:
+                states[state] = count
+        return result
 
     def prune(self, *, older_than: float) -> int:
         """Delete events older than `older_than` seconds whose deliveries are all done; dead letters stay."""

@@ -38,6 +38,7 @@ For the system-wide design, main execution flows, and architecture invariants, s
 3. **Handle errors**: Raise `ToolError` with a standard `ErrorCode` (`invalid_input`, `permission_denied`, `not_found`, etc.) rather than leaking raw exceptions.
 4. **Declare `lfmap.toml`**: Specify plugin metadata, operations, side effect tiers (`none`, `local_write`, `external`), permissions, and adapters.
 5. **Register entry point**: Expose the tool class in `pyproject.toml` under the `[project.entry-points."lfmap.plugins"]` group.
+6. **Events (optional)**: With `[adapters] events = true` in `lfmap.toml`, publish your own topics with `self.ctx.events.publish("<plugin-id>.<name>", {...})` (a JSON object up to 64 KiB holding references such as paths or ids, never document text or secrets); other plugins get `permission_denied`. Core may then request your operations through `<plugin-id>.<operation>.requested`. Delivery is at least once: a request or event can be handled twice after a crash or a lease over 60 s, so operations and handlers must be **idempotent** (key on `event.id` or the input, check before writing). Long work should be started by an event and tracked as a job.
 
 ```python
 from lfmap_core import Tool, ToolContext, ToolError, operation

@@ -6,6 +6,8 @@ and answers with `.completed` or `.failed`. No plugin-specific code lives here.
 """
 
 import logging
+import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +26,8 @@ from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import call_tier, run_operation
 
 MAX_ERROR_MESSAGE = 500
+RUN_BATCH = 100
+IDLE_SLEEP_SECONDS = 1.0
 log = logging.getLogger(__name__)
 
 
@@ -158,3 +162,39 @@ class EventAdapter:
         gate(call_tier(entry, operation, inp, config), "side_effects")
         publisher = PluginEvents(entry.id, self._bus, causation=request)
         return run_operation(entry, operation, inp, channel="event", approver=gate, events=publisher)
+
+
+def run_adapter(
+    registry: Registry,
+    bus: EventBus,
+    *,
+    max_seconds: float,
+    until_idle: bool = False,
+    clock: Callable[[], float] = time.monotonic,
+    sleep: Callable[[float], None] = time.sleep,
+) -> int:
+    """`lfmap events run`: attach the adapter and drain in batches until `max_seconds` have passed, or until
+    nothing is ready with `until_idle`. Returns the number of handler calls."""
+    EventAdapter(registry, bus).attach()
+    deadline = clock() + max_seconds
+    total = 0
+    while True:
+        count = bus.drain(max_events=RUN_BATCH)
+        total += count
+        left = deadline - clock()
+        if left <= 0 or (count == 0 and until_idle):
+            return total
+        if count == 0:
+            sleep(min(IDLE_SLEEP_SECONDS, left))
+
+
+def drain_after_job(registry: Registry, max_events: int) -> int:
+    """The bounded drain at the end of `lfmap jobs run`; nothing to do without an events-enabled plugin."""
+    if not any(entry.manifest.adapters.events for entry in registry.all()):
+        return 0
+    bus = open_bus()
+    try:
+        EventAdapter(registry, bus).attach()
+        return bus.drain(max_events=max_events)
+    finally:
+        bus.close()
