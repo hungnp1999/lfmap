@@ -12,11 +12,12 @@ from lfmap_core.errors import ToolError
 
 OPERATION_ATTR = "__lfmap_operation__"
 
-Channel = Literal["sdk", "cli", "mcp", "rest", "job"]
+Channel = Literal["sdk", "cli", "mcp", "rest", "job", "event"]
 
 
 class ToolContext(BaseModel):
-    """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver."""
+    """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver
+    and, for plugins whose manifest has `[adapters] events = true`, the event publisher behind `events`."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -28,6 +29,18 @@ class ToolContext(BaseModel):
     settings: dict[str, Any] = Field(default_factory=dict)
     channel: Channel = "sdk"
     approver: Any = None
+    event_publisher: Any = None
+
+    @property
+    def events(self) -> Any:
+        """The plugin's `PluginEvents`; ToolError permission_denied unless the manifest opts in to events."""
+        if self.event_publisher is None:
+            raise ToolError(
+                "permission_denied",
+                "This plugin cannot use events; set [adapters] events = true in its manifest",
+                {"plugin": self.plugin_id},
+            )
+        return self.event_publisher
 
     def require_approval(self, reason: str, detail: str = "", *, destination: str = "", data: str = "normal") -> None:
         """Escalate this call before acting: T3 for reason "external", otherwise T2 (overwrite, rename, delete).

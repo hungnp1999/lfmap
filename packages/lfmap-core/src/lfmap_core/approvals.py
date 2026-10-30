@@ -20,6 +20,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationErro
 from lfmap_core.approval import TIERS, DataLevel, Gate, Policy, Tier, audit, job_decision
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
+from lfmap_core.tool import Channel
 
 if TYPE_CHECKING:
     from lfmap_core.jobs import Job
@@ -148,7 +149,20 @@ def pending(now: datetime | None = None) -> list[Proposal]:
     return _pending_files()
 
 
-def queue(job: "Job", tier: Tier, reason: str, detail: str, lifetime: timedelta, now: datetime | None = None) -> str:
+@dataclass(frozen=True)
+class EventCall:
+    """A call requested by an event; queued like a job named `events` (ADR-018, docs/specs/events.md section 6)."""
+
+    plugin: str
+    operation: str
+    input: dict[str, Any]
+    max_tier: int = 0
+    id: str = "events"
+
+
+def queue(
+    job: "Job | EventCall", tier: Tier, reason: str, detail: str, lifetime: timedelta, now: datetime | None = None
+) -> str:
     """Write a proposal for this call and return its id; an identical pending proposal is reused."""
     now = now or datetime.now(UTC)
     sweep(now)
@@ -184,12 +198,14 @@ def _with_destination(reason: str, target: str, destination: str, data: DataLeve
 
 @dataclass
 class JobApprover:
-    """The approver of `lfmap jobs run`. It never asks anyone (see `job_decision`): a call that needs a person
-    is queued as a proposal and refused with `permission_denied` carrying its `approval_id`."""
+    """The approver of `lfmap jobs run` and of event calls (`channel="event"`). It never asks anyone (see
+    `job_decision`): a call that needs a person is queued as a proposal and refused with `permission_denied`
+    carrying its `approval_id`."""
 
-    job: "Job"
+    job: "Job | EventCall"
     policy: Policy
     lifetime: timedelta = timedelta(days=DEFAULT_TTL_DAYS)
+    channel: Channel = "job"
 
     def __call__(
         self, tier: Tier, reason: str, target: str = "", destination: str = "", data: DataLevel = "normal"
@@ -200,7 +216,7 @@ class JobApprover:
         key = f"{plugin}.{op}"
         reason, target = _with_destination(reason, target, destination, data)
         decision = job_decision(self.policy, plugin, op, tier, self.job.max_tier)
-        record = {"channel": "job", "plugin": plugin, "operation": op, "tier": tier}
+        record = {"channel": self.channel, "plugin": plugin, "operation": op, "tier": tier}
         record |= {"target": target} if target else {}
         if decision == "allow":
             audit({**record, "decision": "allow", "reason": reason})

@@ -78,11 +78,16 @@ def build_tool(
     approver: Any = None,
     explicit_read: bool = False,
     config: dict | None = None,
+    events: Any = None,
 ) -> Tool:
     """Variables and settings default to the user's config.toml, never to anything the caller sends.
 
     Only the interactive CLI sets `explicit_read`; reads outside the roots are then audited.
+    `events` replaces the default `PluginEvents` (the event adapter passes its bus and the request);
+    it is ignored unless the manifest has `[adapters] events = true`.
     """
+    from lfmap_core.events_adapter import PluginEvents  # events_adapter imports this module
+
     config = load_config() if config is None else config
     if variables is None:
         variables = plugin_variables(config, entry.id)
@@ -97,6 +102,7 @@ def build_tool(
         settings=_plugin_settings(config, entry.id),
         channel=channel,
         approver=approver,
+        event_publisher=(events or PluginEvents(entry.id)) if entry.manifest.adapters.events else None,
         **_plugin_dirs(variables),
     )
     return entry.tool_class(ctx)
@@ -111,10 +117,10 @@ def run_operation(
     channel: Channel = "sdk",
     approver: Any = None,
     explicit_read: bool = False,
+    events: Any = None,
 ) -> BaseModel:
-    return invoke(
-        build_tool(entry, variables, channel=channel, approver=approver, explicit_read=explicit_read), name, payload
-    )
+    tool = build_tool(entry, variables, channel=channel, approver=approver, explicit_read=explicit_read, events=events)
+    return invoke(tool, name, payload)
 
 
 def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None) -> ToolContext:
