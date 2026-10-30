@@ -80,6 +80,10 @@ DEV_TREE_SDDL = (
     "(A;OICIIOID;SDGXGWGR;;;AU)(A;ID;0x1200a9;;;BU)(A;OICIIOID;GXGR;;;BU)"
 )
 PROFILE_SDDL = f"D:(A;OICIID;FA;;;SY)(A;OICIID;FA;;;BA)(A;OICIID;FA;;;{USER_SID})"
+DRIVE_SDDL = (
+    "D:(A;;FA;;;BA)(A;OICIIO;GA;;;BA)(A;;FA;;;SY)(A;OICIIO;GA;;;SY)(A;;0x1301bf;;;AU)"
+    "(A;OICIIO;SDGXGWGR;;;AU)(A;;0x1200a9;;;BU)(A;OICIIO;GXGR;;;BU)"
+)
 # What Setup-LfmapAgent.ps1 aims for: inheritance off, the agent may read and execute only.
 RUNTIME_SDDL = f"D:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{USER_SID})(A;OICI;0x1200a9;;;{AGENT_SID})"
 
@@ -132,11 +136,11 @@ def system(monkeypatch):
     monkeypatch.setattr(jobs_doctor, "_http_get", fake_http_get)
     monkeypatch.setattr(jobs, "find_uv", lambda: Path("C:/uv/uv.exe"))
     monkeypatch.setattr(jobs, "find_pwsh", lambda: Path("C:/Program Files/PowerShell/7/pwsh.exe"))
-    acl: dict[str, str | ToolError] = {"sddl": RUNTIME_SDDL, "sid": USER_SID}
+    acl: dict = {"sddl": RUNTIME_SDDL, "sid": USER_SID, "by_path": {}}
 
-    def fake_read_acl(root: Path) -> str:
-        acl["root"] = str(root)
-        result = acl["sddl"]
+    def fake_read_acl(folder: Path) -> str:
+        acl.setdefault("root", str(folder))
+        result = acl["by_path"].get(str(folder), acl["sddl"])
         if isinstance(result, ToolError):
             raise result
         return result
@@ -427,6 +431,41 @@ def test_runtime_writable_by_others_warns(jobs_file, registry, system):
     assert check.ok is None
     assert "Authenticated Users (S-1-5-11)" in check.detail
     assert "[runtime] root" in check.fix
+
+
+def test_parent_that_others_can_move_warns(jobs_file, registry, system, tmp_path):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    system["acl"]["by_path"][str(root.parent)] = DEV_TREE_SDDL
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert f"{root.parent} (can move what is below): Authenticated Users (S-1-5-11)" in check.detail
+    assert f"{root}:" not in check.detail
+
+
+def test_every_parent_is_read(jobs_file, registry, system, tmp_path, monkeypatch):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    read = []
+    fake = jobs_doctor._read_acl
+    monkeypatch.setattr(jobs_doctor, "_read_acl", lambda folder: read.append(folder) or fake(folder))
+    jobs_doctor.run_checks(registry)
+    assert read == [root, *root.parents]
+
+
+@pytest.mark.parametrize(
+    ("sddl", "mask", "expected"),
+    [
+        (DRIVE_SDDL, jobs_doctor._DRIVE_MOVE_MASK, []),
+        (DRIVE_SDDL, jobs_doctor._MOVE_MASK, ["Authenticated Users (S-1-5-11)"]),
+        (DEV_TREE_SDDL, jobs_doctor._MOVE_MASK, ["Authenticated Users (S-1-5-11)"]),
+        ("D:(A;OICIIO;GA;;;AU)(A;;0x1200a9;;;BU)", jobs_doctor._MOVE_MASK, []),
+        (f"D:(A;;DT;;;{AGENT_SID})", jobs_doctor._DRIVE_MOVE_MASK, [AGENT_SID]),
+        (f"D:(A;;WD;;;{AGENT_SID})", jobs_doctor._DRIVE_MOVE_MASK, [AGENT_SID]),
+    ],
+)
+def test_who_can_move_a_parent(sddl, mask, expected):
+    assert jobs_doctor.other_writers(sddl, USER_SID, mask, own_only=True) == expected
 
 
 def test_unreadable_acl_is_unknown(jobs_file, registry, system):

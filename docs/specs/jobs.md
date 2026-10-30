@@ -118,6 +118,8 @@ Handoff `docs/handoff/2026-10-30-agent-account.md`, issue #114.
   no `-RepoPath "<root>"`) and `runtime_acl` (warn: an allow ACE on the root, effective or inherit-only, gives
   an account other than the current user, SYSTEM `S-1-5-18`, Administrators `S-1-5-32-544` or Creator Owner
   `S-1-3-0` any of write data, append, delete child, DELETE, WRITE_DAC, WRITE_OWNER, GENERIC_WRITE,
-  GENERIC_ALL; an unknown rights code counts as write). The ACL comes from
+  GENERIC_ALL; an unknown rights code counts as write; and for each parent folder, an allow ACE that applies to
+  the folder itself with delete child, DELETE, WRITE_DAC, WRITE_OWNER or GENERIC_ALL, without DELETE on a drive
+  root). The ACL comes from
   `%SystemRoot%\System32\icacls.exe <root> /save <temp file>` (UTF-16 SDDL, compared by SID) and the user from
   `%SystemRoot%\System32\whoami.exe /user /fo csv /nh`; both run as argument lists through `_run`, no shell.

@@ -51,6 +51,10 @@ _TRUSTED = {"S-1-5-18", "S-1-5-32-544", "S-1-3-0"}
 _ALLOW = {"A", "XA", "OA", "ZA"}
 # Write data or add file, append or add subfolder, delete child, DELETE, WRITE_DAC, WRITE_OWNER, generic all/write.
 _WRITE_MASK = 0x2 | 0x4 | 0x40 | 0x10000 | 0x40000 | 0x80000 | 0x10000000 | 0x40000000
+# On a folder above the root: anything that lets someone rename it or the folder below it, or change its ACL.
+_MOVE_MASK = 0x40 | 0x10000 | 0x40000 | 0x80000 | 0x10000000
+# A drive root cannot be renamed, so DELETE on it does not matter (Authenticated Users have it on D:\ by default).
+_DRIVE_MOVE_MASK = _MOVE_MASK & ~0x10000
 _RIGHTS = {
     "GA": 0x10000000, "GR": 0x80000000, "GW": 0x40000000, "GX": 0x20000000,
     "FA": 0x1F01FF, "FR": 0x120089, "FW": 0x120116, "FX": 0x1200A0,
@@ -282,14 +286,18 @@ def _mask(rights: str) -> int:
     return mask
 
 
-def other_writers(sddl: str, user_sid: str) -> list[str]:
-    """Accounts other than you, SYSTEM and Administrators with a write right on the folder or what it inherits to.
+def other_writers(sddl: str, user_sid: str, mask: int = _WRITE_MASK, *, own_only: bool = False) -> list[str]:
+    """Accounts other than you, SYSTEM and Administrators with a right in `mask` on the folder or, unless
+    `own_only`, on what it inherits to.
 
     Deny ACEs are ignored, so this may warn about an account that a deny entry actually stops."""
     writers: list[str] = []
-    for kind, _flags, rights, _object, _inherited, sid, *_ in _aces(sddl):
+    for kind, flags, rights, _object, _inherited, sid, *_ in _aces(sddl):
         sid, name = _WELL_KNOWN.get(sid, (sid, ""))
-        if kind not in _ALLOW or sid in _TRUSTED or sid == user_sid or not _mask(rights) & _WRITE_MASK:
+        inherit_only = "IO" in [flags[i : i + 2] for i in range(0, len(flags), 2)]
+        if kind not in _ALLOW or sid in _TRUSTED or sid == user_sid or not _mask(rights) & mask:
+            continue
+        if own_only and inherit_only:
             continue
         label = f"{name} ({sid})" if name else sid
         if label not in writers:
@@ -318,19 +326,34 @@ def _check_runtime_root(root: Path | None, xml: dict[str, str | None]) -> Check:
     return Check("runtime_root", True, str(root))
 
 
+def _acl_findings(root: Path, user_sid: str) -> list[str]:
+    """`<folder>: <accounts>` for the root (any write) and each folder above it (rename, delete child, ACL change),
+    since whoever can move a parent can put another tree at the root's path."""
+    findings = []
+    writers = other_writers(_read_acl(root), user_sid)
+    if writers:
+        findings.append(f"{root}: {', '.join(writers)}")
+    for parent in root.parents:
+        mask = _MOVE_MASK if parent.parent != parent else _DRIVE_MOVE_MASK
+        movers = other_writers(_read_acl(parent), user_sid, mask, own_only=True)
+        if movers:
+            findings.append(f"{parent} (can move what is below): {', '.join(movers)}")
+    return findings
+
+
 def _check_runtime_acl(root: Path | None) -> Check:
     if root is None or not root.is_dir():
         return Check("runtime_acl", None, "no runtime root to inspect")
     try:
-        writers = other_writers(_read_acl(root), _current_sid())
+        findings = _acl_findings(root, _current_sid())
     except ToolError as error:
         return Check("runtime_acl", None, f"ACL of {root} could not be read: {error.message}")
     except OSError as error:
         return Check("runtime_acl", None, f"ACL of {root} could not be read: {error}")
-    if writers:
-        detail = f"{root} is also writable by {', '.join(writers)}; code they change runs as you"
+    if findings:
+        detail = f"other accounts can change {root}; code they change runs as you: {'; '.join(findings)}"
         return Check("runtime_acl", None, detail, RUNTIME_FIX)
-    return Check("runtime_acl", True, f"only you, SYSTEM and Administrators can write {root}")
+    return Check("runtime_acl", True, f"only you, SYSTEM and Administrators can change {root} or the folders above it")
 
 
 def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:

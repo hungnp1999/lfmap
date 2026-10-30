@@ -149,11 +149,15 @@ folder; both by full path in `%SystemRoot%\System32`), and asks Ollama for its v
 | `sleep` | never sleeps on AC power | sleeps after N minutes, or `powercfg` unreadable | |
 | `ollama` | `http://localhost:11434/api/version` answers | no enabled job uses a plugin with `permissions.network = true` | needed but not answering; start Ollama |
 | `runtime_root` | the root has `scripts\Invoke-LfmapJob.ps1` and every task runs with `-RepoPath "<root>"` | `jobs.toml` unreadable, or a task runs from another tree; run `register` | the root has no runner script |
-| `runtime_acl` | only you, SYSTEM and Administrators can write the root | another account (for example `lfmap-agent`, Users or Authenticated Users) has write, append, delete, change-permissions or take-ownership rights on the root or on what it inherits to; or the ACL could not be read | |
+| `runtime_acl` | only you, SYSTEM and Administrators can write the root or move a folder above it | another account (for example `lfmap-agent`, Users or Authenticated Users) has write, append, delete, change-permissions or take-ownership rights on the root or on what it inherits to; or the ACL could not be read | |
 
-`runtime_acl` compares SIDs, not account names, so it works in any Windows language. It reads only the root
-folder's own ACL (including entries it passes to its contents), not every file below it, and it does not
-subtract deny entries, so a deny can leave a warning that is not a real hole.
+`runtime_acl` also reads each folder above the root and warns when another account can delete or rename it,
+delete the folder below it, or change its ACL or owner: whoever can move `D:\Development` can put another tree
+at `D:\Development\lfmap-runtime`. On a drive root only delete-child and ACL changes count. Keep the runtime
+directly under a drive root (`D:\lfmap-runtime`) or under folders only you can change. The check compares SIDs,
+not account names, so it works in any Windows language. It reads the root folder's own ACL (including entries
+it passes to its contents), not every file below it, and it does not subtract deny entries, so a deny can leave
+a warning that is not a real hole.
 
 Only tasks of enabled jobs are inspected. On Linux or CI, where `schtasks` and `powercfg` do not exist, those
 checks are `warn`. A task that runs only while you are logged on still runs at the lock screen; see below to
