@@ -85,18 +85,42 @@ uv run lfmap jobs doctor           # read-only machine check; exit 1 when a chec
 
 `register` creates or updates (`/F`) a task for every enabled job and deletes the tasks of jobs that are disabled
 or no longer in `jobs.toml`. It only ever touches tasks directly in `\LFMAP\`. `--dry-run` prints the
-`schtasks` commands without running them. `--repo` (default: this checkout) and `--uv` (default: `uv` on
+`schtasks` commands without running them. `--repo` (default: `[runtime] root`, see below, else this checkout) and `--uv` (default: `uv` on
 `PATH`, then `%LOCALAPPDATA%\Microsoft\WinGet\Links\uv.exe`) are written into each task. So is the full path of
 PowerShell 7 (`--pwsh`; default `%ProgramFiles%\PowerShell\7\pwsh.exe`, then the Microsoft Store alias
 `%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe`, then `PATH`): Task Scheduler cannot start the Store `pwsh` by
 name, and the task then fails with `0x80070002`.
+
+### Runtime root (ADR-023)
+
+A task runs as you, so the code it runs must be code you reviewed. Point the tasks at a clone of `main` that
+agents can read but not write, and update it only after a PR is merged:
+
+```toml
+# top of %LOCALAPPDATA%\lfmap\jobs.toml
+[runtime]
+root = 'D:\lfmap-runtime'          # absolute path with a drive letter; no UNC or \\?\ paths
+```
+
+```powershell
+git -C D:\lfmap-runtime pull --ff-only
+uv run --directory D:\lfmap-runtime lfmap jobs register
+uv run --directory D:\lfmap-runtime lfmap jobs doctor
+```
+
+Without `[runtime]` the root is the checkout `lfmap` runs from, as before. `register` writes
+`-File "<root>\scripts\Invoke-LfmapJob.ps1" ... -RepoPath "<root>"` into each task, and the script refuses a
+`-RepoPath` other than its own repository, so the runner and the code always come from the same tree. Do not run
+`uv run` or `git` in a tree an agent can write (for example `D:\Development\lfmap`) from your own account: its
+hooks and code then run as you.
 
 ## The runner script
 
 `scripts\Invoke-LfmapJob.ps1 -JobId <id> [-RepoPath <repo>] [-UvPath <uv.exe>]` runs
 `uv run --directory <repo> lfmap jobs run <id> --json`, appends one JSON line to
 `%LOCALAPPDATA%\lfmap\logs\jobs-YYYY-MM-DD.jsonl` (`started`, `finished`, `job`, `exit_code`, and `stdout`
-and `stderr` cut to 4000 characters) and exits with the code of `lfmap`. It exits 2 when uv cannot be found.
+and `stderr` cut to 4000 characters) and exits with the code of `lfmap`. It exits 2 when uv cannot be found or
+when `-RepoPath` is not the repository the script lives in.
 
 Run it by hand to check a job before registering it:
 
@@ -109,7 +133,8 @@ Get-Content "$env:LOCALAPPDATA\lfmap\logs\jobs-$(Get-Date -Format yyyy-MM-dd).js
 ## Checking the machine
 
 `uv run lfmap jobs doctor [--json]` checks, without changing anything, that this machine can run the jobs. It
-only runs `schtasks /Query` and `powercfg /query`, and asks Ollama for its version. Each line shows the check,
+only runs `schtasks /Query`, `powercfg /query`, `whoami /user` and `icacls <root> /save` (into a temporary
+folder; both by full path in `%SystemRoot%\System32`), and asks Ollama for its version. Each line shows the check,
 `ok`, `warn` or `FAIL`, what was found and, after `->`, how to fix it. It exits 1 when any check is `FAIL`;
 `warn` never fails. `--json` prints a list of `{name, ok, detail, fix}` with `ok` `true`, `null` (warn) or `false`.
 
@@ -123,6 +148,12 @@ only runs `schtasks /Query` and `powercfg /query`, and asks Ollama for its versi
 | `wake` | the machine never sleeps on AC power, or every task has "Wake the computer" | no task, no `schtasks`, or sleep unknown | the machine sleeps and a task does not wake it |
 | `sleep` | never sleeps on AC power | sleeps after N minutes, or `powercfg` unreadable | |
 | `ollama` | `http://localhost:11434/api/version` answers | no enabled job uses a plugin with `permissions.network = true` | needed but not answering; start Ollama |
+| `runtime_root` | the root has `scripts\Invoke-LfmapJob.ps1` and every task runs with `-RepoPath "<root>"` | `jobs.toml` unreadable, or a task runs from another tree; run `register` | the root has no runner script |
+| `runtime_acl` | only you, SYSTEM and Administrators can write the root | another account (for example `lfmap-agent`, Users or Authenticated Users) has write, append, delete, change-permissions or take-ownership rights on the root or on what it inherits to; or the ACL could not be read | |
+
+`runtime_acl` compares SIDs, not account names, so it works in any Windows language. It reads only the root
+folder's own ACL (including entries it passes to its contents), not every file below it, and it does not
+subtract deny entries, so a deny can leave a warning that is not a real hole.
 
 Only tasks of enabled jobs are inspected. On Linux or CI, where `schtasks` and `powercfg` do not exist, those
 checks are `warn`. A task that runs only while you are logged on still runs at the lock screen; see below to

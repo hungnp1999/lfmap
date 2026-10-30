@@ -102,3 +102,22 @@ Files are UTF-8; tests must pass on Windows and must not touch the real Task Sch
 - Job `echo-hello` (T0) chạy đúng giờ khi máy đang ở màn hình khóa, có dòng log.
 - Một job gọi operation `local_write` với `max_tier = 0` chỉ tạo đề xuất; `lfmap approvals approve` thực thi và ghi audit.
 - `lfmap jobs doctor` không còn mục `False`.
+
+## Addendum AA-3 (ADR-023, 2026-10-30): runtime root
+
+Handoff `docs/handoff/2026-10-30-agent-account.md`, issue #114.
+
+- `jobs.toml` accepts an optional `[runtime]` table with one key, `root`: an absolute path with a drive letter.
+  UNC, `\\?\`, `\\.\`, `//`, relative and drive-relative paths and `"` are refused (`invalid_input`). Missing
+  table or key: the root is `repo_root()`, the checkout `lfmap` runs from.
+- `lfmap jobs register` uses `--repo`, else that root, for both `-File <root>\scripts\Invoke-LfmapJob.ps1` and
+  `-RepoPath <root>` in the task action.
+- `scripts/Invoke-LfmapJob.ps1` exits 2 when `-RepoPath` (full path, case-insensitive) is not the parent of its
+  own `scripts` folder.
+- `lfmap jobs doctor` adds `runtime_root` (FAIL: no runner script in the root; warn: a task's `<Arguments>` has
+  no `-RepoPath "<root>"`) and `runtime_acl` (warn: an allow ACE on the root, effective or inherit-only, gives
+  an account other than the current user, SYSTEM `S-1-5-18`, Administrators `S-1-5-32-544` or Creator Owner
+  `S-1-3-0` any of write data, append, delete child, DELETE, WRITE_DAC, WRITE_OWNER, GENERIC_WRITE,
+  GENERIC_ALL; an unknown rights code counts as write). The ACL comes from
+  `%SystemRoot%\System32\icacls.exe <root> /save <temp file>` (UTF-16 SDDL, compared by SID) and the user from
+  `%SystemRoot%\System32\whoami.exe /user /fo csv /nh`; both run as argument lists through `_run`, no shell.

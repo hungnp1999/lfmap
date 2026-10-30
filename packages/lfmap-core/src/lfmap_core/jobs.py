@@ -1,6 +1,7 @@
 """Scheduled jobs (ADR-018): `%LOCALAPPDATA%\\lfmap\\jobs.toml` and the Windows Task Scheduler commands for it.
 
 Task Scheduler does the scheduling; each task runs `scripts/Invoke-LfmapJob.ps1`, which calls `lfmap jobs run`.
+Both come from `[runtime] root` (ADR-023): a reviewed clone that agents cannot write, by default this checkout.
 Only tasks in the `\\LFMAP\\` folder are ever created or deleted. A job never asks anyone: calls above its
 `max_tier` become proposals in the approval queue (`lfmap_core.approvals`).
 """
@@ -11,7 +12,7 @@ import re
 import shutil
 import subprocess
 import tomllib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -27,6 +28,7 @@ TASK_FOLDER = "\\LFMAP\\"
 QUERY = ["schtasks", "/Query", "/FO", "CSV", "/NH"]
 MAX_ACTION = 261  # schtasks /TR limit
 _ID = r"^[a-z][a-z0-9-]*$"
+_DRIVE = re.compile(r"[A-Za-z]:")
 _TIME = r"([01]\d|2[0-3]):[0-5]\d"
 _DAILY = re.compile(rf"^{_TIME}$")
 _WEEKLY = re.compile(rf"^(MON|TUE|WED|THU|FRI|SAT|SUN) {_TIME}$")
@@ -90,9 +92,31 @@ class Job(BaseModel):
     via: Literal["call", "event"] = "call"
 
 
+class Runtime(BaseModel):
+    """`[runtime] root`: the reviewed clone that tasks run code from (ADR-023); `None` means this checkout."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    root: Path | None = None
+
+    @field_validator("root", mode="before")
+    @classmethod
+    def _local_absolute(cls, value: object) -> object:
+        if value is None:
+            return None
+        text = str(value)
+        if text.replace("/", "\\").startswith("\\\\") or '"' in text:
+            raise ValueError("root must be a local path, not UNC or device")
+        windows = PureWindowsPath(text)
+        if not _DRIVE.fullmatch(windows.drive) or not windows.is_absolute():
+            raise ValueError("root must be an absolute path with a drive letter, like D:\\lfmap-runtime")
+        return Path(str(windows))
+
+
 class JobsFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    runtime: Runtime = Field(default_factory=Runtime)
     jobs: list[Job] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -109,18 +133,27 @@ def jobs_path() -> Path:
     return Path(override) if override else app_dir() / "jobs.toml"
 
 
-def load_jobs(path: Path | None = None) -> list[Job]:
+def load_jobs_file(path: Path | None = None) -> JobsFile:
     path = path or jobs_path()
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        return []
+        return JobsFile()
     try:
-        return JobsFile.model_validate(tomllib.loads(text)).jobs
+        return JobsFile.model_validate(tomllib.loads(text))
     except tomllib.TOMLDecodeError as error:
         raise ToolError("invalid_input", f"{path} is not valid TOML", {"error": str(error)}) from error
     except ValidationError as error:
         raise ToolError("invalid_input", f"{path} is invalid", {"error": str(error)}) from error
+
+
+def load_jobs(path: Path | None = None) -> list[Job]:
+    return load_jobs_file(path).jobs
+
+
+def runtime_root(jobs_file: JobsFile) -> Path:
+    """Where tasks run code from: `[runtime] root`, else this checkout."""
+    return jobs_file.runtime.root or repo_root()
 
 
 def check_input(entry: PluginEntry, operation: str, payload: dict[str, Any]) -> None:

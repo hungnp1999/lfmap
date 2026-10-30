@@ -1,7 +1,10 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from lfmap_core import jobs
@@ -40,6 +43,7 @@ enabled = false
 REPO = Path("C:/lfmap")
 UV = Path("C:/Users/x/.local/bin/uv.exe")
 SCRIPT = REPO / "scripts" / "Invoke-LfmapJob.ps1"
+SCRIPT_IN_REPO = jobs.repo_root() / "scripts" / "Invoke-LfmapJob.ps1"
 
 
 @pytest.fixture
@@ -320,3 +324,89 @@ def test_register_without_schtasks_fails(jobs_file, registry, monkeypatch):
     monkeypatch.setattr(jobs, "_schtasks", _no_schtasks)
     result = run(registry, "jobs", "register", "--repo", str(REPO), "--uv", str(UV))
     assert result.exception.code == "backend_unavailable"
+
+
+def test_runtime_root_defaults_to_this_checkout(jobs_file):
+    loaded = jobs.load_jobs_file()
+    assert loaded.runtime.root is None
+    assert jobs.runtime_root(loaded) == jobs.repo_root()
+    assert jobs.runtime_root(jobs.load_jobs_file(jobs_file.parent / "missing.toml")) == jobs.repo_root()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"), [(r"D:\lfmap-runtime", r"D:\lfmap-runtime"), ("d:/lfmap-runtime/", r"d:\lfmap-runtime")]
+)
+def test_runtime_root_from_jobs_toml(value, expected):
+    loaded = jobs.JobsFile.model_validate({"runtime": {"root": value}})
+    assert str(jobs.runtime_root(loaded)) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        r"\\server\share\lfmap",
+        "//server/share/lfmap",
+        r"\\?\D:\lfmap-runtime",
+        r"\\.\D:\lfmap-runtime",
+        "/\\server/share",
+        "lfmap-runtime",
+        r"D:lfmap-runtime",
+        r"\lfmap-runtime",
+        "/opt/lfmap",
+        'D:\\lfmap" -RepoPath "D:\\Development\\lfmap',
+    ],
+)
+def test_runtime_root_must_be_a_local_absolute_path(value):
+    with pytest.raises(ValidationError):
+        jobs.JobsFile.model_validate({"runtime": {"root": value}})
+
+
+def test_runtime_section_rejects_unknown_keys(user_dirs, monkeypatch):
+    path = user_dirs / "jobs.toml"
+    path.write_text("[runtime]\nroot = 'D:\\\\lfmap-runtime'\npath = 'x'\n", encoding="utf-8")
+    with pytest.raises(ToolError) as error:
+        jobs.load_jobs(path)
+    assert error.value.code == "invalid_input"
+
+
+def registered_actions(registry, monkeypatch, *args: str) -> list[str]:
+    calls = []
+
+    def fake_schtasks(command):
+        calls.append(command)
+        return ""
+
+    monkeypatch.setattr(jobs, "_schtasks", fake_schtasks)
+    assert run(registry, "jobs", "register", "--uv", str(UV), *args).exit_code == 0
+    return [c[c.index("/TR") + 1] for c in calls if c[1] == "/Create"]
+
+
+def test_register_runs_from_the_runtime_root(jobs_file, registry, monkeypatch):
+    jobs_file.write_text("[runtime]\nroot = 'D:\\\\lfmap-runtime'\n" + JOBS_TOML, encoding="utf-8")
+    actions = registered_actions(registry, monkeypatch)
+    assert len(actions) == 2
+    root = Path("D:\\lfmap-runtime")
+    for action in actions:
+        assert f'-File "{root / "scripts" / "Invoke-LfmapJob.ps1"}"' in action
+        assert f'-RepoPath "{root}"' in action
+
+
+def test_register_repo_option_overrides_the_runtime_root(jobs_file, registry, monkeypatch):
+    jobs_file.write_text("[runtime]\nroot = 'D:\\\\lfmap-runtime'\n" + JOBS_TOML, encoding="utf-8")
+    actions = registered_actions(registry, monkeypatch, "--repo", str(REPO))
+    assert all(f'-RepoPath "{REPO}"' in action and "lfmap-runtime" not in action for action in actions)
+
+
+@pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs PowerShell 7")
+def test_runner_refuses_another_repo_path(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    args = ["-JobId", "echo-hello", "-RepoPath", str(tmp_path), "-UvPath", str(SCRIPT_IN_REPO)]
+    result = subprocess.run(
+        [shutil.which("pwsh"), "-NoProfile", "-File", str(SCRIPT_IN_REPO), *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert "is not the repository of this script" in result.stderr
+    assert not (tmp_path / "lfmap" / "logs").exists()

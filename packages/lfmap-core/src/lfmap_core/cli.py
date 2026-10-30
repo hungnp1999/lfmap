@@ -442,17 +442,21 @@ def build_app(registry: Registry) -> typer.Typer:
     @jobs_app.command("register")
     def jobs_register(
         dry_run: Annotated[bool, typer.Option("--dry-run", help="Print the schtasks commands only.")] = False,
-        repo: Annotated[Path | None, typer.Option("--repo", help="Repository root; default this checkout.")] = None,
+        repo: Annotated[
+            Path | None,
+            typer.Option("--repo", help="Runtime root; default [runtime] root in jobs.toml, else this checkout."),
+        ] = None,
         uv: Annotated[Path | None, typer.Option("--uv", help="Path to uv.exe; default PATH, then WinGet.")] = None,
         pwsh: Annotated[
             Path | None, typer.Option("--pwsh", help="Path to pwsh.exe; default found by full path.")
         ] = None,
     ) -> None:
         """Create or update a task in \\LFMAP\\ for each enabled job; delete the tasks of the others."""
-        repo = repo or jobs.repo_root()
+        jobs_file = jobs.load_jobs_file()
+        repo = repo or jobs.runtime_root(jobs_file)
         uv = uv or jobs.find_uv()
         pwsh = pwsh or jobs.find_pwsh()
-        job_list = jobs.load_jobs()
+        job_list = jobs_file.jobs
         try:
             existing = jobs.existing_tasks()
         except ToolError as error:
