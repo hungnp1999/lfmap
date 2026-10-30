@@ -24,6 +24,7 @@ from lfmap_core.runtime import build_tool, call_tier, run_operation
 from lfmap_core.tool import OperationSpec
 
 _FLAT = (str, int, float, bool, Path)
+_WINDOWS = sys.platform == "win32"
 
 
 def _is_flat(annotation: Any) -> bool:
@@ -33,9 +34,27 @@ def _is_flat(annotation: Any) -> bool:
     return typing.get_origin(annotation) in (typing.Union, types.UnionType) and len(args) == 1 and _is_flat(args[0])
 
 
+def _console_stdin() -> bool:
+    """Windows: stdin is a console. `isatty()` is also True for NUL (a character device); GetConsoleMode
+    fails for NUL, files and pipes."""
+    try:
+        import ctypes  # Windows-only modules, imported here
+        import msvcrt
+        from ctypes import wintypes
+
+        handle = wintypes.HANDLE(msvcrt.get_osfhandle(sys.stdin.fileno()))
+        mode = wintypes.DWORD()
+        return bool(ctypes.windll.kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
+    except Exception:  # noqa: BLE001 - anything unexpected means nobody is known to be there
+        return False
+
+
 def _interactive() -> bool:
     """A person at a terminal. Agents and scripts calling the CLI get no prompts and no extra rights."""
-    return sys.stdin.isatty()
+    try:
+        return _console_stdin() if _WINDOWS else sys.stdin.isatty()
+    except Exception:  # noqa: BLE001 - a closed or replaced stdin is not a person
+        return False
 
 
 def _print_output(output: BaseModel, as_json: bool) -> None:
