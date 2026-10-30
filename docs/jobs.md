@@ -36,6 +36,9 @@ Only plugins with `[adapters] events = true` accept it; otherwise the job fails 
 `config.toml` (default 0) in the event adapter, so the lower one wins. A call stopped by the job's ceiling is
 queued under the job's id; one stopped by the event ceiling is queued under `events`.
 
+See [docs/events.md](events.md) for the full event bus user guide, including publishing from a plugin, topic
+rules, idempotency, `[events] max_tier`, and the `lfmap events` commands.
+
 A job never runs with `--yes`, never asks anyone and ignores grants, `serve mcp --approve` and preapproved
 destinations. What a call does depends on its tier (ADR-017) and the job's `max_tier`:
 
