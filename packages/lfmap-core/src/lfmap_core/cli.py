@@ -81,8 +81,10 @@ def _confirm_code() -> str:
 
 def _require_code(action: str, record: dict[str, Any]) -> None:
     """The person types back a fresh random code; a mismatch or end of input refuses and is audited."""
+    if not _interactive():
+        raise ToolError("permission_denied", f"{action} only works in an interactive terminal")
     code = _confirm_code()
-    typer.echo(f"To {action}, type this code: {code}")
+    typer.echo(approvals.visible(f"To {action}, type this code: {code}"))
     try:
         typed = typer.prompt("Code", default="", show_default=False)
     except (EOFError, typer.Abort):

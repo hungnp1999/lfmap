@@ -101,3 +101,19 @@ def test_add_folder_with_wrong_code_writes_nothing(user_dirs, registry, monkeypa
     assert not (user_dirs / "config.toml").exists()
     [record] = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
     assert (record["decision"], record["target"]) == ("deny", str(tmp_path))
+
+
+def test_add_folder_prompt_escapes_control_characters(user_dirs, registry, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "_interactive", lambda: True)
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    folder = str(tmp_path) + "\x1b[2K"
+    result = run(registry, "config", "add-folder", folder, "--as", "documents", input="no\n")
+    assert result.exception.code == "permission_denied"
+    assert "\x1b" not in result.output
+    assert r"\u001b[2K" in result.output
+
+
+def test_require_code_refuses_without_a_terminal(user_dirs):
+    with pytest.raises(ToolError) as error:
+        cli._require_code("grant x", {})
+    assert error.value.code == "permission_denied"
