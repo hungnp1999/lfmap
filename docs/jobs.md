@@ -17,7 +17,24 @@ input = { text = "xin chào" }
 schedule = { daily = "07:30" }    # or { weekly = "MON 07:30" } or { every_minutes = 60 } (1-1439)
 max_tier = 0                      # 0 = only T0 runs; 1 = T1 runs and is audited
 enabled = true
+via = "call"                      # "call" (default) runs the operation; "event" goes through the event bus
 ```
+
+### Jobs through the event bus (`via = "event"`)
+
+With `via = "event"`, `lfmap jobs run <id>` checks the job as usual (input, tier, `max_tier`), then publishes
+`<plugin>.<operation>.requested` with `{"input": ...}` as core instead of calling the operation. It drains the
+bus (at most `--max-events` handler calls, default 1000) and reports the answer for that request:
+
+- `.completed`: the operation's output, as with `via = "call"` (`--json` prints it). An output over 64 KiB
+  prints `request_id` and `output_too_large: true`.
+- `.failed`: the operation's error, with the same code and exit 1. `details` gains `request_id`.
+- no answer within the drain: `Error [timeout]`. The request stays queued and runs at the next drain.
+
+Only plugins with `[adapters] events = true` accept it; otherwise the job fails with `invalid_input` and
+`lfmap jobs doctor` flags it. Both ceilings apply: the job's `max_tier` here and `[events] max_tier` in
+`config.toml` (default 0) in the event adapter, so the lower one wins. A call stopped by the job's ceiling is
+queued under the job's id; one stopped by the event ceiling is queued under `events`.
 
 A job never runs with `--yes`, never asks anyone and ignores grants, `serve mcp --approve` and preapproved
 destinations. What a call does depends on its tier (ADR-017) and the job's `max_tier`:

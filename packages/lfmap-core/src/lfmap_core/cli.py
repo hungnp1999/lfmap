@@ -429,7 +429,7 @@ def build_app(registry: Registry) -> typer.Typer:
     ) -> None:
         """Run one job now, as Task Scheduler would, then drain the event bus (bounded by --max-events)."""
         try:
-            _print_output(jobs.run_job(registry, job_id), json_output)
+            _print_output(jobs.run_job(registry, job_id, max_events=max_events), json_output)
         finally:
             try:
                 handled = drain_after_job(registry, max_events)
