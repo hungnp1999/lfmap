@@ -210,8 +210,19 @@ class RequestResult(BaseModel):
 
 
 def _answer(events: list[Event], request_id: str) -> Event | None:
+    """The core answer caused by this request; anything else on the watched topics is ignored."""
     phases = (".completed", ".failed")
-    return next((e for e in events if e.topic.endswith(phases) and e.payload.get("request_id") == request_id), None)
+    return next(
+        (
+            e
+            for e in events
+            if e.topic.endswith(phases)
+            and e.source == "core"
+            and e.causation_id == request_id
+            and e.payload.get("request_id") == request_id
+        ),
+        None,
+    )
 
 
 def request_operation(

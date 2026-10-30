@@ -205,3 +205,27 @@ def test_call_jobs_are_unchanged(ev_registry, write_jobs) -> None:
     write_jobs(job_block("direct", PLUGIN, "greet", '{ name = "A" }', via="call"))
     assert jobs.run_job(ev_registry, "direct") == Output(message="Hello A")
     assert events(".greet.requested") == []
+
+
+def test_answer_must_come_from_core_and_the_request() -> None:
+    from datetime import UTC, datetime
+
+    from lfmap_core.events import Event
+    from lfmap_core.events_adapter import _answer
+
+    def event(source: str, causation: str | None) -> Event:
+        payload = {"request_id": "r" * 32, "output": {}}
+        now = datetime.now(UTC)
+        return Event(
+            id="a" * 32,
+            topic=f"{PLUGIN}.greet.completed",
+            source=source,
+            payload=payload,
+            created_at=now,
+            correlation_id="r" * 32,
+            causation_id=causation,
+        )
+
+    assert _answer([event(PLUGIN, "r" * 32)], "r" * 32) is None
+    assert _answer([event("core", "b" * 32)], "r" * 32) is None
+    assert _answer([event("core", "r" * 32)], "r" * 32) is not None
