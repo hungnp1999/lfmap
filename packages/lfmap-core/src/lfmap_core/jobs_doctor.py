@@ -1,12 +1,16 @@
 """`lfmap jobs doctor`: read-only checks that the machine can run the jobs in `jobs.toml` (TC-J4).
 
-Only `schtasks /Query` and `powercfg /query` are run, through `_run`, and Ollama is only asked for its version.
+Only `schtasks /Query`, `powercfg /query`, `whoami /user` and `icacls /save` (into a temporary folder) are run,
+through `_run`, and Ollama is only asked for its version.
 `ok` is `True` (fine), `None` (warning or unknown) or `False` (a job will not run as expected).
 """
 
+import html
 import json
+import os
 import re
 import subprocess
+import tempfile
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
@@ -20,7 +24,43 @@ OLLAMA_URL = "http://localhost:11434/api/version"
 REGISTER_FIX = "uv run lfmap jobs register"
 SIGNED_OUT_FIX = 'Task Scheduler > \\LFMAP\\ > task > General: "Run whether user is logged on or not"'
 WAKE_FIX = 'Task Scheduler > \\LFMAP\\ > task > Conditions: "Wake the computer to run this task"'
+RUNTIME_FIX = "point [runtime] root in jobs.toml at a clone only you can write (docs/jobs.md), then register"
 _HEX = re.compile(r"0x([0-9a-fA-F]+)")
+_SID = re.compile(r"S-1-\d+(-\d+)+")
+
+# SDDL abbreviations icacls writes for well-known accounts: SID and a readable name.
+_WELL_KNOWN = {
+    "SY": ("S-1-5-18", "SYSTEM"),
+    "BA": ("S-1-5-32-544", "Administrators"),
+    "BU": ("S-1-5-32-545", "Users"),
+    "BG": ("S-1-5-32-546", "Guests"),
+    "PU": ("S-1-5-32-547", "Power Users"),
+    "AU": ("S-1-5-11", "Authenticated Users"),
+    "WD": ("S-1-1-0", "Everyone"),
+    "IU": ("S-1-5-4", "Interactive"),
+    "NU": ("S-1-5-2", "Network"),
+    "AN": ("S-1-5-7", "Anonymous"),
+    "LS": ("S-1-5-19", "Local Service"),
+    "NS": ("S-1-5-20", "Network Service"),
+    "CO": ("S-1-3-0", "Creator Owner"),
+    "OW": ("S-1-3-4", "Owner Rights"),
+    "AC": ("S-1-15-2-1", "All Application Packages"),
+}
+# Creator Owner only stands for whoever creates a child, which needs a write right of its own.
+_TRUSTED = {"S-1-5-18", "S-1-5-32-544", "S-1-3-0"}
+_ALLOW = {"A", "XA", "OA", "ZA"}
+# Write data or add file, append or add subfolder, delete child, DELETE, WRITE_DAC, WRITE_OWNER, generic all/write.
+_WRITE_MASK = 0x2 | 0x4 | 0x40 | 0x10000 | 0x40000 | 0x80000 | 0x10000000 | 0x40000000
+# On a folder above the root: anything that lets someone rename it or the folder below it, or change its ACL.
+_MOVE_MASK = 0x40 | 0x10000 | 0x40000 | 0x80000 | 0x10000000
+# A drive root cannot be renamed, so DELETE on it does not matter (Authenticated Users have it on D:\ by default).
+_DRIVE_MOVE_MASK = _MOVE_MASK & ~0x10000
+_RIGHTS = {
+    "GA": 0x10000000, "GR": 0x80000000, "GW": 0x40000000, "GX": 0x20000000,
+    "FA": 0x1F01FF, "FR": 0x120089, "FW": 0x120116, "FX": 0x1200A0,
+    "RC": 0x20000, "SD": 0x10000, "WD": 0x40000, "WO": 0x80000,
+    "CC": 0x1, "DC": 0x2, "LC": 0x4, "SW": 0x8, "RP": 0x10, "WP": 0x20, "DT": 0x40, "LO": 0x80, "CR": 0x100,
+}  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -194,6 +234,128 @@ def _check_ollama(registry: Registry, enabled: list[jobs.Job]) -> Check:
     return Check("ollama", True, f"version {version}")
 
 
+def _system_tool(name: str) -> str:
+    """Absolute path in System32, so a planted `icacls.exe` or `whoami.exe` on PATH is never run."""
+    return str(PureWindowsPath(os.environ.get("SystemRoot") or r"C:\Windows", "System32", name))
+
+
+def _current_sid() -> str:
+    """The SID of the account running doctor, from `whoami /user /fo csv /nh`."""
+    found = _SID.search(_run([_system_tool("whoami.exe"), "/user", "/fo", "csv", "/nh"]))
+    if not found:
+        raise ToolError("internal", "whoami did not print a SID")
+    return found.group(0)
+
+
+def _read_acl(root: Path) -> str:
+    """The DACL of `root` in SDDL, written by `icacls <root> /save` into a temporary folder."""
+    with tempfile.TemporaryDirectory(prefix="lfmap-acl-") as folder:
+        saved = Path(folder) / "acl.txt"
+        _run([_system_tool("icacls.exe"), str(root), "/save", str(saved)])
+        text = saved.read_bytes().decode("utf-16-le", errors="replace")
+    found = re.search(r"D:[^\r\n]*", text)
+    if not found:
+        raise ToolError("internal", "icacls /save wrote no DACL")
+    return found.group(0)
+
+
+def _aces(sddl: str) -> list[list[str]]:
+    """Top-level `(type;flags;rights;object;inherited object;sid)` groups; nested conditions stay inside."""
+    aces, depth, start = [], 0, 0
+    for index, char in enumerate(sddl):
+        if char == "(":
+            depth += 1
+            start = index + 1 if depth == 1 else start
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                aces.append(sddl[start:index].split(";"))
+    if depth != 0 or any(len(ace) < 6 for ace in aces):
+        raise ToolError("internal", "icacls /save wrote an ACL that could not be read")
+    return aces
+
+
+def _mask(rights: str) -> int:
+    """Access mask of an SDDL rights field; an unknown code counts as write."""
+    if rights.lower().startswith("0x"):
+        return int(rights, 16)
+    codes = [rights[i : i + 2] for i in range(0, len(rights), 2)]
+    mask = 0
+    for code in codes:
+        mask |= _RIGHTS.get(code, _WRITE_MASK)
+    return mask
+
+
+def other_writers(sddl: str, user_sid: str, mask: int = _WRITE_MASK, *, own_only: bool = False) -> list[str]:
+    """Accounts other than you, SYSTEM and Administrators with a right in `mask` on the folder or, unless
+    `own_only`, on what it inherits to.
+
+    Deny ACEs are ignored, so this may warn about an account that a deny entry actually stops."""
+    writers: list[str] = []
+    for kind, flags, rights, _object, _inherited, sid, *_ in _aces(sddl):
+        sid, name = _WELL_KNOWN.get(sid, (sid, ""))
+        inherit_only = "IO" in [flags[i : i + 2] for i in range(0, len(flags), 2)]
+        if kind not in _ALLOW or sid in _TRUSTED or sid == user_sid or not _mask(rights) & mask:
+            continue
+        if own_only and inherit_only:
+            continue
+        label = f"{name} ({sid})" if name else sid
+        if label not in writers:
+            writers.append(label)
+    return writers
+
+
+def _runtime_root(path: Path) -> Path | None:
+    try:
+        return jobs.runtime_root(jobs.load_jobs_file(path))
+    except ToolError:
+        return None
+
+
+def _check_runtime_root(root: Path | None, xml: dict[str, str | None]) -> Check:
+    if root is None:
+        return Check("runtime_root", None, "jobs.toml could not be read")
+    if not (root / "scripts" / "Invoke-LfmapJob.ps1").is_file():
+        return Check("runtime_root", False, f"{root} has no scripts\\Invoke-LfmapJob.ps1", RUNTIME_FIX)
+    expected = f'-RepoPath "{root}"'.lower()
+    elsewhere = sorted(
+        i for i, text in xml.items() if text and expected not in html.unescape(_tag(text, "Arguments") or "").lower()
+    )
+    if elsewhere:
+        return Check("runtime_root", None, f"tasks not running from {root}: {', '.join(elsewhere)}", REGISTER_FIX)
+    return Check("runtime_root", True, str(root))
+
+
+def _acl_findings(root: Path, user_sid: str) -> list[str]:
+    """`<folder>: <accounts>` for the root (any write) and each folder above it (rename, delete child, ACL change),
+    since whoever can move a parent can put another tree at the root's path."""
+    findings = []
+    writers = other_writers(_read_acl(root), user_sid)
+    if writers:
+        findings.append(f"{root}: {', '.join(writers)}")
+    for parent in root.parents:
+        mask = _MOVE_MASK if parent.parent != parent else _DRIVE_MOVE_MASK
+        movers = other_writers(_read_acl(parent), user_sid, mask, own_only=True)
+        if movers:
+            findings.append(f"{parent} (can move what is below): {', '.join(movers)}")
+    return findings
+
+
+def _check_runtime_acl(root: Path | None) -> Check:
+    if root is None or not root.is_dir():
+        return Check("runtime_acl", None, "no runtime root to inspect")
+    try:
+        findings = _acl_findings(root, _current_sid())
+    except ToolError as error:
+        return Check("runtime_acl", None, f"ACL of {root} could not be read: {error.message}")
+    except OSError as error:
+        return Check("runtime_acl", None, f"ACL of {root} could not be read: {error}")
+    if findings:
+        detail = f"other accounts can change {root}; code they change runs as you: {'; '.join(findings)}"
+        return Check("runtime_acl", None, detail, RUNTIME_FIX)
+    return Check("runtime_acl", True, f"only you, SYSTEM and Administrators can change {root} or the folders above it")
+
+
 def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
     path = path or jobs.jobs_path()
     uv = _check_uv()
@@ -206,6 +368,7 @@ def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
         registered, error = None, failure.message
     xml = _task_xml(sorted((enabled_ids or set()) & (registered or set())))
     seconds, power_error = _sleep_seconds()
+    root = _runtime_root(path)
     return [
         uv,
         _check_pwsh(xml),
@@ -215,4 +378,6 @@ def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
         _check_wake(xml, seconds),
         _check_sleep(seconds, power_error),
         _check_ollama(registry, enabled),
+        _check_runtime_root(root, xml),
+        _check_runtime_acl(root),
     ]

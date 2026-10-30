@@ -4,8 +4,11 @@ Run one LFMAP job (`lfmap jobs run <id>`) and append one JSON line to the daily 
 
 .DESCRIPTION
 Task Scheduler calls this script for every task in \LFMAP\ (see docs/jobs.md).
+`lfmap jobs register` starts it from the runtime root (`[runtime] root` in jobs.toml, ADR-023) and passes that
+root as -RepoPath. The script refuses a -RepoPath other than its own repository, so the runner and the code it
+runs always come from the same reviewed tree.
 Log: %LOCALAPPDATA%\lfmap\logs\jobs-YYYY-MM-DD.jsonl. The exit code is the one of `lfmap`
-(0 success, 1 ToolError, 2 other error); 2 also when uv cannot be found.
+(0 success, 1 ToolError, 2 other error); 2 also when uv cannot be found or -RepoPath is another tree.
 
 .EXAMPLE
 pwsh -NoProfile -File scripts\Invoke-LfmapJob.ps1 -JobId echo-hello
@@ -43,6 +46,13 @@ if (-not $UvPath -or -not (Test-Path -LiteralPath $UvPath -PathType Leaf)) {
     exit 2
 }
 $UvPath = (Resolve-Path -LiteralPath $UvPath).Path
+
+$ownRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot)).TrimEnd('\')
+$RepoPath = [System.IO.Path]::GetFullPath($RepoPath).TrimEnd('\')
+if ($RepoPath -ine $ownRoot) {
+    [Console]::Error.WriteLine("-RepoPath $RepoPath is not the repository of this script ($ownRoot)")
+    exit 2
+}
 
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $env:PYTHONUTF8 = '1'

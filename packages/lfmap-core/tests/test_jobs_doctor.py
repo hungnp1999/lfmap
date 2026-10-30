@@ -35,8 +35,12 @@ POWER = ("powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE")
 TASKS_CSV = '"\\LFMAP\\hello","N/A","Ready"\n"\\Microsoft\\Windows\\Other","N/A","Ready"\n'
 
 
-def task_xml(logon: str = "InteractiveToken", wake: str = "false", command: str | None = None) -> str:
-    action = f"\n  <Actions><Exec><Command>{command}</Command></Exec></Actions>" if command else ""
+def task_xml(
+    logon: str = "InteractiveToken", wake: str = "false", command: str | None = None, root: Path | None = None
+) -> str:
+    executable = f"<Command>{command}</Command>" if command else ""
+    arguments = f"-NoProfile -File &quot;x.ps1&quot; -JobId hello -RepoPath &quot;{root or jobs.repo_root()}&quot;"
+    action = f"\n  <Actions><Exec>{executable}<Arguments>{arguments}</Arguments></Exec></Actions>"
     return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Principals>
@@ -66,6 +70,22 @@ def powercfg(ac: int, dc: int = 900) -> str:
     Current AC Power Setting Index: 0x{ac:08x}
     Current DC Power Setting Index: 0x{dc:08x}
 """
+
+
+USER_SID = "S-1-5-21-3501978580-2174309771-332471541-1001"
+AGENT_SID = "S-1-5-21-3501978580-2174309771-332471541-1002"
+# Recorded with `icacls <folder> /save` on pc-01 (second line of the file).
+DEV_TREE_SDDL = (
+    "D:(A;ID;FA;;;BA)(A;OICIIOID;GA;;;BA)(A;ID;FA;;;SY)(A;OICIIOID;GA;;;SY)(A;ID;0x1301bf;;;AU)"
+    "(A;OICIIOID;SDGXGWGR;;;AU)(A;ID;0x1200a9;;;BU)(A;OICIIOID;GXGR;;;BU)"
+)
+PROFILE_SDDL = f"D:(A;OICIID;FA;;;SY)(A;OICIID;FA;;;BA)(A;OICIID;FA;;;{USER_SID})"
+DRIVE_SDDL = (
+    "D:(A;;FA;;;BA)(A;OICIIO;GA;;;BA)(A;;FA;;;SY)(A;OICIIO;GA;;;SY)(A;;0x1301bf;;;AU)"
+    "(A;OICIIO;SDGXGWGR;;;AU)(A;;0x1200a9;;;BU)(A;OICIIO;GXGR;;;BU)"
+)
+# What Setup-LfmapAgent.ps1 aims for: inheritance off, the agent may read and execute only.
+RUNTIME_SDDL = f"D:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{USER_SID})(A;OICI;0x1200a9;;;{AGENT_SID})"
 
 
 @pytest.fixture
@@ -116,7 +136,18 @@ def system(monkeypatch):
     monkeypatch.setattr(jobs_doctor, "_http_get", fake_http_get)
     monkeypatch.setattr(jobs, "find_uv", lambda: Path("C:/uv/uv.exe"))
     monkeypatch.setattr(jobs, "find_pwsh", lambda: Path("C:/Program Files/PowerShell/7/pwsh.exe"))
-    return {"outputs": outputs, "http": http, "calls": calls}
+    acl: dict = {"sddl": RUNTIME_SDDL, "sid": USER_SID, "by_path": {}}
+
+    def fake_read_acl(folder: Path) -> str:
+        acl.setdefault("root", str(folder))
+        result = acl["by_path"].get(str(folder), acl["sddl"])
+        if isinstance(result, ToolError):
+            raise result
+        return result
+
+    monkeypatch.setattr(jobs_doctor, "_read_acl", fake_read_acl)
+    monkeypatch.setattr(jobs_doctor, "_current_sid", lambda: acl["sid"])
+    return {"outputs": outputs, "http": http, "calls": calls, "acl": acl}
 
 
 def by_name(checks: list[jobs_doctor.Check]) -> dict[str, jobs_doctor.Check]:
@@ -129,7 +160,9 @@ def no_schtasks() -> ToolError:
 
 def test_check_names_and_order(jobs_file, registry, system):
     names = [check.name for check in jobs_doctor.run_checks(registry)]
-    assert names == ["uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"]
+    assert names == [
+        "uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama", "runtime_root", "runtime_acl"
+    ]  # fmt: skip
 
 
 def test_default_machine(jobs_file, registry, system):
@@ -296,7 +329,7 @@ def test_cli_doctor_exit_0_without_false(jobs_file, registry, system):
     system["outputs"][XML_QUERY] = task_xml(logon="Password", wake="true")
     result = runner.invoke(build_app(registry), ["jobs", "doctor"])
     assert result.exit_code == 0
-    for name in ("uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama"):
+    for name in ("uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama", "runtime_acl"):
         assert name in result.output
 
 
@@ -336,3 +369,181 @@ def test_missing_pwsh(jobs_file, registry, system, monkeypatch):
     check = by_name(jobs_doctor.run_checks(registry))["pwsh"]
     assert check.ok is False
     assert check.fix
+
+
+def runtime_tree(tmp_path: Path) -> Path:
+    root = tmp_path / "lfmap-runtime"
+    (root / "scripts").mkdir(parents=True)
+    (root / "scripts" / "Invoke-LfmapJob.ps1").write_text("# runner\n", encoding="utf-8")
+    return root
+
+
+def use_runtime(jobs_file: Path, root: Path) -> None:
+    jobs_file.write_text(f"[runtime]\nroot = '{root}'\n" + JOBS_TOML, encoding="utf-8")
+
+
+def test_runtime_defaults_to_this_checkout(jobs_file, registry, system):
+    checks = by_name(jobs_doctor.run_checks(registry))
+    assert checks["runtime_root"].ok is True
+    assert checks["runtime_root"].detail == str(jobs.repo_root())
+    assert system["acl"]["root"] == str(jobs.repo_root())
+
+
+def test_runtime_root_from_jobs_toml(jobs_file, registry, system, tmp_path):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    system["outputs"][XML_QUERY] = task_xml(root=root)
+    checks = by_name(jobs_doctor.run_checks(registry))
+    assert checks["runtime_root"].ok is True
+    assert checks["runtime_acl"].ok is True
+    assert system["acl"]["root"] == str(root)
+
+
+def test_task_running_from_another_tree_warns(jobs_file, registry, system, tmp_path):
+    use_runtime(jobs_file, runtime_tree(tmp_path))
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_root"]
+    assert check.ok is None
+    assert "hello" in check.detail
+    assert "jobs register" in check.fix
+
+
+def test_runtime_root_without_runner_fails(jobs_file, registry, system, tmp_path):
+    use_runtime(jobs_file, tmp_path / "empty")
+    checks = by_name(jobs_doctor.run_checks(registry))
+    assert checks["runtime_root"].ok is False
+    assert checks["runtime_root"].fix
+    assert checks["runtime_acl"].ok is None
+    assert "root" not in system["acl"]
+
+
+def test_runtime_unknown_when_jobs_file_is_invalid(user_dirs, registry, system, monkeypatch):
+    path = user_dirs / "jobs.toml"
+    path.write_text("[runtime]\nroot = 'relative'\n", encoding="utf-8")
+    monkeypatch.setenv("LFMAP_JOBS", str(path))
+    checks = by_name(jobs_doctor.run_checks(registry))
+    assert checks["runtime_root"].ok is None
+    assert checks["runtime_acl"].ok is None
+
+
+def test_runtime_writable_by_others_warns(jobs_file, registry, system):
+    system["acl"]["sddl"] = DEV_TREE_SDDL
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert "Authenticated Users (S-1-5-11)" in check.detail
+    assert "[runtime] root" in check.fix
+
+
+def test_parent_that_others_can_move_warns(jobs_file, registry, system, tmp_path):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    system["acl"]["by_path"][str(root.parent)] = DEV_TREE_SDDL
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert f"{root.parent} (can move what is below): Authenticated Users (S-1-5-11)" in check.detail
+    assert f"{root}:" not in check.detail
+
+
+def test_every_parent_is_read(jobs_file, registry, system, tmp_path, monkeypatch):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    read = []
+    fake = jobs_doctor._read_acl
+    monkeypatch.setattr(jobs_doctor, "_read_acl", lambda folder: read.append(folder) or fake(folder))
+    jobs_doctor.run_checks(registry)
+    assert read == [root, *root.parents]
+
+
+@pytest.mark.parametrize(
+    ("sddl", "mask", "expected"),
+    [
+        (DRIVE_SDDL, jobs_doctor._DRIVE_MOVE_MASK, []),
+        (DRIVE_SDDL, jobs_doctor._MOVE_MASK, ["Authenticated Users (S-1-5-11)"]),
+        (DEV_TREE_SDDL, jobs_doctor._MOVE_MASK, ["Authenticated Users (S-1-5-11)"]),
+        ("D:(A;OICIIO;GA;;;AU)(A;;0x1200a9;;;BU)", jobs_doctor._MOVE_MASK, []),
+        (f"D:(A;;DT;;;{AGENT_SID})", jobs_doctor._DRIVE_MOVE_MASK, [AGENT_SID]),
+        (f"D:(A;;WD;;;{AGENT_SID})", jobs_doctor._DRIVE_MOVE_MASK, [AGENT_SID]),
+    ],
+)
+def test_who_can_move_a_parent(sddl, mask, expected):
+    assert jobs_doctor.other_writers(sddl, USER_SID, mask, own_only=True) == expected
+
+
+def test_unreadable_acl_is_unknown(jobs_file, registry, system):
+    system["acl"]["sddl"] = ToolError("backend_unavailable", "icacls.exe was not found (Windows only)")
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert "icacls" in check.detail
+
+
+@pytest.mark.parametrize(
+    ("sddl", "expected"),
+    [
+        (DEV_TREE_SDDL, ["Authenticated Users (S-1-5-11)"]),
+        (PROFILE_SDDL, []),
+        (RUNTIME_SDDL, []),
+        (f"D:PAI(A;OICI;FA;;;SY)(A;OICI;0x1301bf;;;{AGENT_SID})", [AGENT_SID]),
+        (f"D:(A;OICI;FA;;;{AGENT_SID})", [AGENT_SID]),
+        ("D:(A;OICIIO;GW;;;WD)", ["Everyone (S-1-1-0)"]),
+        ("D:(A;;WD;;;BU)", ["Users (S-1-5-32-545)"]),
+        ("D:(A;;SD;;;BU)", ["Users (S-1-5-32-545)"]),
+        ("D:(A;;DCLC;;;BU)", ["Users (S-1-5-32-545)"]),
+        ("D:(A;;FRFX;;;BU)(A;;0x1200a9;;;AU)(A;OICIIO;GXGR;;;BU)", []),
+        (f"D:(D;OICI;FA;;;{AGENT_SID})(A;OICIIO;GA;;;CO)(A;OICI;FA;;;S-1-5-32-544)", []),
+        ("D:(A;;ZZ;;;BU)", ["Users (S-1-5-32-545)"]),
+        (f'D:(XA;;FA;;;{AGENT_SID};(@User.Project == "x"))', [AGENT_SID]),
+        (f"D:(A;;FA;;;{USER_SID})", []),
+    ],
+)
+def test_other_writers(sddl, expected):
+    assert jobs_doctor.other_writers(sddl, USER_SID) == expected
+
+
+@pytest.mark.parametrize("sddl", ["D:(A;;FA;;;BU", "D:(A;;FA)"])
+def test_unreadable_sddl(sddl):
+    with pytest.raises(ToolError):
+        jobs_doctor.other_writers(sddl, USER_SID)
+
+
+def test_read_acl_runs_icacls_from_system32(monkeypatch, tmp_path):
+    seen = []
+
+    def fake_run(args: list[str]) -> str:
+        seen.append(args)
+        Path(args[3]).write_bytes(f"lfmap-runtime\r\n{RUNTIME_SDDL}\r\n".encode("utf-16-le"))
+        return "processed file"
+
+    monkeypatch.setenv("SystemRoot", r"C:\Windows")
+    monkeypatch.setattr(jobs_doctor, "_run", fake_run)
+    assert jobs_doctor._read_acl(tmp_path) == RUNTIME_SDDL
+    assert seen[0][0] == r"C:\Windows\System32\icacls.exe"
+    assert seen[0][1:3] == [str(tmp_path), "/save"]
+    assert not Path(seen[0][3]).exists()
+
+
+def test_read_acl_without_dacl(monkeypatch, tmp_path):
+    def fake_run(args: list[str]) -> str:
+        Path(args[3]).write_bytes("lfmap-runtime\r\n".encode("utf-16-le"))
+        return ""
+
+    monkeypatch.setattr(jobs_doctor, "_run", fake_run)
+    with pytest.raises(ToolError):
+        jobs_doctor._read_acl(tmp_path)
+
+
+def test_current_sid_from_whoami(monkeypatch):
+    seen = []
+
+    def fake_run(args: list[str]) -> str:
+        seen.append(args)
+        return f'"diep-anh\\hungnp","{USER_SID}"\r\n'
+
+    monkeypatch.setenv("SystemRoot", r"C:\Windows")
+    monkeypatch.setattr(jobs_doctor, "_run", fake_run)
+    assert jobs_doctor._current_sid() == USER_SID
+    assert seen == [[r"C:\Windows\System32\whoami.exe", "/user", "/fo", "csv", "/nh"]]
+
+
+def test_current_sid_missing(monkeypatch):
+    monkeypatch.setattr(jobs_doctor, "_run", lambda args: "nothing")
+    with pytest.raises(ToolError):
+        jobs_doctor._current_sid()
