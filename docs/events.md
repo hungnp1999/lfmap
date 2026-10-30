@@ -32,8 +32,10 @@ Rules that the bus enforces:
   `<plugin>.<operation>.requested|completed|failed` belong to core and are always refused.
 - **Payload limit.** Payloads are JSON objects with string keys, at most 65 536 UTF-8 bytes once encoded
   compact and key-sorted. Carry references (paths, ids, counts), never document text or secrets.
-- **Causation chain.** If `ctx.events.publish` is called while handling an event the new event keeps
-  `causation_id` pointing to the triggering event. No extra argument is needed.
+- **Causation chain.** When the event adapter runs an operation in response to a `.requested` event and the
+  plugin calls `ctx.events.publish` inside that operation, the new event's `causation_id` is set to the
+  `.requested` event's id automatically. No extra argument is needed. Outside of an event-adapter call
+  `causation_id` is not set by `ctx.events.publish`.
 
 ## Topics and patterns
 
@@ -125,7 +127,7 @@ uv run lfmap events retry <event-id> <subscription>
 After `retry`, the next drain attempts delivery again from attempt 1.
 
 **Queue not draining.** Remember: no daemon. Run `lfmap events run --until-idle` or add it as a scheduled job
-(see `lfmap jobs register`) if you need lower latency than \"next `jobs run`\".
+(see `lfmap jobs register`) if you need lower latency than the next `jobs run`.
 
 **Locked database.** `SqliteBus` uses a 30 s busy timeout. A lock error means another process held an
 `IMMEDIATE` transaction for over 30 s, which should not happen in normal use. If it does, stop all LFMAP
