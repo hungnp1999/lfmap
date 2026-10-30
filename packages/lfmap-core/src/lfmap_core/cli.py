@@ -436,7 +436,7 @@ def build_app(registry: Registry) -> typer.Typer:
             typer.echo(json.dumps(counts, indent=2))
             return
         for name, states in counts.items():
-            typer.echo(f"{name}  " + "  ".join(f"{state}={count}" for state, count in states.items()))
+            typer.echo(approvals.visible(f"{name}  " + "  ".join(f"{s}={n}" for s, n in states.items())))
 
     @events_app.command("dead")
     def events_dead(
@@ -450,7 +450,7 @@ def build_app(registry: Registry) -> typer.Typer:
         finally:
             bus.close()
         if json_output:
-            typer.echo(json.dumps([letter.model_dump(mode="json") for letter in letters], indent=2, ensure_ascii=False))
+            typer.echo(json.dumps([letter.model_dump(mode="json") for letter in letters], indent=2))
             return
         for letter in letters:
             line = f"{letter.event.id}  {letter.subscription}  {letter.event.topic}  attempts={letter.attempts}"
