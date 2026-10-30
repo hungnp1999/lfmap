@@ -45,12 +45,13 @@ flowchart LR
 2. **Scheduled job.** Task Scheduler runs `Invoke-LfmapJob.ps1`, which runs `lfmap jobs run` and exits. A job never asks: calls above its `max_tier` become proposals in `approvals\pending\`, approved later at a TTY.
 3. **Knowledge reindex.** Under a single-writer lock: reconcile files, extract changed ones through markitdown (in-process SDK call with the caller's rights), chunk, index FTS5, embed in batches, write LanceDB, garbage-collect.
 4. **Question over MCP.** `knowledge_search` / `knowledge_get_context`: keyword and vector search fused with RRF, weak hits pruned, packed to a token budget with citations. `secret` roots never leave on `mcp`/`rest`; every call that returns content writes `egress_log`.
+5. **Event.** No daemon: handlers run only while `lfmap events run` or the end of `lfmap jobs run` drains `%LOCALAPPDATA%\lfmap\events.db` (bounded by `--max-seconds` / `--max-events`). A plugin with `[adapters] events = true` publishes its own topics through `ctx.events`. Core publishes `<plugin>.<operation>.requested`; the event adapter (`adapter-<plugin-id>`) runs the operation like a job (channel `event`, capped at `[events] max_tier`, otherwise a proposal) and publishes `.completed` or `.failed`. Delivery is at least once, so handlers must be idempotent; failed handlers retry with backoff and end as dead letters (`lfmap events dead`, `retry` at a TTY).
 
 ## Invariants
 
 - Adapters stay generic: no plugin-specific code in `cli.py` or `mcp_adapter.py`. Plugins call each other through the SDK (`context_for`), never through CLI or MCP.
 - Every caller-supplied path goes through `PermissionManager.require_read` / `require_write` before file-system access; the final check is `realpath` plus an inline `startswith` guard. UNC, `\\?\`, `\\.\` and `//` paths are refused before any I/O.
-- Folders come only from the user's `config.toml`; no operation writes it. Self-granting commands (`config add-folder`, `approvals grant/revoke/approve/reject`) run only at a TTY and have no MCP form.
+- Folders come only from the user's `config.toml`; no operation writes it. Self-granting commands (`config add-folder`, `approvals grant/revoke/approve/reject`) and the queue-changing `events retry/prune` run only at a TTY and have no MCP form.
 - T3 is never covered by `--yes`, `--approve` or elicitation.
 - No network beyond loopback: markitdown converts opened streams only, the embedder accepts loopback URLs and ignores proxy variables.
 - Runtime dependencies must carry a licence in the manifest's `allowed` list (`scripts/check_licenses.py`).

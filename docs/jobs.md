@@ -60,7 +60,7 @@ uv run lfmap approvals reject <id>
 
 ```powershell
 uv run lfmap jobs list              # id, plugin.operation, schedule, enabled
-uv run lfmap jobs run echo-hello    # run one job now; exit 0 success, 1 ToolError, 2 other error
+uv run lfmap jobs run echo-hello    # run one job, then drain events (--max-events 1000); exit 0 ok, 1 ToolError, 2 other
 uv run lfmap jobs register --dry-run
 uv run lfmap jobs register
 uv run lfmap jobs doctor           # read-only machine check; exit 1 when a check is FAIL
