@@ -86,8 +86,13 @@ def _load(registry: Registry, path: Path) -> tuple[Check, list[jobs.Job] | None]
             known = False
         if not known:
             broken.append(f"{job.id} ({job.plugin}.{job.operation})")
+            continue
+        try:
+            jobs.check_via(registry.get(job.plugin), job)
+        except ToolError:
+            broken.append(f'{job.id} (via = "event" but {job.plugin} has events = false)')
     if broken:
-        detail = "unknown plugin or operation: " + ", ".join(broken)
+        detail = "unknown plugin or operation, or events not enabled: " + ", ".join(broken)
         return Check("jobs_file", False, detail, "fix the jobs or install the plugin"), job_list
     return Check("jobs_file", True, f"{path}: {len(job_list)} job(s)"), job_list
 

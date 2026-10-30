@@ -5,18 +5,20 @@ runs that operation like a scheduled job (channel "event", never asks anyone, ca
 and answers with `.completed` or `.failed`. No plugin-specific code lives here.
 """
 
+import contextlib
 import logging
 import time
+import uuid
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 
 from pydantic import BaseModel
 
 from lfmap_core.approval import Policy
 from lfmap_core.approvals import EventCall, JobApprover, ttl
 from lfmap_core.config import app_dir, load_config
-from lfmap_core.errors import ToolError
+from lfmap_core.errors import ErrorCode, ToolError
 from lfmap_core.events import Event, EventBus, Handler
 from lfmap_core.events_names import operation_topic, parse_operation_topic, plugin_may_publish
 from lfmap_core.events_payload import encode_payload
@@ -198,3 +200,47 @@ def drain_after_job(registry: Registry, max_events: int) -> int:
         return bus.drain(max_events=max_events)
     finally:
         bus.close()
+
+
+class RequestResult(BaseModel):
+    """What `request_operation` returns when the output did not fit in the `.completed` event."""
+
+    request_id: str
+    output_too_large: bool = True
+
+
+def _answer(events: list[Event], request_id: str) -> Event | None:
+    phases = (".completed", ".failed")
+    return next((e for e in events if e.topic.endswith(phases) and e.payload.get("request_id") == request_id), None)
+
+
+def request_operation(
+    registry: Registry, entry: PluginEntry, operation: str, inp: dict[str, Any], *, max_events: int
+) -> BaseModel:
+    """Publish `<plugin>.<operation>.requested` as core, drain at most `max_events` handler calls and return
+    the output from `.completed`. `.failed` raises its ToolError; no answer within the drain raises `timeout`
+    and the request stays queued for the next drain."""
+    bus = open_bus()
+    watcher = f"request-{uuid.uuid4().hex[:16]}"
+    seen: list[Event] = []
+    try:
+        EventAdapter(registry, bus).attach()
+        bus.subscribe(watcher, f"{entry.id}.{operation}.*", seen.append)
+        request = bus.publish(operation_topic(entry.id, operation, "requested"), {"input": inp}, source="core")
+        bus.drain(max_events=max_events)
+    finally:
+        with contextlib.suppress(ToolError):  # the watcher may not exist if subscribing failed
+            bus.unsubscribe(watcher)
+        bus.close()
+    answer = _answer(seen, request.id)
+    if answer is None:
+        message = "The request was not handled within --max-events; it stays queued for the next drain"
+        raise ToolError("timeout", message, {"request_id": request.id})
+    if answer.topic.endswith(".failed"):
+        error = answer.payload.get("error") or {}
+        code = error.get("code") if error.get("code") in get_args(ErrorCode) else "internal"
+        details = error.get("details") if isinstance(error.get("details"), dict) else {}
+        raise ToolError(code, str(error.get("message", "The operation failed")), {**details, "request_id": request.id})
+    if answer.payload.get("output_too_large"):
+        return RequestResult(request_id=request.id)
+    return entry.tool_class.operations()[operation].output_model.model_validate(answer.payload["output"])

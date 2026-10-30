@@ -87,6 +87,7 @@ class Job(BaseModel):
     schedule: Schedule
     max_tier: Literal[0, 1] = 0
     enabled: bool = True
+    via: Literal["call", "event"] = "call"
 
 
 class JobsFile(BaseModel):
@@ -134,7 +135,16 @@ def check_input(entry: PluginEntry, operation: str, payload: dict[str, Any]) -> 
         raise ToolError("invalid_input", "Input does not match the operation schema", details) from error
 
 
-def run_job(registry: Registry, job_id: str, path: Path | None = None) -> BaseModel:
+def check_via(entry: PluginEntry, job: Job) -> None:
+    if job.via == "event" and not entry.manifest.adapters.events:
+        message = f'Job {job.id!r} uses via = "event" but plugin {job.plugin} has [adapters] events = false'
+        raise ToolError("invalid_input", message, {"job": job.id, "plugin": job.plugin})
+
+
+def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_events: int = 1000) -> BaseModel:
+    """Run one job. With `via = "event"` the call goes through the event adapter: core publishes
+    `<plugin>.<operation>.requested`, drains at most `max_events` handler calls and returns the result.
+    The job's `max_tier` is checked here and `[events] max_tier` in the adapter, so the lower one applies."""
     job = next((j for j in load_jobs(path) if j.id == job_id), None)
     if job is None:
         raise ToolError("not_found", f"Unknown job {job_id!r}", {"job": job_id})
@@ -145,9 +155,14 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None) -> BaseMo
     if declared is None:
         raise ToolError("not_found", f"Unknown operation {job.plugin}.{job.operation}", {"job": job_id})
     check_input(entry, job.operation, job.input)
+    check_via(entry, job)
     config = load_config()
     gate = JobApprover(job, Policy.from_config(config), ttl(config))
     gate(call_tier(entry, job.operation, job.input, config), "side_effects")
+    if job.via == "event":
+        from lfmap_core.events_adapter import request_operation  # events_adapter imports this module
+
+        return request_operation(registry, entry, job.operation, job.input, max_events=max_events)
     return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
 
