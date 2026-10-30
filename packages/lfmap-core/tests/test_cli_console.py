@@ -34,6 +34,7 @@ class FakeStdin:
 @pytest.fixture
 def windows(monkeypatch):
     monkeypatch.setattr(cli, "_WINDOWS", True)
+    monkeypatch.setattr(cli, "_console_window", lambda: True)
 
 
 @pytest.mark.parametrize("args", TTY_ONLY, ids=lambda a: " ".join(a[:2]))
@@ -48,9 +49,21 @@ def test_tty_only_commands_refuse_without_a_console(registry, windows, monkeypat
     assert not (app_dir() / "events.db").exists()
 
 
+@pytest.mark.parametrize("args", TTY_ONLY, ids=lambda a: " ".join(a[:2]))
+def test_tty_only_commands_refuse_a_console_without_a_window(registry, windows, monkeypatch, args) -> None:
+    monkeypatch.setattr(cli, "_console_stdin", lambda: True)
+    monkeypatch.setattr(cli, "_console_window", lambda: False)
+    result = runner.invoke(build_app(registry), args)
+    assert isinstance(result.exception, ToolError)
+    assert result.exception.code == "permission_denied"
+    assert "interactive terminal" in result.exception.message
+    assert not (app_dir() / "grants.json").exists()
+
+
 def test_console_probe_lets_a_person_through(registry, windows, monkeypatch) -> None:
     monkeypatch.setattr(cli, "_console_stdin", lambda: True)
-    result = runner.invoke(build_app(registry), TTY_ONLY[0])
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    result = runner.invoke(build_app(registry), TTY_ONLY[0], input="ABC234\n")
     assert result.exit_code == 0, result.output
     assert (app_dir() / "grants.json").exists()
 
@@ -61,6 +74,8 @@ def test_windows_uses_the_console_probe_not_isatty(windows, monkeypatch) -> None
     assert cli._interactive() is False
     monkeypatch.setattr(cli, "_console_stdin", lambda: True)
     assert cli._interactive() is True
+    monkeypatch.setattr(cli, "_console_window", lambda: False)
+    assert cli._interactive() is False
 
 
 @pytest.mark.parametrize("tty", [True, False])

@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from typer.testing import CliRunner
 
 from lfmap_core import cli, grants
@@ -77,7 +78,10 @@ def test_grant_needs_a_terminal(user_dirs, registry):
 
 def test_grant_list_revoke(user_dirs, registry, monkeypatch):
     monkeypatch.setattr(cli, "_interactive", lambda: True)
-    assert run(registry, "approvals", "grant", "fake-plugin.write", "--tier", "T3", "--for", "2h").exit_code == 0
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    granted = run(registry, "approvals", "grant", "fake-plugin.write", "--tier", "T3", "--for", "2h", input="abc234\n")
+    assert granted.exit_code == 0, granted.output
+    assert "type this code: ABC234" in granted.output
     assert grants.active("fake-plugin.write", "T3")
     listed = json.loads(run(registry, "approvals", "list", "--json").output)
     assert [g["operation"] for g in listed] == ["fake-plugin.write"]
@@ -85,7 +89,42 @@ def test_grant_list_revoke(user_dirs, registry, monkeypatch):
         "invalid_input"
     )
     assert run(registry, "approvals", "grant", "nope.op").exception.code == "invalid_input"
-    assert "Revoked 1" in run(registry, "approvals", "revoke", "fake-plugin.write").output
+    assert "Revoked 1" in run(registry, "approvals", "revoke", "fake-plugin.write", input="ABC234\n").output
     assert not grants.active("fake-plugin.write", "T3")
     decisions = [json.loads(line)["decision"] for line in audit_path().read_text(encoding="utf-8").splitlines()]
     assert decisions == ["grant", "revoke"]
+
+
+def test_confirm_code_shape():
+    codes = {cli._confirm_code() for _ in range(50)}
+    assert len(codes) > 45
+    assert all(len(c) == cli.CODE_LENGTH and set(c) <= set(cli.CODE_ALPHABET) for c in codes)
+    assert not set("01IO") & set(cli.CODE_ALPHABET)
+
+
+@pytest.mark.parametrize("typed", ["XYZ999\n", "\n", None])
+def test_grant_with_wrong_code_or_eof_writes_nothing(user_dirs, registry, monkeypatch, typed):
+    monkeypatch.setattr(cli, "_interactive", lambda: True)
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    result = run(registry, "approvals", "grant", "fake-plugin.write", "--tier", "T3", input=typed)
+    assert result.exception.code == "permission_denied"
+    assert "confirmation code" in result.exception.message
+    assert grants.load() == []
+    [record] = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
+    assert (record["decision"], record["operation"], record["tier"]) == ("deny", "write", "T3")
+
+
+def test_revoke_with_wrong_code_keeps_the_grant(user_dirs, registry, monkeypatch):
+    monkeypatch.setattr(cli, "_interactive", lambda: True)
+    monkeypatch.setattr(cli, "_confirm_code", lambda: "ABC234")
+    run(registry, "approvals", "grant", "fake-plugin.write", "--tier", "T2", input="ABC234\n")
+    result = run(registry, "approvals", "revoke", "fake-plugin.write", input="nope\n")
+    assert result.exception.code == "permission_denied"
+    assert grants.active("fake-plugin.write", "T2")
+
+
+def test_grant_checks_input_before_asking(user_dirs, registry, monkeypatch):
+    monkeypatch.setattr(cli, "_interactive", lambda: True)
+    result = run(registry, "approvals", "grant", "fake-plugin.write", "--tier", "T3", "--for", "2d")
+    assert result.exception.code == "invalid_input"
+    assert "type this code" not in result.output
