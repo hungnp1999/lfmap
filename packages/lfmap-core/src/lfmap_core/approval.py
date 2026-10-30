@@ -111,14 +111,14 @@ def decide(
     `can_elicit` says the adapter can ask the person (interactive terminal, MCP elicitation);
     `granted` says a time-limited grant from the interactive CLI covers this call.
     Neither a pre-approval nor MCP elicitation covers T3: an agent could answer for the person.
-    A scheduled job has nobody to ask and takes no grant or pre-approval (it uses `job_decision`).
+    A scheduled job or an event call has nobody to ask and takes no grant or pre-approval (it uses `job_decision`).
     """
     action = policy.action(plugin, op, tier)
     if action == "deny":
         return "deny"
     if action in ("allow", "audit"):
         return "allow"
-    if channel == "job":
+    if channel in ("job", "event"):
         return "deny"
     if granted:
         return "allow"
@@ -133,7 +133,8 @@ def job_decision(policy: Policy, plugin: str, op: str, tier: Tier, max_tier: int
     """Whether a scheduled job runs a call, queues it for a person to approve, or is refused (ADR-018).
 
     Nobody watches a job, so it never asks and ignores grants, pre-approvals and preapproved destinations.
-    `max_tier` (0 or 1, from jobs.toml) is a ceiling: the policy can only tighten it, and `deny` is never queued.
+    `max_tier` (0 or 1, from jobs.toml or `[events] max_tier`) is a ceiling: the policy can only tighten it,
+    and `deny` is never queued.
     """
     if tier == "T0":
         return "allow"
