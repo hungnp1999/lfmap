@@ -544,9 +544,11 @@ def build_app(registry: Registry) -> typer.Typer:
         bus = open_bus()
         try:
             removed = bus.prune(older_than=days * 86400)
+            watchers = bus.prune_watchers(older_than=86400)
         finally:
             bus.close()
         typer.echo(f"Deleted {removed} event(s)")
+        typer.echo(f"Deleted {watchers} stale watcher subscription(s)")
 
     @events_app.command("run")
     def events_run(

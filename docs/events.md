@@ -107,7 +107,9 @@ Prune regularly to keep the file small:
 uv run lfmap events prune --days 7   # remove handled events older than 7 days
 ```
 
-Dead letters and pending deliveries are never pruned automatically.
+`prune` also drops `request-*` watcher subscriptions older than a day (left behind by a killed `lfmap jobs run`) with their deliveries.
+
+Dead letters and pending deliveries of other subscriptions are never pruned automatically.
 
 ## Troubleshooting
 
