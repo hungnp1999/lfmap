@@ -21,7 +21,7 @@ from common.metrics import Trace, traced
 from common.models import AwaitingApproval, Done, Models, RunRecord, RunResult
 
 SPIKE = Path(__file__).resolve().parent.parent
-IMPLEMENTED = {"plain"}
+IMPLEMENTED = {"plain", "pydanticai"}
 VARIANTS = [
     pytest.param(
         name,
