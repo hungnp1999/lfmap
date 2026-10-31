@@ -66,7 +66,7 @@ max_tier = 0   # 0 = only T0 (read-only) runs; 1 = T1 (new files) also runs
 ```
 
 The default is 0. The same tier table as jobs applies (see [docs/jobs.md](jobs.md#jobs-through-the-event-bus-via--event)). A call above the ceiling is
-queued as a proposal under job `events` and can be approved later at a TTY with `lfmap approvals approve`.
+queued as a proposal under job `events` and can be approved later at a TTY with `lfmap approvals approve`. See [docs/approvals.md](approvals.md) for tiers, grants and the queue.
 
 ## Commands
 
