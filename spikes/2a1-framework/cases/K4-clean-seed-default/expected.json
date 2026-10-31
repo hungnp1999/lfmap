@@ -1,0 +1,18 @@
+{
+  "id": "K4-clean-seed-default",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "mutable default argument config={} is shared between calls and replaces the card's None, so the real config file is never read"
+  ],
+  "seeded": [
+    "    tool_ctx: ToolContext, path: Path, content_hash: str, cache_dir: Path, ocr: bool, config: dict = {}"
+  ],
+  "keywords": [
+    "mutable",
+    "default argument",
+    "shared",
+    "config file",
+    "None"
+  ]
+}

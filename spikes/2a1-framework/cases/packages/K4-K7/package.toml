@@ -1,0 +1,28 @@
+# Work package for the one Plan run of F4 (spec section 2, step 1).
+# Goal: TC-K4..TC-K7 of docs/specs/knowledge.md section 8 as of c8a4cf4, in English.
+# Worktree: lfmap at 018ffdf (frozen tests of PR #26 present, modules absent); see cases/README.md.
+id = "K4-K7"
+goal = """
+Package `packages/lfmap-knowledge` of the lfmap monorepo (Python 3.12); every path below is relative to the repository root. Write four modules, one card each.
+Standard library plus `lfmap_core` (and `lfmap_markitdown` for extract.py) only. The frozen tests are
+already in the repository; do not change them or `packages/lfmap-knowledge/tests/conftest.py`, do not define fixtures.
+
+1. `packages/lfmap-knowledge/src/lfmap_knowledge/extract.py` (tests: `packages/lfmap-knowledge/tests/test_extract.py`): call the markitdown plugin and
+   cache the Markdown by content hash. `extract(tool_ctx, path, content_hash, cache_dir, ocr, config=None)
+   -> ExtractResult | SkipResult`; cache file `cache_dir/<hash[:2]>/<hash>.md` plus a `.json` sidecar with
+   `extractor_version`, written atomically (`os.replace`), sidecar last; reuse the cache when the
+   extractor version matches; a ToolError with `details["reason_code"]` becomes `SkipResult(reason_code)`.
+2. `packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py` (tests: `packages/lfmap-knowledge/tests/test_chunker.py`): pure function
+   `chunk_markdown(text, target_chars=1500, max_chars=3000) -> list[Chunk]` with
+   `Chunk(ordinal, heading_path, char_start, char_end, text)`; `text[char_start:char_end] == chunk.text`;
+   nested headings give `"A > B"`; no chunk over `max_chars`; a table is never cut; `""` gives `[]`.
+3. `packages/lfmap-knowledge/src/lfmap_knowledge/fts.py` (tests: `packages/lfmap-knowledge/tests/test_fts.py`): `fold(s)` (casefold, đ -> d);
+   `fts_query(user_text)` quotes each word after removing quotes inside it, empty -> ToolError("invalid_input");
+   `index_chunks(conn, rows)`; `delete_content(conn, content_hash)` for the contentless FTS5 table;
+   `keyword_search(conn, query, limit) -> list[tuple[int, float]]`, best first, score = -bm25.
+4. `packages/lfmap-knowledge/src/lfmap_knowledge/embed.py` (tests: `packages/lfmap-knowledge/tests/test_embed.py`): `OllamaEmbedder(url, model, perms, timeout)`;
+   `check_loopback(url)` accepts only http(s) to localhost or a loopback IP without userinfo, else
+   ToolError("invalid_input"); `embed(texts)` in batches of 32 after `perms.require_network()`, checks the
+   number of vectors, connection errors -> ToolError("backend_unavailable", ..., {"reason": "ollama_unreachable"});
+   `ping()`; environment proxies are ignored.
+"""

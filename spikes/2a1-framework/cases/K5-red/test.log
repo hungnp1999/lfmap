@@ -1,0 +1,66 @@
+owledge\tests\test_chunker.py:45: in test_sibling_heading_replaces_previous
+    assert _with(chunks, "Phần B").heading_path == "A > B"
+E   AssertionError: assert 'A > C' == 'A > B'
+E     
+E     - A > B
+E     ?     ^
+E     + A > C
+E     ?     ^
+_______________ test_heading_line_is_in_first_chunk_of_section ________________
+packages\lfmap-knowledge\tests\test_chunker.py:51: in test_heading_line_is_in_first_chunk_of_section
+    assert _with(chunks, "Phần A").text.startswith("# A")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+packages\lfmap-knowledge\tests\test_chunker.py:22: in _with
+    return next(c for c in chunks if needle in c.text)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   StopIteration
+________________________ test_long_paragraph_is_split _________________________
+packages\lfmap-knowledge\tests\test_chunker.py:58: in test_long_paragraph_is_split
+    assert len(chunks) > 1
+E   assert 0 > 1
+E    +  where 0 = len([])
+________________ test_sentence_without_punctuation_is_hard_cut ________________
+packages\lfmap-knowledge\tests\test_chunker.py:68: in test_sentence_without_punctuation_is_hard_cut
+    assert "".join(c.text for c in chunks) == text
+E   AssertionError: assert '' == 'aaaaaaaaaaaa...aaaaaaaaaaaaa'
+E     
+E     - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
+E     
+E     ...Full output truncated (1 line hidden), use '-vv' to show
+_______________________ test_small_table_is_kept_whole ________________________
+packages\lfmap-knowledge\tests\test_chunker.py:75: in test_small_table_is_kept_whole
+    assert any(table in c.text for c in chunks)
+E   assert False
+E    +  where False = any(<generator object test_small_table_is_kept_whole.<locals>.<genexpr> at 0x00000145E1DA4AD0>)
+_______________________ test_long_table_repeats_header ________________________
+packages\lfmap-knowledge\tests\test_chunker.py:85: in test_long_table_repeats_header
+    assert len(table_chunks) > 1
+E   assert 0 > 1
+E    +  where 0 = len([])
+________________________ test_ordinals_are_consecutive ________________________
+packages\lfmap-knowledge\tests\test_chunker.py:106: in test_ordinals_are_consecutive
+    assert [c.ordinal for c in chunks] == list(range(len(chunks)))
+E   assert [1] == [0]
+E     
+E     At index 0 diff: 1 != 0
+E     Use -v to get more diff
+=========================== short test summary info ===========================
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_offsets_point_into_text
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_nested_heading_path
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_sibling_heading_replaces_previous
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_heading_line_is_in_first_chunk_of_section
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_long_paragraph_is_split
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_sentence_without_punctuation_is_hard_cut
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_small_table_is_kept_whole
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_long_table_repeats_header
+FAILED packages/lfmap-knowledge/tests/test_chunker.py::test_ordinals_are_consecutive
+9 failed, 2 passed in 0.16s
+[exit 1]
+
+$ uv run --frozen ruff check packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py
+All checks passed!
+[exit 0]
+
+$ uv run --frozen ruff format --check packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py
+1 file already formatted
+[exit 0]

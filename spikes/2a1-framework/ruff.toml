@@ -1,0 +1,5 @@
+extend = "../../ruff.toml"
+src = ["."]
+
+[lint.isort]
+known-first-party = ["common", "variants"]

@@ -1,0 +1,18 @@
+{
+  "id": "K4-clean-seed-order",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "the .json sidecar is written before the .md, so a crash leaves a sidecar for an incomplete extraction"
+  ],
+  "seeded": [
+    "    _write_atomic(md_path, out.markdown)"
+  ],
+  "keywords": [
+    "order",
+    "last",
+    "before",
+    "sidecar",
+    "incomplete"
+  ]
+}

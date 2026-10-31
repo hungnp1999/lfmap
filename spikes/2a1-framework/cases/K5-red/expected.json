@@ -1,0 +1,10 @@
+{
+  "id": "K5-red",
+  "card": "TC-K5",
+  "expected_verdict": "escalate",
+  "known_issues": [
+    "wrong chunking algorithm; 9 of 11 tests fail"
+  ],
+  "seeded": [],
+  "keywords": []
+}

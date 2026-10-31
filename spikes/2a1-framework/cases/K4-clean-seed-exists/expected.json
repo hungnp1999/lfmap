@@ -1,0 +1,18 @@
+{
+  "id": "K4-clean-seed-exists",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "the caller-supplied path is probed with is_file() before markitdown's permission check, so files outside the allowed roots answer not_found instead of permission_denied"
+  ],
+  "seeded": [
+    "    if not path.is_file():"
+  ],
+  "keywords": [
+    "permission",
+    "require_read",
+    "allowed root",
+    "outside the root",
+    "oracle"
+  ]
+}
