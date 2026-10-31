@@ -166,10 +166,10 @@ Release notes (tóm tắt CHANGELOG `[Unreleased]` tại `b002710`):
 
 | Mục | Nguồn | Đích đề xuất |
 |---|---|---|
-| Docling backend | Roadmap 1.2 | Sau nghiệm thu MVP; Cloud |
-| REST adapter (OpenAPI `/docs`) | Roadmap 1.3, L7 | Sau nghiệm thu MVP; Cloud |
+| Docling backend | Roadmap 1.2 | Xong ở Phase 1b (PR #70, #75, #80) |
+| REST adapter (OpenAPI `/docs`) | Roadmap 1.3, L7 | Đầu Phase 2 khi có client (ADR-003, PR #57) |
 | Quyền riêng theo từng script `powershell` (Hùng chốt 2026-10-22) | Quyết định nghiệm thu | Xong: ADR-020, PR #48 |
-| Heading `.docx` sai, PDF không heading, `get_context` đầy ngân sách | L20, L21, L23 (TC-918) | Phase 1b |
+| Heading `.docx` sai, PDF không heading, `get_context` đầy ngân sách | L20, L21, L23 (TC-918) | Xong ở Phase 1b (`00` §6) |
 | `.doc`/Office cũ không vào chỉ mục | L22 | Qua MarkitdownTool (ADR-011); cân nhắc tự động ở Phase 1b |
 | Embed lần đầu nhanh hơn (`OLLAMA_FLASH_ATTENTION` hoặc model embed nhỏ hơn) | L19, PR #45/#46 | Hùng quyết; cần đo trên DIEP-ANH |
 | `min_core_version` được core đối chiếu | L3, L9 | Backlog core |

@@ -121,4 +121,5 @@ Tổng: 555 case pytest (423 hàm test; tăng 495 case so với 60 của Phase 0
 | 1.8 | FR-20 … FR-23, NFR-15 | TC-201 … TC-203, TC-912 … TC-914 |
 | Phase 0 (hồi quy) | FR-01 … FR-13 | TC-109 |
 | 1.6 | — | Test trong PR #43 (sau mốc) |
-| 1.2, 1.3 | — | Phase 1b |
+| 1.2 | — | Test trong PR #70, #75, #80; chạy thật trên pc-01 (D3b) |
+| 1.3 | — | Dời sang đầu Phase 2 (ADR-003) |

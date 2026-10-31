@@ -1,6 +1,6 @@
 # LFMAP Phase 1 — Hồ sơ nghiệm thu giai đoạn
 
-> **Phiên bản 1.1 (2026-10-22): đã nghiệm thu MVP Phase 1** (Hùng, 15:41Z, phương án A). TC-918 (thư mục PDF/DOCX thật) đạt cùng ngày, ghi bổ sung ở bản 1.1. Bản 1.2: retro bổ sung việc sau nghiệm thu (PR #43 … #51) và hành động A8–A11.
+> **Phiên bản 1.1 (2026-10-22): đã nghiệm thu MVP Phase 1** (Hùng, 15:41Z, phương án A). TC-918 (thư mục PDF/DOCX thật) đạt cùng ngày, ghi bổ sung ở bản 1.1. Bản 1.2: retro bổ sung việc sau nghiệm thu (PR #43 … #51) và hành động A8–A11. Bản 1.3 (2026-10-31): **đóng Phase 1b** (§6).
 
 | Mục | Giá trị |
 |---|---|
@@ -9,6 +9,7 @@
 | Thời gian | 2026-10-19 → 2026-10-22; hồ sơ lập 2026-10-22 |
 | Mốc nghiệm thu | Commit `b002710` trên `main` (PR #3 … #39) |
 | Chưa làm | 1.2 Docling, 1.3 REST (chuyển Phase 1b). 1.6 `powershell` xong sau mốc (PR #43, 2026-10-22) |
+| Phase 1b | Đóng 2026-10-31: 1.2 xong, 1.3 dời sang đầu Phase 2 (ADR-003), quyền theo script xong (§6) |
 | Product Owner | Hùng |
 | Lập hồ sơ | Claude (Managing Agent) |
 
@@ -42,8 +43,8 @@ Mã nối tiếp bộ hồ sơ Phase 0 (`docs/phase0/`): `BP-xx` quy trình, `FR
 |---|---|---|---|---|---|
 | core 0.2 | Config, ToolContext, phê duyệt T0–T3, grants, đích duyệt trước, lệnh quản trị | FR-14 … 19 | `core/{config,runtime,tool,approval,grants,cli,mcp_adapter}.py` | TC-101 … 108 | Đạt |
 | 1.1 | Plugin `markitdown` đạt Plugin DoD | FR-24 … 27 | `plugins/lfmap-markitdown/` | TC-301 … 308, 910 | Đạt |
-| 1.2 | Backend Docling | — | — | — | Chưa làm |
-| 1.3 | REST adapter | — | — | — | Chưa làm |
+| 1.2 | Backend Docling | — | `plugins/lfmap-markitdown/` (`backend = "docling"`), `kn/` (`pdf_backend`) | Test trong PR #70, #75, #80 | Xong ở Phase 1b (§6) |
+| 1.3 | REST adapter | — | — | — | Dời sang đầu Phase 2 (ADR-003, PR #57) |
 | 1.4 | `lfmap-knowledge`: catalog, scanner, chunk, embed, LanceDB, cạnh | FR-28 … 34 | `packages/lfmap-knowledge/` | TC-401 … 414, 911, 915 | Đạt (bench 10k TC-917 đạt) |
 | 1.5 | MCP knowledge (`knowledge_search`, `knowledge_get_context`…; egress_log) | FR-33, 35 | `kn/search.py`, `kn/tool.py` | TC-412, 414, 916 | Đạt (TC-918) |
 | 1.6 | Plugin `powershell` (allow-list script) | — | `plugins/lfmap-powershell/` | Test trong PR #43 | Xong sau mốc (PR #43, `68a042f`); đặc tả `docs/specs/powershell.md`. Hùng chốt 15:41Z tách quyền riêng cho từng script: ADR-020 (sửa ADR-017) merge ở PR #48 |
@@ -79,3 +80,23 @@ Quyết định của Hùng: **A** (2026-10-22 15:41Z). 1.6 đã xong trước k
 |---|---|---|---|
 | Product Owner | Hùng | ☑ Nghiệm thu MVP Phase 1 (phê duyệt trong project thread "Hồ sơ nghiệm thu Phase 1") | 2026-10-22 |
 | Lập hồ sơ / Reviewer | Claude (Managing Agent) | Đề nghị phương án A khi các ô chờ đạt | 2026-10-22 |
+
+## 6. Đóng Phase 1b (2026-10-31)
+
+Phase 1b gồm ba hạng mục chuyển từ nghiệm thu MVP (§4) và các giới hạn L20–L23 phát hiện ở TC-918.
+
+| Hạng mục | Kết quả | Bằng chứng |
+|---|---|---|
+| 1.2 Backend Docling | Xong. Spike GO (PR #68, #71); plugin `markitdown` có `backend = "docling"` tùy chọn (PR #70); `lfmap-knowledge` có `pdf_backend = "docling"` (PR #75); thiếu dữ liệu ngôn ngữ Tesseract báo `ocr_unavailable` (PR #80); `fpdf2`, `img2pdf` vào ngoại lệ giấy phép đã duyệt (PR #81) | Chạy thật trên pc-01 (D3b, 2026-10-28) |
+| 1.3 REST adapter | Không làm ở Phase 1b. Theo ADR-003, REST chỉ bật khi có client cần; giữ đặc tả `docs/specs/rest.md`, làm R1 khi đầu Phase 2 có client (Workspace hoặc Flows) | PR #57 |
+| Quyền riêng theo từng script `powershell` | Xong: `min_tier` + `Tool.call_tier`, mỗi script trong allow-list có `tier` (mặc định T3) | ADR-020, PR #48 |
+
+| Giới hạn | Trạng thái 2026-10-31 |
+|---|---|
+| L20 heading `.docx` sai | Đã sửa (chunker); chỉ mục cũ cần `reindex --full` |
+| L21 PDF không có heading | Đã xử lý bằng `pdf_backend = "docling"` (tùy chọn, cần cài extra); mặc định markitdown vẫn không có heading |
+| L22 `.doc`/Office cũ | Còn mở: chuyển bằng MarkitdownTool rồi index `.md`. Thiết kế đường Office tự động chưa xếp lịch |
+| L23 `get_context` đầy ngân sách | Đã sửa (PR #69): cắt theo điểm từng danh sách đã co giãn. Bench `bench/iso-vi` (PR #90): ở 0,5 câu keyword dùng 671 thay vì 1.782 token, precision 0,88 thay vì 0,57, không mất file gold |
+
+Kết luận: Phase 1b **đóng**, không còn hạng mục nào của Roadmap 1.x đang làm. Milestone "Phase 1b" trên GitHub không có issue nào và được đóng cùng PR này. Việc còn lại chuyển Phase 2: R1 REST, L22 (đường Office), các mục backlog ở `07` §6.
+
