@@ -5,6 +5,7 @@
 | Phiên bản tài liệu | 1.0 (2026-10-22), đã nghiệm thu MVP Phase 1 |
 | Phạm vi | Phase 1 — MVP Document → Knowledge → Answer: core 0.2 (điều kiện tiên quyết), Roadmap 1.1, 1.4, 1.5, 1.7, 1.8 |
 | Chưa làm | 1.2 Docling, 1.3 REST (Phase 1b). 1.6 `powershell` xong sau mốc (PR #43), đặc tả `docs/specs/powershell.md` |
+| Phase 1b | Đóng 2026-10-31: 1.2 Docling xong (PR #70, #75), 1.3 REST dời sang đầu Phase 2 (ADR-003), xem `00` §6 |
 | Mốc code | `hungnp1999/lfmap` commit `b002710` trên `main` (PR #3 … #39) |
 | Nguồn thiết kế | ADR-011 … ADR-018 (cùng các ADR Phase 0); Plugin Contract; `docs/specs/knowledge.md`, `docs/specs/jobs.md`; project files `phase1-specs/` (00 Overview, 01 Core Prereqs, 02 markitdown) |
 
@@ -245,7 +246,7 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 
 | # | Giới hạn | Ảnh hưởng | Xử lý |
 |---|---|---|---|
-| L8 | Chưa có REST (1.3), Docling (1.2) | Phase 1 chưa đủ hạng mục Roadmap | Phase 1b (`07` §6); 1.6 xong ở PR #43 |
+| L8 | Chưa có REST (1.3), Docling (1.2) | Phase 1 chưa đủ hạng mục Roadmap | Docling xong ở Phase 1b (PR #70, #75); REST dời sang đầu Phase 2 (ADR-003, PR #57); 1.6 xong ở PR #43 |
 | L9 | Core không đối chiếu `min_core_version` của manifest | Plugin cần core 0.2 vẫn nạp được trên core cũ | Đã sửa sau mốc: `load_entry` từ chối plugin cần core mới hơn (`lfmap_core.versions`, card qwen TC-V1) |
 | L10 | `audit.jsonl` luôn ở `%LOCALAPPDATA%\lfmap\`, không theo `LFMAP_CONFIG`; lần đọc bị từ chối không ghi audit | Thử nghiệm tách cấu hình vẫn ghi chung audit | Backlog core |
 | L11 | Tiến độ `reindex` in ra stderr khi kênh `cli` (tạm) | Không có hook tiến độ chung cho MCP | Chờ core có progress hook |
@@ -258,6 +259,6 @@ Trạng thái giới hạn Phase 0: L1, L6 đã xử lý ở core 0.2; L2 (`exec
 | L18 | LanceDB cảnh báo deprecation về tự chiếu cột `_distance` | Có thể vỡ khi nâng lancedb | Đã sửa sau mốc: PR #40 (chọn `_distance` tường minh) |
 | L19 | Embed lần đầu chậm: 10.000 file mất ~1 giờ (3,75 file/s sau PR #44, GPU chưa dùng hết) | Lần lập chỉ mục đầu của thư mục lớn kéo dài | PR #45 không cải thiện; #46 thêm `embed_concurrency` (song song, cần `OLLAMA_NUM_PARALLEL`); reindex lần hai đạt (7,2 s) |
 | L20 | markitdown đổi đoạn mở đầu in nghiêng của một số `.docx` thành heading | `heading_path` thành một câu dài | Đã sửa sau mốc ở chunker (Phase 1b, S5): dòng heading dài hơn 120 ký tự, hoặc kết thúc bằng dấu chấm và có từ 8 từ, được coi là nội dung. Chỉ mục cũ cần `reindex --full` (giữ cache Markdown) |
-| L21 | PDF không có heading Markdown | `heading_path` rỗng, trích dẫn chỉ có đường dẫn + vị trí ký tự | Chấp nhận ở MVP; Docling (1.2) có thể cải thiện |
+| L21 | PDF không có heading Markdown | `heading_path` rỗng, trích dẫn chỉ có đường dẫn + vị trí ký tự | Đã xử lý ở Phase 1b: `pdf_backend = "docling"` (PR #75) cho `heading_path` với PDF; mặc định markitdown không đổi |
 | L22 | `.doc` và Office cũ bị bỏ qua (`office_gui_only`) | Thư mục thật: 9/17 file không vào chỉ mục | Chuyển bằng app MarkitdownTool (ADR-011) rồi index file `.md` |
-| L23 | `get_context` thường lấy đầy ngân sách 4000 token | Tốn ngữ cảnh của client | Đã sửa sau mốc (Phase 1b, S5): `min_relative_score` (mặc định 0,5) bỏ chunk có điểm dưới 0,5 lần chunk tốt nhất. Đo trên DIEP-ANH: không cắt được gì (điểm RRF quá phẳng, vẫn ~3850/4000 token). Sửa lần 2: so điểm từng danh sách keyword/vector đã co giãn min-max, giữ chunk đạt 0,5 ở một trong hai. Đo lại trên thư mục thật |
+| L23 | `get_context` thường lấy đầy ngân sách 4000 token | Tốn ngữ cảnh của client | Đã sửa sau mốc (Phase 1b, S5): `min_relative_score` (mặc định 0,5) bỏ chunk có điểm dưới 0,5 lần chunk tốt nhất. Đo trên DIEP-ANH: không cắt được gì (điểm RRF quá phẳng, vẫn ~3850/4000 token). Sửa lần 2: so điểm từng danh sách keyword/vector đã co giãn min-max, giữ chunk đạt 0,5 ở một trong hai (PR #69). Bench `bench/iso-vi` (PR #90): câu keyword 671 thay vì 1.782 token, không mất file gold |
