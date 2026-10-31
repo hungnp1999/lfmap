@@ -287,6 +287,23 @@ class SqliteBus:
             .rowcount
         )
 
+    def prune_watchers(self, *, older_than: float) -> int:
+        """Delete `request-*` subscriptions older than `older_than` seconds, with their deliveries."""
+        if type(older_than) not in (int, float) or not math.isfinite(older_than) or older_than < 0:
+            raise ToolError("invalid_input", "older_than must be >= 0", {"older_than": repr(older_than)})
+        db = self._conn()
+        stale = "SELECT name FROM subscriptions WHERE name LIKE ? AND created_at < ?"
+        params = ("request-%", self._clock() - older_than)
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(f"DELETE FROM deliveries WHERE subscription IN ({stale})", params)
+            deleted = db.execute("DELETE FROM subscriptions WHERE name LIKE ? AND created_at < ?", params).rowcount
+            db.execute("COMMIT")
+        except BaseException:
+            db.execute("ROLLBACK")
+            raise
+        return deleted
+
     def close(self) -> None:
         if self._db is not None:
             self._db.close()

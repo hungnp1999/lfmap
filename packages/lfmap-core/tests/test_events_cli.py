@@ -172,10 +172,10 @@ def test_prune_deletes_handled_events_only(ev_registry, terminal) -> None:
     queue_requests(ev_registry, "B", source="other-plugin")
     run(ev_registry, "events", "run", "--until-idle")
     queue_requests(ev_registry, "C")
-    assert run(ev_registry, "events", "prune").output.strip() == "Deleted 0 event(s)"
+    assert run(ev_registry, "events", "prune").output.startswith("Deleted 0 event(s)\n")
     result = run(ev_registry, "events", "prune", "--days", "0")
     assert result.exit_code == 0
-    assert result.output.strip() == "Deleted 2 event(s)"  # request A and its .completed (no subscriber)
+    assert result.output.startswith("Deleted 2 event(s)\n")  # request A and its .completed (no subscriber)
     assert counts()[SUB] == {"ready": 1, "leased": 0, "done": 0, "dead": 1}
 
 
