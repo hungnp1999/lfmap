@@ -8,6 +8,8 @@ import argparse
 import datetime as dt
 import importlib
 import json
+import os
+import shlex
 import sys
 import time
 from pathlib import Path
@@ -16,7 +18,7 @@ from types import ModuleType
 from common.cases import case_package, load_card, load_package
 from common.guard import SocketGuard
 from common.metrics import Trace, traced
-from common.models import AwaitingApproval, RunResult
+from common.models import AwaitingApproval, Package, RunResult
 from common.ollama import URL, default_models
 
 HERE = Path(__file__).resolve().parent
@@ -48,6 +50,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     run.add_argument("--cases-dir", type=Path, default=HERE / "cases")
     run.add_argument("--workdir", type=Path, help="git worktree for the gates; without it no gate runs")
     run.add_argument("--state-dir", type=Path, default=None)
+    run.add_argument("--pytest-cmd", default=None, help="command of the pytest gate; default: this Python's pytest -q")
+    run.add_argument("--ruff-cmd", default=None, help="command of the ruff gate; default: this Python's ruff")
     run.add_argument("--ollama", default=URL)
     run.add_argument("--think", default=None, help="true, false, low, medium or high; default: model default")
     res = sub.add_parser("resume", help="finish a paused run in this new process")
@@ -63,14 +67,29 @@ def _think(value: str | None) -> bool | str | None:
     return {"true": True, "false": False}.get(value, value) if value is not None else None
 
 
-def command_run(args: argparse.Namespace, state_dir: Path) -> tuple[RunResult, dict]:
-    """Run until the pause; returns the result and the metrics of this process."""
-    module, import_s = load_variant(args.variant)
+def split_cmd(text: str) -> list[str]:
+    """Split a command string into argv; Windows paths keep their backslashes."""
+    return shlex.split(text, posix=(os.name != "nt"))
+
+
+def build_package(args: argparse.Namespace) -> tuple[Package, list | None]:
+    """The package to run and the replay cards (None when the Plan phase runs), with gate commands applied."""
     if args.case:
         case = args.cases_dir / args.case
         package, replay = case_package(case, args.workdir), [load_card(case)]
     else:
         package, replay = load_package(args.package, args.workdir), None
+    if args.pytest_cmd:
+        package.pytest_cmd = split_cmd(args.pytest_cmd)
+    if args.ruff_cmd:
+        package.ruff_cmd = split_cmd(args.ruff_cmd)
+    return package, replay
+
+
+def command_run(args: argparse.Namespace, state_dir: Path) -> tuple[RunResult, dict]:
+    """Run until the pause; returns the result and the metrics of this process."""
+    module, import_s = load_variant(args.variant)
+    package, replay = build_package(args)
     trace = Trace()
     models = traced(default_models(args.ollama, _think(args.think)), trace)
     started = time.perf_counter()
