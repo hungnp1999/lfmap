@@ -1,0 +1,18 @@
+{
+  "id": "K6-seed-order",
+  "card": "TC-K6",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "bm25 is lower-is-better; ORDER BY score DESC returns the worst matches first"
+  ],
+  "seeded": [
+    "ORDER BY score DESC"
+  ],
+  "keywords": [
+    "desc",
+    "order",
+    "worst",
+    "ascending",
+    "bm25"
+  ]
+}

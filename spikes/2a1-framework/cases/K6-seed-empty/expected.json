@@ -1,0 +1,17 @@
+{
+  "id": "K6-seed-empty",
+  "card": "TC-K6",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "emptiness is checked before the quotes are removed, so a query of only quotes returns an empty FTS5 query instead of ToolError(\"invalid_input\")"
+  ],
+  "seeded": [
+    "    if not user_text.strip():"
+  ],
+  "keywords": [
+    "empty",
+    "invalid_input",
+    "no word",
+    "only quotes"
+  ]
+}

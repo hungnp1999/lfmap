@@ -1,0 +1,11 @@
+{
+  "id": "K7-real",
+  "card": "TC-K7",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "number of vectors returned by Ollama is not checked against the inputs",
+    "ping calls the network even when the network permission is missing"
+  ],
+  "seeded": [],
+  "keywords": []
+}

@@ -62,6 +62,12 @@ Checked at `606342b` (2026-10-23) by reading module headers, searching the tree 
 | License watch, dependency share | `scripts/license_watch.py`, `scripts/dependency_share.py` | In-house | — | Claude Code | RT-01, RT-11 |
 | CI, CodeQL, provenance check, commit hook | `.github/`, `.githooks/`, `.claude/hooks/` | In-house | GitHub Actions and CodeQL documented configuration | Claude Code | #1, #60 |
 
+### Spikes (Internal: not distributed, not workspace members)
+
+| Component | Path | Origin | Sources | Written by | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| Phase 2a.1 agent framework spike: `common/`, variants, runner, cases | `spikes/2a1-framework/` | In-house (Internal) | Quote check, Ollama call and seed scoring adapted from the B0 bench (`docs/handoff/prep/2026-10-24-framework-spike/bench_b0.py`, in-house); cases from the same prep folder and PR #26; PydanticAI (MIT) and LangGraph (MIT) used as libraries in their variants only | Claude Code | Handoff `docs/handoff/2026-10-24-phase2a-framework-spike.md`, tasks F0, F1 |
+
 ## Clean-room log
 
 One entry each time a Reference source is studied for an in-house replacement (RT-04 Flows, RT-05 chat UI, ...): date, product, public documents read (URLs), who read them, and the spec written from them. The session that writes the code receives only that spec.

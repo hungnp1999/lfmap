@@ -1,0 +1,16 @@
+{
+  "id": "K6-seed-fold",
+  "card": "TC-K6",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "query words are not folded while indexed text is, so case and '\u0111' no longer match"
+  ],
+  "seeded": [
+    "processed_words.append(f'\"{word}\"')"
+  ],
+  "keywords": [
+    "fold",
+    "casefold",
+    "case"
+  ]
+}
