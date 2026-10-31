@@ -66,7 +66,7 @@ Checked at `606342b` (2026-10-23) by reading module headers, searching the tree 
 
 | Component | Path | Origin | Sources | Written by | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| Phase 2a.1 agent framework spike: `common/`, variants, runner, cases | `spikes/2a1-framework/` | In-house (Internal) | Quote check, Ollama call and seed scoring adapted from the B0 bench (`docs/handoff/prep/2026-10-24-framework-spike/bench_b0.py`, in-house); cases from the same prep folder and PR #26; PydanticAI (MIT) and LangGraph (MIT) used as libraries in their variants only | Claude Code | Handoff `docs/handoff/2026-10-24-phase2a-framework-spike.md`, task F0 |
+| Phase 2a.1 agent framework spike: `common/`, variants, runner, cases | `spikes/2a1-framework/` | In-house (Internal) | Quote check, Ollama call and seed scoring adapted from the B0 bench (`docs/handoff/prep/2026-10-24-framework-spike/bench_b0.py`, in-house); cases from the same prep folder and PR #26; PydanticAI (MIT) and LangGraph (MIT) used as libraries in their variants only | Claude Code | Handoff `docs/handoff/2026-10-24-phase2a-framework-spike.md`, tasks F0, F1 |
 
 ## Clean-room log
 

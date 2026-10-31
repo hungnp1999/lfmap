@@ -21,13 +21,13 @@ from common.metrics import Trace, traced
 from common.models import AwaitingApproval, Done, Models, RunRecord, RunResult
 
 SPIKE = Path(__file__).resolve().parent.parent
-IMPLEMENTED: set[str] = set()
+IMPLEMENTED = {"plain"}
 VARIANTS = [
     pytest.param(
         name,
         marks=()
         if name in IMPLEMENTED
-        else pytest.mark.xfail(raises=NotImplementedError, strict=True, reason="variant not implemented yet (F1-F3)"),
+        else pytest.mark.xfail(raises=NotImplementedError, strict=True, reason="variant not implemented yet (F2/F3)"),
     )
     for name in ("plain", "pydanticai", "langgraph")
 ]
