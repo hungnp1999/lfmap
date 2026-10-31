@@ -1,0 +1,5 @@
+id = "TC-S1"
+base_ref = "80d547f8d43b0dd3399da253b6b1c55e6f5d453d"
+targets = ["spikes/2a1-framework/common/scoring.py"]
+tests = ["spikes/2a1-framework/tests/test_scoring_normalise.py"]
+max_rounds = 3
