@@ -63,6 +63,8 @@ def make_diff(rel: str, old: str, new: str) -> str:
 
 def write_in(workdir: Path, rel: str, text: str) -> str:
     """Write text to workdir/rel and return the previous content; refuses paths outside workdir."""
+    if os.path.isabs(rel) or os.path.splitdrive(rel)[0] or rel.startswith(("\\\\", "//")):
+        raise ValueError(f"path must be relative to the workdir: {rel}")
     root = os.path.realpath(workdir)
     full = os.path.realpath(os.path.join(root, rel))
     if not full.startswith(root + os.sep):
@@ -73,10 +75,22 @@ def write_in(workdir: Path, rel: str, text: str) -> str:
     return old
 
 
+def _gate_env() -> dict[str, str]:
+    """No .pyc files: a rewrite within the same second and size would otherwise import the stale bytecode."""
+    return {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+
+
 def _run(name: str, cmd: list[str], cwd: Path) -> GateResult:
     try:
         done = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=GATE_TIMEOUT
+            cmd,
+            cwd=cwd,
+            env=_gate_env(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=GATE_TIMEOUT,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return GateResult(name=name, ok=False, output=f"{type(exc).__name__}: {exc}")

@@ -124,6 +124,9 @@ def test_write_in_refuses_paths_outside_the_workdir(tmp_path: Path):
         write_in(tmp_path, "../escape.py", "x")
     with pytest.raises(ValueError):
         write_in(tmp_path, str(tmp_path.parent / "abs.py"), "x")
+    for unc in ("\\\\server\\share\\a.py", "//server/share/a.py"):
+        with pytest.raises(ValueError, match="relative"):
+            write_in(tmp_path, unc, "x")
     assert write_in(tmp_path, "pkg/a.py", "x\n") == ""
     assert write_in(tmp_path, "pkg/a.py", "y\n") == "x\n"
 
