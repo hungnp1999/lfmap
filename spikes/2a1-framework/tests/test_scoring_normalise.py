@@ -1,6 +1,7 @@
 """Frozen tests of card QW-S1: common.scoring.normalise (spec section 4)."""
 
 import pytest
+
 from common.scoring import normalise
 
 THREE = ("plain", "pydanticai", "langgraph")

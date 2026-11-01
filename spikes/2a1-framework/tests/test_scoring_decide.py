@@ -1,6 +1,7 @@
 """Frozen tests of card QW-S2: common.scoring.decide (spec section 5, rules 2-4)."""
 
 import pytest
+
 from common.scoring import decide
 
 LINES = {"plain": 100, "pydanticai": 100, "langgraph": 100}
