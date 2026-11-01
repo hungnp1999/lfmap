@@ -281,3 +281,11 @@ def test_code_lines_skip_blank_comment_and_docstring(tmp_path: Path):
     source = '"""Module\ndoc."""\n\n# comment\nx = 1  # trailing\n\n\ndef f():\n    """Doc."""\n    return "s"\n'
     (tmp_path / "m.py").write_text(source)
     assert code_lines(tmp_path / "m.py") == 3
+
+
+def test_default_models_put_54_layers_of_the_leader_on_the_gpu():
+    from common.ollama import default_models
+
+    models = default_models()
+    assert models.leading.body("s", "u", None)["options"]["num_gpu"] == 54
+    assert "num_gpu" not in models.working.body("s", "u", None)["options"]

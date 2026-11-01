@@ -15,6 +15,7 @@ NUM_CTX = 16384
 NUM_PREDICT = 8192
 KEEP_ALIVE = "30m"
 TIMEOUT = 3600
+LEADING_NUM_GPU = 54  # B0c/B0e: 54 of 66 layers of the 27b fit 16 GB, +45 % tok/s over the default split
 
 
 def check_loopback(url: str) -> str:
@@ -75,4 +76,6 @@ class OllamaModel:
 
 def default_models(url: str = URL, think: bool | str | None = None) -> Models:
     """Leading qwen3.8:27b and Working qwen2.5-coder:14b on one local Ollama."""
-    return Models(leading=OllamaModel(LEADING, url, think), working=OllamaModel(WORKING, url))
+    leading = OllamaModel(LEADING, url, think)
+    leading.options["num_gpu"] = LEADING_NUM_GPU
+    return Models(leading=leading, working=OllamaModel(WORKING, url))
