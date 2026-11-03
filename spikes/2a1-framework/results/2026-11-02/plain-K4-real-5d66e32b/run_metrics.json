@@ -1,0 +1,47 @@
+{
+  "variant": "plain",
+  "case": "K4-real",
+  "package": null,
+  "import_s": 0.007,
+  "wall_s": 1595.977,
+  "model_s": 1578.751,
+  "overhead_s": 17.226,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 45307.4999236,
+      "seconds": 366.6438191999987,
+      "prompt_chars": 12760,
+      "reply_chars": 675
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 45674.1441082,
+      "seconds": 71.13994019999518,
+      "prompt_chars": 8341,
+      "reply_chars": 3168
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 45751.3230728,
+      "seconds": 56.69292459999997,
+      "prompt_chars": 18713,
+      "reply_chars": 3099
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 45813.2041019,
+      "seconds": 1084.274540499995,
+      "prompt_chars": 14164,
+      "reply_chars": 779
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 4
+}

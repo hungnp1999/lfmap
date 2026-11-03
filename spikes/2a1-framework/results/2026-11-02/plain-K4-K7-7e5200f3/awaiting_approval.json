@@ -1,0 +1,17 @@
+{
+  "run_id": "plain-K4-K7-7e5200f3",
+  "variant": "plain",
+  "cards": [
+    "K4",
+    "K5",
+    "K6",
+    "K7"
+  ],
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-K7-7e5200f3\\reports.json"
+}

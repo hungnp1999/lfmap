@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K5-red-b3a4931e",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K5-red": "escalate"
+  }
+}

@@ -1,0 +1,13 @@
+next: python run.py resume pydanticai-K4-clean-seed-unlink-394aebe0 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "pydanticai-K4-clean-seed-unlink-394aebe0",
+  "variant": "pydanticai",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K4-clean-seed-unlink": "ready"
+  },
+  "attempts": {
+    "K4-clean-seed-unlink": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-clean-seed-unlink-394aebe0"
+}

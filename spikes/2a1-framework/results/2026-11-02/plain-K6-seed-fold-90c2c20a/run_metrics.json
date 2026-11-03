@@ -1,0 +1,47 @@
+{
+  "variant": "plain",
+  "case": "K6-seed-fold",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 1073.45,
+  "model_s": 1066.392,
+  "overhead_s": 7.058,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 49756.8902451,
+      "seconds": 372.2986451999968,
+      "prompt_chars": 11556,
+      "reply_chars": 813
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 50129.1894292,
+      "seconds": 61.13973460000125,
+      "prompt_chars": 7499,
+      "reply_chars": 2930
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 50192.718046,
+      "seconds": 46.88278569999966,
+      "prompt_chars": 10608,
+      "reply_chars": 2603
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 50241.6237964,
+      "seconds": 586.0709267999991,
+      "prompt_chars": 15359,
+      "reply_chars": 763
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 4
+}

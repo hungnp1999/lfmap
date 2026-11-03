@@ -1,0 +1,11 @@
+{
+  "run_id": "langgraph-K6-seed-fold-488a73d7",
+  "variant": "langgraph",
+  "cards": [
+    "K6-seed-fold"
+  ],
+  "verdicts": {
+    "K6-seed-fold": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K6-seed-fold-488a73d7\\reports.json"
+}

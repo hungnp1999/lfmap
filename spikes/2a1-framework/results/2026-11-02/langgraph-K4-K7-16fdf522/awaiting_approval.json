@@ -1,0 +1,17 @@
+{
+  "run_id": "langgraph-K4-K7-16fdf522",
+  "variant": "langgraph",
+  "cards": [
+    "K4",
+    "K5",
+    "K6",
+    "K7"
+  ],
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-K7-16fdf522\\reports.json"
+}

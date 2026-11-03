@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K4-clean-seed-unlink-52b2d1b8",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-unlink": "ready"
+  }
+}

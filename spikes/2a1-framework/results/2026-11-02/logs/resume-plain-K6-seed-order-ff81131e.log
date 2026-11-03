@@ -1,0 +1,12 @@
+{
+  "run_id": "plain-K6-seed-order-ff81131e",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "K6-seed-order": "escalate"
+  },
+  "attempts": {
+    "K6-seed-order": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K6-seed-order-ff81131e"
+}

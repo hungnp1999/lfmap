@@ -1,0 +1,13 @@
+next: python run.py resume plain-K4-real-5d66e32b --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "plain-K4-real-5d66e32b",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K4-real": "escalate"
+  },
+  "attempts": {
+    "K4-real": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-real-5d66e32b"
+}

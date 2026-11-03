@@ -1,0 +1,47 @@
+{
+  "variant": "plain",
+  "case": "K6-seed-empty",
+  "package": null,
+  "import_s": 0.007,
+  "wall_s": 1145.587,
+  "model_s": 1139.29,
+  "overhead_s": 6.297,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 48609.9526025,
+      "seconds": 237.83614780000062,
+      "prompt_chars": 12018,
+      "reply_chars": 1023
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 48847.7892623,
+      "seconds": 57.111270699999295,
+      "prompt_chars": 7568,
+      "reply_chars": 2164
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 48907.228532,
+      "seconds": 38.321811199995864,
+      "prompt_chars": 11554,
+      "reply_chars": 2058
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 48947.5330299,
+      "seconds": 806.0212022000051,
+      "prompt_chars": 13944,
+      "reply_chars": 789
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 4
+}

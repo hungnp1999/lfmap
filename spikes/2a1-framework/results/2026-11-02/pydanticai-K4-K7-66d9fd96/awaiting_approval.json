@@ -1,0 +1,17 @@
+{
+  "run_id": "pydanticai-K4-K7-66d9fd96",
+  "variant": "pydanticai",
+  "cards": [
+    "K4",
+    "K5",
+    "K6",
+    "K7"
+  ],
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-K7-66d9fd96\\reports.json"
+}

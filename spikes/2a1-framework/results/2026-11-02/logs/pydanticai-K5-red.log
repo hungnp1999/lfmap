@@ -1,0 +1,13 @@
+next: python run.py resume pydanticai-K5-red-7c3f2f6a --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "pydanticai-K5-red-7c3f2f6a",
+  "variant": "pydanticai",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K5-red": "escalate"
+  },
+  "attempts": {
+    "K5-red": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K5-red-7c3f2f6a"
+}

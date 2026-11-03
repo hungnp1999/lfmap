@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K4-real-a6dbf50e",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K4-real": "escalate"
+  }
+}

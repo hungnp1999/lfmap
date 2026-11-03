@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K7-clean-seed-userinfo-1ea4d3ea",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-userinfo": "escalate"
+  }
+}

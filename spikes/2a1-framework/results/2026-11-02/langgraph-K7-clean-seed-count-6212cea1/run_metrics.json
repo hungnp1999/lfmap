@@ -1,0 +1,24 @@
+{
+  "variant": "langgraph",
+  "case": "K7-clean-seed-count",
+  "package": null,
+  "import_s": 1.132,
+  "wall_s": 693.759,
+  "model_s": 684.501,
+  "overhead_s": 9.258,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 110976.0593143,
+      "seconds": 684.5012091999961,
+      "prompt_chars": 12835,
+      "reply_chars": 300
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

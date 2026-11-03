@@ -1,0 +1,11 @@
+{
+  "run_id": "plain-K5-red-a197d7f7",
+  "variant": "plain",
+  "cards": [
+    "K5-red"
+  ],
+  "verdicts": {
+    "K5-red": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K5-red-a197d7f7\\reports.json"
+}

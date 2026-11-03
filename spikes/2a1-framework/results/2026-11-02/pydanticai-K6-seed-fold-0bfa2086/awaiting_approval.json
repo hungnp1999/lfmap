@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K6-seed-fold-0bfa2086",
+  "variant": "pydanticai",
+  "cards": [
+    "K6-seed-fold"
+  ],
+  "verdicts": {
+    "K6-seed-fold": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K6-seed-fold-0bfa2086\\reports.json"
+}

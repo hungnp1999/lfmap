@@ -1,0 +1,11 @@
+{
+  "run_id": "langgraph-K4-real-a6dbf50e",
+  "variant": "langgraph",
+  "cards": [
+    "K4-real"
+  ],
+  "verdicts": {
+    "K4-real": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-real-a6dbf50e\\reports.json"
+}

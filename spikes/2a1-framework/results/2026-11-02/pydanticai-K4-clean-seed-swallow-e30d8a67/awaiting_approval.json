@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-swallow-e30d8a67",
+  "variant": "pydanticai",
+  "cards": [
+    "K4-clean-seed-swallow"
+  ],
+  "verdicts": {
+    "K4-clean-seed-swallow": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-clean-seed-swallow-e30d8a67\\reports.json"
+}

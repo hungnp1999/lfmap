@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K7-clean-seed-count-6212cea1",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-count": "ready"
+  }
+}

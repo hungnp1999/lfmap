@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K4-clean-seed-default-f7e4c193",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-default": "escalate"
+  }
+}

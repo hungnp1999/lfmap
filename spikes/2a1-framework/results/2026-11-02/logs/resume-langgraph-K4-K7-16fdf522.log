@@ -1,0 +1,18 @@
+{
+  "run_id": "langgraph-K4-K7-16fdf522",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "attempts": {
+    "K4": 2,
+    "K5": 2,
+    "K6": 2,
+    "K7": 4
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-K7-16fdf522"
+}

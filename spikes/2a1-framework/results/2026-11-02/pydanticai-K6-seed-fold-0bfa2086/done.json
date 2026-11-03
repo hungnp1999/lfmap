@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K6-seed-fold-0bfa2086",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-fold": "escalate"
+  }
+}

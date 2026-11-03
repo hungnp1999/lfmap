@@ -1,0 +1,19 @@
+next: python run.py resume pydanticai-K4-K7-66d9fd96 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "pydanticai-K4-K7-66d9fd96",
+  "variant": "pydanticai",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "attempts": {
+    "K4": 2,
+    "K5": 2,
+    "K6": 2,
+    "K7": 4
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-K7-66d9fd96"
+}

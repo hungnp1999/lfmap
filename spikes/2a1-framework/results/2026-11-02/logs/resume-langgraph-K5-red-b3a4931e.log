@@ -1,0 +1,12 @@
+{
+  "run_id": "langgraph-K5-red-b3a4931e",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K5-red": "escalate"
+  },
+  "attempts": {
+    "K5-red": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K5-red-b3a4931e"
+}

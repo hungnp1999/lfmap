@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K4-real-214b60bb",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4-real": "escalate"
+  }
+}

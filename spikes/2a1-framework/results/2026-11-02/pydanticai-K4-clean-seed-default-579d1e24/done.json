@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-default-579d1e24",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-default": "escalate"
+  }
+}

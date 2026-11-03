@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K4-clean-seed-exists-73f4e75c",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-exists": "escalate"
+  }
+}

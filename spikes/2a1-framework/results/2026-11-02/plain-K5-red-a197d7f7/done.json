@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K5-red-a197d7f7",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K5-red": "escalate"
+  }
+}

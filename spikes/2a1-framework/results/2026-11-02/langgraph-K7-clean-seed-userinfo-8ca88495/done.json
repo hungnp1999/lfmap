@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K7-clean-seed-userinfo-8ca88495",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-userinfo": "escalate"
+  }
+}

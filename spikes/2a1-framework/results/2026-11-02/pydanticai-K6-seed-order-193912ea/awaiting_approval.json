@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K6-seed-order-193912ea",
+  "variant": "pydanticai",
+  "cards": [
+    "K6-seed-order"
+  ],
+  "verdicts": {
+    "K6-seed-order": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K6-seed-order-193912ea\\reports.json"
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K6-seed-order-7708e9b7",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-order": "escalate"
+  }
+}

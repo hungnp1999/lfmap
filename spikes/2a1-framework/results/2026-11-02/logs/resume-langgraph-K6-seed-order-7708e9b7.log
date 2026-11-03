@@ -1,0 +1,12 @@
+{
+  "run_id": "langgraph-K6-seed-order-7708e9b7",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K6-seed-order": "escalate"
+  },
+  "attempts": {
+    "K6-seed-order": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K6-seed-order-7708e9b7"
+}

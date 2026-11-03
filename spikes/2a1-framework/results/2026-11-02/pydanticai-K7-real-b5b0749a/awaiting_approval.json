@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K7-real-b5b0749a",
+  "variant": "pydanticai",
+  "cards": [
+    "K7-real"
+  ],
+  "verdicts": {
+    "K7-real": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K7-real-b5b0749a\\reports.json"
+}
