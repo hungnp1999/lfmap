@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K6-real-97d7e64a",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K6-real": "ready"
+  }
+}

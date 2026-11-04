@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K7-clean-seed-proxy-166204af",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-proxy": "escalate"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "variant": "pydanticai",
+  "case": "K6-clean",
+  "package": null,
+  "import_s": 0.802,
+  "wall_s": 935.298,
+  "model_s": 927.981,
+  "overhead_s": 7.317,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 75693.7065546,
+      "seconds": 271.7959961000015,
+      "prompt_chars": 9818,
+      "reply_chars": 535
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 75965.5089688,
+      "seconds": 53.21093729999848,
+      "prompt_chars": 7219,
+      "reply_chars": 2617
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 76021.4350831,
+      "seconds": 45.48387789999833,
+      "prompt_chars": 12661,
+      "reply_chars": 2565
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 76069.1246556,
+      "seconds": 557.4904563000018,
+      "prompt_chars": 14967,
+      "reply_chars": 951
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 5
+}

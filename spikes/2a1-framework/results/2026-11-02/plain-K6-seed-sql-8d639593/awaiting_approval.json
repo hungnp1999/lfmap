@@ -1,0 +1,11 @@
+{
+  "run_id": "plain-K6-seed-sql-8d639593",
+  "variant": "plain",
+  "cards": [
+    "K6-seed-sql"
+  ],
+  "verdicts": {
+    "K6-seed-sql": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K6-seed-sql-8d639593\\reports.json"
+}

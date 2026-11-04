@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K4-clean-a2acd799",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K4-clean": "escalate"
+  }
+}

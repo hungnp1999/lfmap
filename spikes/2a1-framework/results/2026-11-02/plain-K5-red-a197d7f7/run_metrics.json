@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "K5-red",
+  "package": null,
+  "import_s": 0.007,
+  "wall_s": 583.527,
+  "model_s": 581.539,
+  "overhead_s": 1.989,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 46900.0424926,
+      "seconds": 581.5387468000044,
+      "prompt_chars": 17497,
+      "reply_chars": 2429
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

@@ -1,0 +1,24 @@
+{
+  "variant": "pydanticai",
+  "case": "K6-real",
+  "package": null,
+  "import_s": 0.935,
+  "wall_s": 959.648,
+  "model_s": 957.266,
+  "overhead_s": 2.382,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 76630.7369987,
+      "seconds": 957.2660584999976,
+      "prompt_chars": 10584,
+      "reply_chars": 177
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 2
+}

@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K4-clean-a6dcb0c2",
+  "variant": "pydanticai",
+  "cards": [
+    "K4-clean"
+  ],
+  "verdicts": {
+    "K4-clean": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-clean-a6dcb0c2\\reports.json"
+}

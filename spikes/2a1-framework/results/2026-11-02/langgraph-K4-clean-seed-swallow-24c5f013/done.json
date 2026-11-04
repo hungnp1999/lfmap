@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K4-clean-seed-swallow-24c5f013",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-swallow": "escalate"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K7-real-91e0873f",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K7-real": "escalate"
+  }
+}

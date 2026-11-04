@@ -1,0 +1,11 @@
+{
+  "run_id": "langgraph-K6-real-182fb578",
+  "variant": "langgraph",
+  "cards": [
+    "K6-real"
+  ],
+  "verdicts": {
+    "K6-real": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K6-real-182fb578\\reports.json"
+}

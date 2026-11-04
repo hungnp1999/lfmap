@@ -1,0 +1,12 @@
+{
+  "run_id": "plain-K5-red-a197d7f7",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "K5-red": "escalate"
+  },
+  "attempts": {
+    "K5-red": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K5-red-a197d7f7"
+}

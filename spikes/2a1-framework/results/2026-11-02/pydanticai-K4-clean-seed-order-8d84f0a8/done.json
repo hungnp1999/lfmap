@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-order-8d84f0a8",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-order": "escalate"
+  }
+}

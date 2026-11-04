@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K7-clean-seed-userinfo-38be8415",
+  "variant": "pydanticai",
+  "cards": [
+    "K7-clean-seed-userinfo"
+  ],
+  "verdicts": {
+    "K7-clean-seed-userinfo": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K7-clean-seed-userinfo-38be8415\\reports.json"
+}

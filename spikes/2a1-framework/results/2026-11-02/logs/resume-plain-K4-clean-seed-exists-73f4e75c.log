@@ -1,0 +1,12 @@
+{
+  "run_id": "plain-K4-clean-seed-exists-73f4e75c",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "K4-clean-seed-exists": "escalate"
+  },
+  "attempts": {
+    "K4-clean-seed-exists": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-clean-seed-exists-73f4e75c"
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K6-clean-469775ab",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K6-clean": "escalate"
+  }
+}

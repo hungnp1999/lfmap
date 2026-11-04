@@ -1,0 +1,6 @@
+{
+  "import_s": 0.01,
+  "wall_s": 0.005,
+  "guard_blocked": [],
+  "guard_allowed": 0
+}

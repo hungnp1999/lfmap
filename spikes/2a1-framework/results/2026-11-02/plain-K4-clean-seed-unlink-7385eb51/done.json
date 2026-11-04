@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K4-clean-seed-unlink-7385eb51",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-unlink": "escalate"
+  }
+}

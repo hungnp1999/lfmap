@@ -1,0 +1,47 @@
+{
+  "variant": "langgraph",
+  "case": "K6-seed-fold",
+  "package": null,
+  "import_s": 1.087,
+  "wall_s": 1878.368,
+  "model_s": 1871.244,
+  "overhead_s": 7.124,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 105436.7480206,
+      "seconds": 153.36705619998975,
+      "prompt_chars": 11556,
+      "reply_chars": 773
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 105590.1165061,
+      "seconds": 61.523236900000484,
+      "prompt_chars": 7459,
+      "reply_chars": 3070
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 105654.2208628,
+      "seconds": 49.78851470000518,
+      "prompt_chars": 11483,
+      "reply_chars": 2780
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 105706.192875,
+      "seconds": 1606.565118700004,
+      "prompt_chars": 15160,
+      "reply_chars": 875
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 4
+}

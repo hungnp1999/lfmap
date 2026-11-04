@@ -1,0 +1,11 @@
+{
+  "run_id": "langgraph-K5-red-b3a4931e",
+  "variant": "langgraph",
+  "cards": [
+    "K5-red"
+  ],
+  "verdicts": {
+    "K5-red": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K5-red-b3a4931e\\reports.json"
+}

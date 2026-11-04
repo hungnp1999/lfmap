@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K6-seed-sql-29253e17",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-sql": "escalate"
+  }
+}

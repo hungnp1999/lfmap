@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K4-K7-66d9fd96",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  }
+}

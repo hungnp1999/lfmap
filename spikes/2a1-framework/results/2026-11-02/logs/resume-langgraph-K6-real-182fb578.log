@@ -1,0 +1,12 @@
+{
+  "run_id": "langgraph-K6-real-182fb578",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K6-real": "ready"
+  },
+  "attempts": {
+    "K6-real": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K6-real-182fb578"
+}

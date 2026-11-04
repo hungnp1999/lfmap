@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K7-clean-seed-userinfo-38be8415",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-userinfo": "escalate"
+  }
+}

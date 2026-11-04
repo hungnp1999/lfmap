@@ -1,0 +1,12 @@
+{
+  "run_id": "pydanticai-K7-real-b5b0749a",
+  "variant": "pydanticai",
+  "status": "approved",
+  "verdicts": {
+    "K7-real": "ready"
+  },
+  "attempts": {
+    "K7-real": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K7-real-b5b0749a"
+}

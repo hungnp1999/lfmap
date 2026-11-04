@@ -1,0 +1,11 @@
+{
+  "run_id": "langgraph-K4-clean-a2acd799",
+  "variant": "langgraph",
+  "cards": [
+    "K4-clean"
+  ],
+  "verdicts": {
+    "K4-clean": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-clean-a2acd799\\reports.json"
+}

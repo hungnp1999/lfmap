@@ -1,0 +1,13 @@
+next: python run.py resume langgraph-K6-clean-b44928c2 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "langgraph-K6-clean-b44928c2",
+  "variant": "langgraph",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K6-clean": "escalate"
+  },
+  "attempts": {
+    "K6-clean": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K6-clean-b44928c2"
+}

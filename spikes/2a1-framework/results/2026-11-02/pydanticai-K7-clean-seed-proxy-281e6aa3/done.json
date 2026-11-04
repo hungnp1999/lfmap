@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K7-clean-seed-proxy-281e6aa3",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-proxy": "escalate"
+  }
+}

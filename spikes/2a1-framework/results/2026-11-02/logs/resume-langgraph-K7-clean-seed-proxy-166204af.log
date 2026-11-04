@@ -1,0 +1,12 @@
+{
+  "run_id": "langgraph-K7-clean-seed-proxy-166204af",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K7-clean-seed-proxy": "escalate"
+  },
+  "attempts": {
+    "K7-clean-seed-proxy": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K7-clean-seed-proxy-166204af"
+}

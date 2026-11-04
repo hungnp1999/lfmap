@@ -1,0 +1,13 @@
+next: python run.py resume pydanticai-K7-clean-seed-proxy-281e6aa3 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "pydanticai-K7-clean-seed-proxy-281e6aa3",
+  "variant": "pydanticai",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K7-clean-seed-proxy": "escalate"
+  },
+  "attempts": {
+    "K7-clean-seed-proxy": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K7-clean-seed-proxy-281e6aa3"
+}

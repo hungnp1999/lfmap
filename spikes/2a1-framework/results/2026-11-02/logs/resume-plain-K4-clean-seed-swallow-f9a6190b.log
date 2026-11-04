@@ -1,0 +1,12 @@
+{
+  "run_id": "plain-K4-clean-seed-swallow-f9a6190b",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "K4-clean-seed-swallow": "ready"
+  },
+  "attempts": {
+    "K4-clean-seed-swallow": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-clean-seed-swallow-f9a6190b"
+}

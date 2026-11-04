@@ -1,0 +1,11 @@
+{
+  "run_id": "plain-K4-clean-seed-exists-73f4e75c",
+  "variant": "plain",
+  "cards": [
+    "K4-clean-seed-exists"
+  ],
+  "verdicts": {
+    "K4-clean-seed-exists": "escalate"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-clean-seed-exists-73f4e75c\\reports.json"
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K7-clean-1eb2cde0",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K7-clean": "escalate"
+  }
+}

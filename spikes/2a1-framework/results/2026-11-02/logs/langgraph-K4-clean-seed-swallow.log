@@ -1,0 +1,13 @@
+next: python run.py resume langgraph-K4-clean-seed-swallow-24c5f013 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-02
+{
+  "run_id": "langgraph-K4-clean-seed-swallow-24c5f013",
+  "variant": "langgraph",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K4-clean-seed-swallow": "escalate"
+  },
+  "attempts": {
+    "K4-clean-seed-swallow": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-clean-seed-swallow-24c5f013"
+}

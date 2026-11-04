@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K6-real-97d7e64a",
+  "variant": "pydanticai",
+  "cards": [
+    "K6-real"
+  ],
+  "verdicts": {
+    "K6-real": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K6-real-97d7e64a\\reports.json"
+}

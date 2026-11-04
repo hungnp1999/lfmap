@@ -1,0 +1,12 @@
+{
+  "run_id": "pydanticai-K6-seed-sql-69e07444",
+  "variant": "pydanticai",
+  "status": "approved",
+  "verdicts": {
+    "K6-seed-sql": "escalate"
+  },
+  "attempts": {
+    "K6-seed-sql": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K6-seed-sql-69e07444"
+}

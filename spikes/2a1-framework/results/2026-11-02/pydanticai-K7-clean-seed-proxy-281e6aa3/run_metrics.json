@@ -1,0 +1,47 @@
+{
+  "variant": "pydanticai",
+  "case": "K7-clean-seed-proxy",
+  "package": null,
+  "import_s": 0.896,
+  "wall_s": 904.47,
+  "model_s": 871.616,
+  "overhead_s": 32.855,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 85437.9392811,
+      "seconds": 164.33117030000722,
+      "prompt_chars": 16855,
+      "reply_chars": 1268
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 85602.2782426,
+      "seconds": 47.86269860000175,
+      "prompt_chars": 9534,
+      "reply_chars": 3579
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 85659.285632,
+      "seconds": 33.22421450000547,
+      "prompt_chars": 15999,
+      "reply_chars": 3691
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 85701.7302508,
+      "seconds": 626.1975651999965,
+      "prompt_chars": 17174,
+      "reply_chars": 748
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 5
+}

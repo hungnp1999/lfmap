@@ -1,0 +1,47 @@
+{
+  "variant": "pydanticai",
+  "case": "K6-seed-fold",
+  "package": null,
+  "import_s": 1.012,
+  "wall_s": 1413.383,
+  "model_s": 1406.049,
+  "overhead_s": 7.335,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 78578.6606404,
+      "seconds": 152.32149149999896,
+      "prompt_chars": 11556,
+      "reply_chars": 920
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 78730.9888654,
+      "seconds": 67.95185769999807,
+      "prompt_chars": 7483,
+      "reply_chars": 2939
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 78801.5651464,
+      "seconds": 51.30091620000894,
+      "prompt_chars": 12754,
+      "reply_chars": 2805
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 78855.0875976,
+      "seconds": 1134.4742497000116,
+      "prompt_chars": 14220,
+      "reply_chars": 884
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 2,
+  "guard_blocked": [],
+  "guard_allowed": 5
+}

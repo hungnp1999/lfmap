@@ -1,0 +1,18 @@
+{
+  "run_id": "plain-K4-K7-7e5200f3",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "K4": "ready",
+    "K5": "escalate",
+    "K6": "ready",
+    "K7": "ready"
+  },
+  "attempts": {
+    "K4": 2,
+    "K5": 2,
+    "K6": 2,
+    "K7": 4
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\plain-K4-K7-7e5200f3"
+}

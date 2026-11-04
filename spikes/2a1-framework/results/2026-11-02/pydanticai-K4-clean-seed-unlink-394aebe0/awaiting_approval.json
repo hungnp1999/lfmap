@@ -1,0 +1,11 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-unlink-394aebe0",
+  "variant": "pydanticai",
+  "cards": [
+    "K4-clean-seed-unlink"
+  ],
+  "verdicts": {
+    "K4-clean-seed-unlink": "ready"
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\pydanticai-K4-clean-seed-unlink-394aebe0\\reports.json"
+}

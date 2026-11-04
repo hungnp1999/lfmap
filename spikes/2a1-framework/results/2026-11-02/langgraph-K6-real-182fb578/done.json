@@ -1,0 +1,8 @@
+{
+  "run_id": "langgraph-K6-real-182fb578",
+  "variant": "langgraph",
+  "approved": true,
+  "verdicts": {
+    "K6-real": "ready"
+  }
+}

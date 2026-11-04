@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-swallow-e30d8a67",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-swallow": "escalate"
+  }
+}

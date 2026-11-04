@@ -1,0 +1,12 @@
+{
+  "run_id": "langgraph-K4-real-a6dbf50e",
+  "variant": "langgraph",
+  "status": "approved",
+  "verdicts": {
+    "K4-real": "escalate"
+  },
+  "attempts": {
+    "K4-real": 3
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-02\\langgraph-K4-real-a6dbf50e"
+}

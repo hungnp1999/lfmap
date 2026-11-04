@@ -1,0 +1,8 @@
+{
+  "run_id": "pydanticai-K4-clean-seed-exists-cb3167fb",
+  "variant": "pydanticai",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-exists": "escalate"
+  }
+}
