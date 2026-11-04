@@ -35,7 +35,9 @@ def normalise(raw: dict[str, dict[str, float]], better: dict[str, str]) -> dict[
         if best == worst:
             result[measure] = {variant: 10.0 for variant in values}
         else:
-            result[measure] = {variant: 10.0 * (value - worst) / (best - worst) for variant, value in values.items()}
+            result[measure] = {
+                variant: 10.0 * (value - worst) / (best - worst) + 0.0 for variant, value in values.items()
+            }
 
     return result
 

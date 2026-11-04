@@ -58,7 +58,7 @@ def test_case_is_consistent(case: Path):
 
 def test_k4_k7_package_loads():
     package = load_package(CASES / "packages" / "K4-K7")
-    assert package.id == "K4-K7" and "embed.py" in package.goal and "C1" in package.standard
+    assert package.id == "K4-K7" and "embed.py" in package.goal and "S1" in package.standard
 
 
 # --- quote check -------------------------------------------------------------------------------------

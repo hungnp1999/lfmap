@@ -2,6 +2,7 @@
 # Goal: TC-K4..TC-K7 of docs/specs/knowledge.md section 8 as of c8a4cf4, in English.
 # Worktree: lfmap at 018ffdf (frozen tests of PR #26 present, modules absent); see cases/README.md.
 id = "K4-K7"
+contracts = "../../contracts.md"
 goal = """
 Package `packages/lfmap-knowledge` of the lfmap monorepo (Python 3.12); every path below is relative to the repository root. Write four modules, one card each.
 Standard library plus `lfmap_core` (and `lfmap_markitdown` for extract.py) only. The frozen tests are
@@ -26,3 +27,9 @@ already in the repository; do not change them or `packages/lfmap-knowledge/tests
    number of vectors, connection errors -> ToolError("backend_unavailable", ..., {"reason": "ollama_unreachable"});
    `ping()`; environment proxies are ignored.
 """
+
+[tests]
+"packages/lfmap-knowledge/src/lfmap_knowledge/extract.py" = ["packages/lfmap-knowledge/tests/test_extract.py"]
+"packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py" = ["packages/lfmap-knowledge/tests/test_chunker.py"]
+"packages/lfmap-knowledge/src/lfmap_knowledge/fts.py" = ["packages/lfmap-knowledge/tests/test_fts.py"]
+"packages/lfmap-knowledge/src/lfmap_knowledge/embed.py" = ["packages/lfmap-knowledge/tests/test_embed.py"]

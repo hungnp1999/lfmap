@@ -33,12 +33,20 @@ class Card(BaseModel):
 
 
 class Package(BaseModel):
-    """A work package: goal and standard for the Plan and Review phases, a workdir for the gates."""
+    """A work package: goal and standard for the Plan and Review phases, a workdir for the gates.
+
+    `tests` maps each target file to its frozen tests (authoritative for Plan cards); `contracts` is the real
+    contract of the imported types, shown to Plan, Work and Review; `verdict_mode` "gates" lets the gates decide
+    ready or rework and keeps the Leading review advisory.
+    """
 
     id: str
     goal: str = ""
     standard: str = ""
     workdir: Path | None = None
+    tests: dict[str, list[str]] = Field(default_factory=dict)
+    contracts: str = ""
+    verdict_mode: Literal["model", "gates"] = "model"
     pytest_cmd: list[str] = Field(default_factory=lambda: list(DEFAULT_PYTEST))
     ruff_cmd: list[str] = Field(default_factory=lambda: list(DEFAULT_RUFF))
 
@@ -80,10 +88,14 @@ class Finding(BaseModel):
 
 
 class Report(BaseModel):
-    """Leading review of one attempt; `dropped` holds findings whose quote is not in the diff."""
+    """Leading review of one attempt; `dropped` holds findings whose quote is not in the diff.
+
+    `verdict` is the one the flow acts on; `model_verdict` is what the Leading model answered (set in gates mode).
+    """
 
     card_id: str
     verdict: Verdict | Literal["invalid_json"]
+    model_verdict: str = ""
     findings: list[Finding] = Field(default_factory=list)
     dropped: list[Finding] = Field(default_factory=list)
     notes: str = ""
@@ -107,6 +119,7 @@ class AwaitingApproval(BaseModel):
     variant: str
     cards: list[str]
     verdicts: dict[str, str]
+    advice: dict[str, int] = Field(default_factory=dict)
     report_path: str
 
 

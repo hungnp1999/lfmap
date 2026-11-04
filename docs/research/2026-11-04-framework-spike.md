@@ -2,7 +2,7 @@
 
 - Date: 2026-11-04. Task F5 of `docs/handoff/2026-10-24-phase2a-framework-spike.md`; spec `docs/specs/framework-spike.md`.
 - Input: the F4 real run, `spikes/2a1-framework/results/2026-11-02/` (PR #149): 3 variants x (19 replay cases + 1 Plan run) = 60 runs on DIEP-ANH (pc-01) under the `lfmap-agent` account, all exit 0, all resumed with `--approve`, 1397 min wall. Leading `qwen3.8:27b` (num_gpu 54), Working `qwen2.5-coder:14b`, Ollama 0.40.13, thinking on.
-- **Result: no framework.** `langgraph` fails E8; `plain` beats `pydanticai` 10.0 to 2.5, far from the 1.5-point margin a framework needs. The `plain` variant becomes the base of the Phase 2 orchestration. Draft ADR-024 at the end amends ADR-004.
+- **Result: no framework.** `langgraph` fails E8; `plain` beats `pydanticai` 10.0 to 2.5, far from the 1.5-point margin a framework needs. The `plain` variant becomes the base of the Phase 2 orchestration. ADR-024 at the end (accepted by the owner on 2026-11-04) amends ADR-004.
 - **Shadow mode: the Leading review is not ready for filter mode.** On replay cases it catches 9/12 seeds (75 %, threshold 80 %) and only 3 of the 6 seeds the gates cannot see; it rejects every clean reference module; and in the Plan run it approved three modules that do not even import.
 
 Numbering: the handoff calls the result ADR "ADR-023"; that number went to "agents run under a separate Windows account" (2026-10-30), so this report uses **ADR-024** (see `variants/plain/NOTES.md`).
@@ -122,9 +122,9 @@ Reports plus the diffs of `ready` cards were 22–25 % of the characters of all 
    The deterministic gates did the useful work. The cheapest win is to make them decide `ready`/`rework` and keep the model for findings only.
 4. Thinking-on `qwen3.8:27b` costs about 9 min per review on this GPU; a package of four cards takes about 45 min. That is acceptable for overnight batches only.
 
-## Draft ADR-024: orchestration framework for Phase 2 (result of spike 2a.1)
+## ADR-024: orchestration framework for Phase 2 (result of spike 2a.1)
 
-- Status: Proposed (gate:po, owner decides)
+- Status: Accepted (owner, 2026-11-04)
 - Date: 2026-11-04
 - Amends: ADR-004. Related: ADR-021 (build in-house first), ADR-022 (local Leading Agent, Proposed), ADR-018 (approvals).
 
