@@ -44,12 +44,31 @@ def load_expected(case: Path) -> dict:
 
 def case_package(case: Path, workdir: Path | None = None) -> Package:
     """One-card package that replays a case."""
-    return Package(id=case.name, goal=f"Replay case {case.name}.", standard=STANDARD, workdir=workdir)
+    return Package(
+        id=case.name,
+        goal=f"Replay case {case.name}.",
+        standard=STANDARD,
+        workdir=workdir,
+        contracts=_read(case.parent / "contracts.md"),
+    )
+
+
+def _read(path: Path) -> str:
+    return path.read_text(encoding="utf-8").strip() if path.is_file() else ""
 
 
 def load_package(folder: Path, workdir: Path | None = None) -> Package:
-    """Package from folder/package.toml (`id`, `goal`) and folder/standard.md (default: the review standard)."""
+    """Package from folder/package.toml and folder/standard.md (default: the review standard).
+
+    package.toml: `id`, `goal`, a `[tests]` table (target file -> frozen test files) and an optional
+    `contracts` path relative to the folder.
+    """
     data = tomllib.loads((folder / "package.toml").read_text(encoding="utf-8"))
-    standard = folder / "standard.md"
-    text = standard.read_text(encoding="utf-8") if standard.is_file() else STANDARD
-    return Package(id=data["id"], goal=data["goal"], standard=text, workdir=workdir)
+    return Package(
+        id=data["id"],
+        goal=data["goal"],
+        standard=_read(folder / "standard.md") or STANDARD,
+        workdir=workdir,
+        tests=data.get("tests", {}),
+        contracts=_read(folder / data["contracts"]) if "contracts" in data else "",
+    )

@@ -52,6 +52,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     run.add_argument("--state-dir", type=Path, default=None)
     run.add_argument("--pytest-cmd", default=None, help="command of the pytest gate; default: this Python's pytest -q")
     run.add_argument("--ruff-cmd", default=None, help="command of the ruff gate; default: this Python's ruff")
+    run.add_argument(
+        "--verdict-mode",
+        choices=("gates", "model"),
+        default="gates",
+        help="gates: the gates decide ready or rework and the Leading review is advice; model: the F4 behaviour",
+    )
     run.add_argument("--ollama", default=URL)
     run.add_argument("--think", default=None, help="true, false, low, medium or high; default: model default")
     res = sub.add_parser("resume", help="finish a paused run in this new process")
@@ -79,6 +85,7 @@ def build_package(args: argparse.Namespace) -> tuple[Package, list | None]:
         package, replay = case_package(case, args.workdir), [load_card(case)]
     else:
         package, replay = load_package(args.package, args.workdir), None
+    package.verdict_mode = args.verdict_mode
     if args.pytest_cmd:
         package.pytest_cmd = split_cmd(args.pytest_cmd)
     if args.ruff_cmd:

@@ -61,15 +61,23 @@ def make_diff(rel: str, old: str, new: str) -> str:
     return head + "".join(lines)
 
 
-def write_in(workdir: Path, rel: str, text: str) -> str:
-    """Write text to workdir/rel and return the previous content; refuses paths outside workdir."""
+def read_in(workdir: Path | None, rel: str) -> str:
+    """Content of workdir/rel, "" when the file or the workdir is missing; refuses paths outside workdir."""
     if os.path.isabs(rel) or os.path.splitdrive(rel)[0] or rel.startswith(("\\\\", "//")):
         raise ValueError(f"path must be relative to the workdir: {rel}")
+    if workdir is None:
+        return ""
     root = os.path.realpath(workdir)
     full = os.path.realpath(os.path.join(root, rel))
     if not full.startswith(root + os.sep):
         raise ValueError(f"path outside the workdir: {rel}")
-    old = Path(full).read_text(encoding="utf-8") if os.path.isfile(full) else ""
+    return Path(full).read_text(encoding="utf-8") if os.path.isfile(full) else ""
+
+
+def write_in(workdir: Path, rel: str, text: str) -> str:
+    """Write text to workdir/rel and return the previous content; refuses paths outside workdir."""
+    old = read_in(workdir, rel)
+    full = os.path.join(os.path.realpath(workdir), rel)
     Path(full).parent.mkdir(parents=True, exist_ok=True)
     Path(full).write_text(text, encoding="utf-8", newline="\n")
     return old
@@ -121,11 +129,12 @@ def run_gates(package: Package, card: Card, before: dict[str, str]) -> list[Gate
     return gates
 
 
-def _write_files(package: Package, files: dict[str, str]) -> str:
+def _write_files(package: Package, files: dict[str, str], bases: dict[str, str] | None = None) -> str:
+    """Write the files; each diff is against its base when one is given, else against the previous content."""
     diffs = []
     for rel, text in files.items():
         old = write_in(package.workdir, rel, text) if package.workdir else ""
-        diffs.append(make_diff(rel, old, text))
+        diffs.append(make_diff(rel, (bases or {}).get(rel, old), text))
     return "".join(diffs)
 
 
@@ -142,17 +151,25 @@ def replay_attempt(package: Package, card: Card) -> Attempt:
     return Attempt(card_id=card.id, round=1, source="replay", diff=card.replay_diff or "", gates=gates)
 
 
-def model_attempt(package: Package, card: Card, round_no: int, reply: str) -> Attempt:
-    """A Work round from a model reply: only card.target is ever written, then the gates run."""
+def model_attempt(package: Package, card: Card, round_no: int, reply: str, base: str | None = None) -> Attempt:
+    """A Work round from a model reply: only card.target is ever written, then the gates run.
+
+    The diff is against `base` (the target before round 1) so a later round shows the whole module.
+    """
     path, code = parse_file_reply(reply)
     if code is None or path not in (None, card.target):
         output = "no python block in the reply" if code is None else f"FILE {path} is not the card target"
         gate = GateResult(name="reply", ok=False, output=f"{output} {card.target}")
         return Attempt(card_id=card.id, round=round_no, source="model", diff="", gates=[gate])
     before = snapshot(package.workdir) if package.workdir else {}
-    diff = _write_files(package, {card.target: code})
+    diff = _write_files(package, {card.target: code}, None if base is None else {card.target: base})
     gates = run_gates(package, card, before)
     return Attempt(card_id=card.id, round=round_no, source="model", diff=diff, gates=gates)
+
+
+def gate_summary(attempt: Attempt) -> str:
+    """One line per gate for the reviewer: name and passed or FAILED; "" when no gate ran."""
+    return "\n".join(f"{g.name}: {'passed' if g.ok else 'FAILED'}" for g in attempt.gates)
 
 
 def review_log(card: Card, attempt: Attempt) -> str:
@@ -160,3 +177,10 @@ def review_log(card: Card, attempt: Attempt) -> str:
     if attempt.gates:
         return attempt.gate_log()
     return (card.replay_log or "") if attempt.source == "replay" else ""
+
+
+def gate_verdict(attempt: Attempt) -> str:
+    """Verdict of the deterministic gates alone: nothing written is escalate, any red gate rework, else ready."""
+    if not attempt.diff:
+        return "escalate"
+    return "ready" if attempt.ok else "rework"
