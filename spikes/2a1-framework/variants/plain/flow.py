@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from common.gates import model_attempt, replay_attempt, review_log
+from common.gates import gate_summary, gate_verdict, model_attempt, read_in, replay_attempt, review_log
 from common.models import (
     Attempt,
     AwaitingApproval,
@@ -25,6 +25,7 @@ from common.models import (
     RunStatus,
     new_run_id,
 )
+from common.plan import complete_cards
 from common.prompts import (
     PLAN_SCHEMA,
     PLAN_SYSTEM,
@@ -51,6 +52,7 @@ class State(BaseModel):
     run_id: str
     package: Package
     cards: list[Card]
+    bases: dict[str, str] = {}
     attempts: list[Attempt] = []
     reports: list[Report] = []
     verdicts: dict[str, str] = {}
@@ -71,31 +73,39 @@ def run_flow(package: Package, *, models: Models, state_dir: Path, replay_cards:
         pending = [c for c in pending if reports[c.id].verdict == "rework"]
         if not pending or review_round == REVIEW_ROUNDS:
             break
-        work_batch(state, pending, models.working, {c.id: rework_feedback(reports[c.id]) for c in pending})
+        feedback = {c.id: _feedback(state, reports[c.id]) for c in pending}
+        work_batch(state, pending, models.working, feedback)
     for card in pending:
         state.verdicts[card.id] = "escalate"
     return pause(state, Path(state_dir))
 
 
 def plan(package: Package, leading: ChatModel) -> list[Card]:
-    """Plan phase: one Leading call splits the package into cards."""
+    """Plan phase: one Leading call splits the package into cards; a card without frozen tests is refused."""
     cards = parse_cards(leading.chat(PLAN_SYSTEM, plan_user(package), PLAN_SCHEMA))
     if not cards:
         raise ValueError(f"the Plan phase produced no card for package {package.id}")
-    return cards
+    return complete_cards(package, cards)
+
+
+def _feedback(state: State, report: Report) -> str:
+    """Rework feedback: in gates mode the failed gate log comes first, then the advisory findings."""
+    gate_log = state.last_attempt(report.card_id).gate_log() if state.package.verdict_mode == "gates" else ""
+    return rework_feedback(report, gate_log)
 
 
 def work_batch(state: State, cards: list[Card], working: ChatModel, feedback: dict[str, str]) -> None:
     """Work phase for every card in order; a replay card's first round is its known diff."""
     for card in cards:
+        state.bases.setdefault(card.id, read_in(state.package.workdir, card.target))
         if card.replay_diff is not None and card.id not in feedback:
             state.attempts.append(replay_attempt(state.package, card))
             continue
         note = feedback.get(card.id, "")
         for _ in range(GATE_ROUNDS):
             round_no = len([a for a in state.attempts if a.card_id == card.id]) + 1
-            reply = working.chat(WORK_SYSTEM, work_user(card, note))
-            attempt = model_attempt(state.package, card, round_no, reply)
+            reply = working.chat(WORK_SYSTEM, work_user(card, note, state.package.contracts))
+            attempt = model_attempt(state.package, card, round_no, reply, state.bases[card.id])
             state.attempts.append(attempt)
             if attempt.ok:
                 break
@@ -103,7 +113,10 @@ def work_batch(state: State, cards: list[Card], working: ChatModel, feedback: di
 
 
 def review_batch(state: State, cards: list[Card], leading: ChatModel) -> dict[str, Report]:
-    """Review phase: the last attempt of every card; quotes not in the diff are dropped."""
+    """Review phase: the last attempt of every card; quotes not in the diff are dropped.
+
+    In gates mode the gates decide the verdict and the model's own verdict is kept as `model_verdict`.
+    """
     reports: dict[str, Report] = {}
     system = state.package.standard or STANDARD
     for card in cards:
@@ -111,8 +124,12 @@ def review_batch(state: State, cards: list[Card], leading: ChatModel) -> dict[st
         if not attempt.diff:
             report = Report(card_id=card.id, verdict="escalate", notes="no code was produced")
         else:
-            reply = leading.chat(system, review_user(card, attempt.diff, review_log(card, attempt)), REPORT_SCHEMA)
-            report = check_quotes(parse_report(card.id, reply), attempt.diff)
+            user = review_user(
+                card, attempt.diff, review_log(card, attempt), state.package.contracts, gate_summary(attempt)
+            )
+            report = check_quotes(parse_report(card.id, leading.chat(system, user, REPORT_SCHEMA)), attempt.diff)
+        if state.package.verdict_mode == "gates":
+            report = report.model_copy(update={"model_verdict": report.verdict, "verdict": gate_verdict(attempt)})
         verdict = "escalate" if report.verdict == "invalid_json" else report.verdict
         state.reports.append(report)
         state.verdicts[card.id] = verdict
@@ -126,6 +143,12 @@ def _result(state: State, run_dir: Path) -> RunResult:
     return RunResult(
         run_id=state.run_id, variant=VARIANT, status=state.status, verdicts=verdicts, attempts=counts, run_dir=run_dir
     )
+
+
+def _advice(state: State) -> dict[str, int]:
+    """Kept findings of the last report of each card: what the human reviewer should read first."""
+    last = {r.card_id: len(r.findings) for r in state.reports}
+    return {c.id: last.get(c.id, 0) for c in state.cards}
 
 
 def pause(state: State, state_dir: Path) -> RunResult:
@@ -148,6 +171,7 @@ def pause(state: State, state_dir: Path) -> RunResult:
         variant=VARIANT,
         cards=[c.id for c in state.cards],
         verdicts=result.verdicts,
+        advice=_advice(state),
         report_path=str(run_dir / "reports.json"),
     )
     (run_dir / "awaiting_approval.json").write_text(awaiting.model_dump_json(indent=2), encoding="utf-8")

@@ -31,6 +31,8 @@ class Tally:
     seeded: int = 0
     caught: int = 0
     verdict_match: int = 0
+    gate_match: int = 0
+    ready_wrong: int = 0
     with_expected: int = 0
     blocked: list[str] = field(default_factory=list)
     swap_violations: list[str] = field(default_factory=list)
@@ -71,7 +73,10 @@ def _score_card(tally: Tally, record: RunRecord, card_id: str, expected: dict) -
     first_report = next((r for r in record.reports if r.card_id == card_id), None)
     first_attempt = next((a for a in record.attempts if a.card_id == card_id), None)
     tally.with_expected += 1
-    tally.verdict_match += bool(first_report) and first_report.verdict == expected["expected_verdict"]
+    wanted = expected["expected_verdict"]
+    tally.verdict_match += bool(first_report) and (first_report.model_verdict or first_report.verdict) == wanted
+    tally.gate_match += bool(first_report) and first_report.verdict == wanted
+    tally.ready_wrong += bool(first_report) and first_report.verdict == "ready" and wanted != "ready"
     tally.seeded += len(expected.get("seeded", []))
     if first_report and first_attempt:
         tally.caught += len(seeds_caught(expected, first_attempt.diff, first_report.findings))
@@ -100,12 +105,16 @@ def print_tables(tallies: dict[str, Tally]) -> None:
         print("| " + " | ".join(map(str, row)) + " |")
     print("\nManual: E1 (licences), E3 (Windows real run), E4/E5 (contract test), E6 (code review), E8/S2 (venv diff),")
     print("S5 (NOTES.md), S6 (changelogs), S7 (sketch).\n")
-    print("| Variant | runs | reviews | seeds caught | hallucinated / 10 reviews | first verdict = expected.json |")
-    print("| --- | --- | --- | --- | --- | --- |")
+    print(
+        "| Variant | runs | reviews | seeds caught | hallucinated / 10 reviews | model verdict = expected | "
+        "acted verdict = expected | ready where not expected |"
+    )
+    print("| --- | --- | --- | --- | --- | --- | --- | --- |")
     for name, t in tallies.items():
         per10 = f"{10 * t.hallucinated / t.reviews:.1f}" if t.reviews else "n/a"
-        match = _pct(t.verdict_match, t.with_expected)
-        print(f"| {name} | {t.runs} | {t.reviews} | {_pct(t.caught, t.seeded)} | {per10} | {match} |")
+        cells = [name, t.runs, t.reviews, _pct(t.caught, t.seeded), per10]
+        cells += [_pct(t.verdict_match, t.with_expected), _pct(t.gate_match, t.with_expected), t.ready_wrong]
+        print("| " + " | ".join(map(str, cells)) + " |")
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -7,18 +7,22 @@ from pydantic import ValidationError
 
 from common.models import Card, Finding, Package, Report
 
-# Review standard of B0/B0b (bench_b0.py STANDARD), extended with the optional "file" field.
-STANDARD = """You are the Leading Agent: a strict first-pass code reviewer. A small model wrote the diff
-below for the task card. Check it against the card and this checklist:
-C1 behaviour matches the card's API and rules; C2 edge cases and error handling the card asks for;
-C3 security (SQL built from strings, paths, network use without permission, proxies, credentials);
-C4 tests would fail (see the test log if given).
-Style (docstring length, comments, naming) is NOT a finding: put at most one style remark in "notes";
-it never changes the verdict.
-Report only real problems against C1-C4. Every finding must quote ONE line copied exactly from the diff.
-Verdict: "ready" (no C1-C4 problem), "rework" (fixable C1-C4 problems), "escalate" (wrong approach
-or beyond a small fix). Answer with JSON only, in this shape:
-{"verdict": "ready|rework|escalate", "findings": [{"check": "C1", "file": "...", "quote": "...", "problem": "..."}],
+# Narrow advisory checklist (F6): the gates decide ready or rework, the model only reports what they cannot see.
+STANDARD = """You are the Leading Agent, an ADVISORY code reviewer. The deterministic gates (scope, frozen tests,
+ruff, pytest) decide whether the module passes; you do not. A small model wrote the diff below for the task
+card. Look ONLY for these problems, which the gates cannot see:
+S1 a caller-supplied path used in a file-system call (exists, is_file, open, stat, unlink) BEFORE the permission check;
+S2 an exception caught and silently dropped where the card says to report or raise;
+S3 SQL built from strings, or user text reaching SQL unquoted;
+S4 a network call without the permission check, or proxy, userinfo or non-loopback handling the card forbids;
+S5 a mutable default argument, a resource not closed, or a temp file left behind on error;
+S6 a rule the card lists that the diff does not implement (a count check, an error code, an ordering, a field).
+Rules: the TEST LOG and GATES section show what the gates already found; never repeat that and never report
+what passing tests prove. Never report style, naming, docstrings, message wording or anything the card does not
+require. Read CONTRACTS before claiming that a type raises or returns something. Every finding quotes ONE line
+copied exactly from the diff and names the item (S1-S6). Verdict: "rework" if you list a finding, "ready" if
+not, "escalate" only when the approach is wrong. Answer with JSON only, in this shape:
+{"verdict": "ready|rework|escalate", "findings": [{"check": "S1", "file": "...", "quote": "...", "problem": "..."}],
  "notes": "..."}"""
 
 REPORT_SCHEMA: dict = {
@@ -44,7 +48,9 @@ REPORT_SCHEMA: dict = {
 }
 
 PLAN_SYSTEM = """You are the Leading Agent. Split the work package into at most 4 small task cards for a
-14B coding model. Each card writes ONE file. Never change tests. Answer with JSON only:
+14B coding model. Each card writes ONE file. Never change tests. EVERY card lists in "tests" the frozen test
+files of its module, exactly as the package names them; a card without tests is refused. Import types only from
+where the CONTRACTS section says they live. Answer with JSON only:
 {"cards": [{"id": "...", "title": "...", "target": "path/to/file.py", "tests": ["path/to/test_x.py"],
  "prompt": "complete card text: API with signatures, rules, which frozen tests must pass"}]}"""
 
@@ -78,29 +84,40 @@ _BLOCK_RE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)```", re.DOTALL)
 
 def plan_user(package: Package) -> str:
     """User message of the Plan phase: package goal and standard."""
-    return f"WORK PACKAGE {package.id}\n{package.goal}\n\nSTANDARD\n{package.standard or STANDARD}"
+    text = f"WORK PACKAGE {package.id}\n{package.goal}"
+    if package.contracts:
+        text += f"\n\nCONTRACTS\n{package.contracts}"
+    return text + f"\n\nSTANDARD\n{package.standard or STANDARD}"
 
 
-def work_user(card: Card, feedback: str = "") -> str:
+def work_user(card: Card, feedback: str = "", contracts: str = "") -> str:
     """User message of a Work round; feedback is the gate log or the review findings of the last round."""
     text = f"CARD ID: {card.id}\n\n{card.prompt}"
+    if contracts:
+        text += f"\n\nCONTRACTS (real behaviour of the imported types)\n{contracts}"
     if feedback:
         text += f"\n\nYOUR LAST ATTEMPT WAS REJECTED. FIX THIS:\n{feedback}"
     return text
 
 
-def review_user(card: Card, diff: str, test_log: str = "") -> str:
-    """User message of the Review phase (bench_b0.review layout plus the card id)."""
-    text = f"CARD ID: {card.id}\n\nTASK CARD\n{card.prompt}\n\nDIFF\n{diff}"
+def review_user(card: Card, diff: str, test_log: str = "", contracts: str = "", gates: str = "") -> str:
+    """User message of the Review phase (bench_b0.review layout plus the card id, contracts and gate summary)."""
+    text = f"CARD ID: {card.id}\n\nTASK CARD\n{card.prompt}"
+    if contracts:
+        text += f"\n\nCONTRACTS (real behaviour of the imported types; they win over the card)\n{contracts}"
+    text += f"\n\nDIFF\n{diff}"
+    if gates:
+        text += f"\n\nGATES\n{gates}"
     if test_log:
         text += f"\n\nTEST LOG (tail)\n{test_log[-4000:]}"
     return text
 
 
-def rework_feedback(report: Report) -> str:
-    """Review findings as feedback for the next Work round."""
+def rework_feedback(report: Report, gate_log: str = "") -> str:
+    """Failed gate output (when given) and review findings as feedback for the next Work round."""
     lines = [f"- {f.check} `{f.quote}`: {f.problem}" for f in report.findings]
-    return "Reviewer findings:\n" + ("\n".join(lines) or report.notes or "(no detail)")
+    text = "Reviewer findings:\n" + ("\n".join(lines) or report.notes or "(no detail)")
+    return f"Failed gates:\n{gate_log}\n\n{text}" if gate_log else text
 
 
 def parse_json(text: str) -> dict:
