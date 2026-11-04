@@ -12,6 +12,10 @@ Rules for AI agents other than Claude Code working in this repository, in partic
 1. Read `CLAUDE.md`, `ARCHITECTURE.md` and your task card.
 2. Check `git branch --show-current` is `ag/<task>` and the folder is a worktree such as `D:\Development\lfmap-ag`. If you are on `main` or in `D:\Development\lfmap`, stop and report.
 
+## Windows account
+
+Until the trial ends on 2026-11-12 you run under the owner's Windows account. After that you run only under the standard account `lfmap-agent` (ADR-023), and the owner's account no longer starts you. Under either account, never write to `D:\lfmap-runtime`: it is the reviewed clone that the owner's jobs and MCP server run from.
+
 ## While you work
 
 - Edit only the files the card lists. Do not touch `CLAUDE.md`, `AGENTS.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `.github/`, `.githooks/`, `.claude/`, `pyproject.toml`, `uv.lock`, `scripts/check_licenses.py`, `PermissionManager` or the CLI/MCP adapters, unless the card names them.
