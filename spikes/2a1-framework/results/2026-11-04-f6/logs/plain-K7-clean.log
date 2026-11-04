@@ -1,0 +1,13 @@
+next: python run.py resume plain-K7-clean-458e11c2 --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-04-f6
+{
+  "run_id": "plain-K7-clean-458e11c2",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K7-clean": "ready"
+  },
+  "attempts": {
+    "K7-clean": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-04-f6\\plain-K7-clean-458e11c2"
+}

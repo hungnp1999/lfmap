@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "K7-real",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 286.715,
+  "model_s": 277.452,
+  "overhead_s": 9.263,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 271292.2817391,
+      "seconds": 277.4524054999929,
+      "prompt_chars": 15414,
+      "reply_chars": 367
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K7-clean-seed-proxy-1ea19226",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K7-clean-seed-proxy": "escalate"
+  }
+}

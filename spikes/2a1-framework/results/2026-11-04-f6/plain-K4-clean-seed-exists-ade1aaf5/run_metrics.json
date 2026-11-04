@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "K4-clean-seed-exists",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 374.122,
+  "model_s": 367.229,
+  "overhead_s": 6.893,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 259399.0144816,
+      "seconds": 367.22867539999424,
+      "prompt_chars": 14450,
+      "reply_chars": 374
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-K4-clean-seed-order-5ea57f1f",
+  "variant": "plain",
+  "cards": [
+    "K4-clean-seed-order"
+  ],
+  "verdicts": {
+    "K4-clean-seed-order": "ready"
+  },
+  "advice": {
+    "K4-clean-seed-order": 1
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-04-f6\\plain-K4-clean-seed-order-5ea57f1f\\reports.json"
+}

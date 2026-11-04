@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K6-seed-sql-89337840",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-sql": "ready"
+  }
+}

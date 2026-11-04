@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "K6-seed-sql",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 536.167,
+  "model_s": 533.768,
+  "overhead_s": 2.399,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 266464.0956828,
+      "seconds": 533.7678697000374,
+      "prompt_chars": 12473,
+      "reply_chars": 696
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

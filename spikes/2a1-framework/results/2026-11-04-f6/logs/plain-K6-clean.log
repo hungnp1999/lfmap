@@ -1,0 +1,13 @@
+{
+  "run_id": "plain-K6-clean-495a128c",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "K6-clean": "ready"
+  },
+  "attempts": {
+    "K6-clean": 1
+  },
+  "run_dir": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-04-f6\\plain-K6-clean-495a128c"
+}
+next: python run.py resume plain-K6-clean-495a128c --approve|--reject --state-dir D:\Development\lfmap\spikes\2a1-framework\results\2026-11-04-f6
