@@ -1,7 +1,7 @@
 """`lfmap jobs doctor`: read-only checks that the machine can run the jobs in `jobs.toml` (TC-J4).
 
-Only `schtasks /Query`, `powercfg /query`, `whoami /user` and `icacls /save` (into a temporary folder) are run,
-through `_run`, and Ollama is only asked for its version.
+Only `schtasks /Query`, `powercfg /query`, `whoami /user`, `icacls /save` and a two-line `Get-Acl` script that
+prints a folder owner (both into a temporary folder) are run, through `_run`, and Ollama is only asked for its version.
 `ok` is `True` (fine), `None` (warning or unknown) or `False` (a job will not run as expected).
 """
 
@@ -25,6 +25,10 @@ REGISTER_FIX = "uv run lfmap jobs register"
 SIGNED_OUT_FIX = 'Task Scheduler > \\LFMAP\\ > task > General: "Run whether user is logged on or not"'
 WAKE_FIX = 'Task Scheduler > \\LFMAP\\ > task > Conditions: "Wake the computer to run this task"'
 RUNTIME_FIX = "point [runtime] root in jobs.toml at a clone only you can write (docs/jobs.md), then register"
+OWNER_SCRIPT = (
+    "param([Parameter(Mandatory)][string]$Path)\n"
+    "(Get-Acl -LiteralPath $Path).GetOwner([System.Security.Principal.SecurityIdentifier]).Value\n"
+)
 _HEX = re.compile(r"0x([0-9a-fA-F]+)")
 _SID = re.compile(r"S-1-\d+(-\d+)+")
 
@@ -46,6 +50,7 @@ _WELL_KNOWN = {
     "OW": ("S-1-3-4", "Owner Rights"),
     "AC": ("S-1-15-2-1", "All Application Packages"),
 }
+_NAMES = dict(_WELL_KNOWN.values())
 # Creator Owner only stands for whoever creates a child, which needs a write right of its own.
 _TRUSTED = {"S-1-5-18", "S-1-5-32-544", "S-1-3-0"}
 _ALLOW = {"A", "XA", "OA", "ZA"}
@@ -259,6 +264,30 @@ def _read_acl(root: Path) -> str:
     return found.group(0)
 
 
+def _read_owner(folder: Path) -> str:
+    """The SID of the owner of `folder`. `icacls /save` keeps only the DACL, and an owner can always rewrite it."""
+    with tempfile.TemporaryDirectory(prefix="lfmap-owner-") as temp:
+        script = Path(temp) / "owner.ps1"
+        script.write_text(OWNER_SCRIPT, encoding="utf-8")
+        powershell = _system_tool(r"WindowsPowerShell\v1.0\powershell.exe")
+        output = _run(
+            [
+                powershell,
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script),
+                str(folder),
+            ]
+        )
+    found = _SID.search(output)
+    if not found:
+        raise ToolError("internal", "the owner of the folder could not be read")
+    return found.group(0)
+
+
 def _aces(sddl: str) -> list[list[str]]:
     """Top-level `(type;flags;rights;object;inherited object;sid)` groups; nested conditions stay inside."""
     aces, depth, start = [], 0, 0
@@ -326,18 +355,34 @@ def _check_runtime_root(root: Path | None, xml: dict[str, str | None]) -> Check:
     return Check("runtime_root", True, str(root))
 
 
+def _foreign_owner(folder: Path, user_sid: str) -> str | None:
+    """`<name> (<sid>)` of the owner of `folder` unless it is you, SYSTEM or Administrators."""
+    owner = _read_owner(folder)
+    if owner == user_sid or owner in _TRUSTED:
+        return None
+    name = _NAMES.get(owner)
+    return f"{name} ({owner})" if name else owner
+
+
 def _acl_findings(root: Path, user_sid: str) -> list[str]:
     """`<folder>: <accounts>` for the root (any write) and each folder above it (rename, delete child, ACL change),
-    since whoever can move a parent can put another tree at the root's path."""
+    since whoever can move a parent can put another tree at the root's path, plus `owned by` for any of these
+    folders owned by someone else: an owner can always change the ACL, whatever the DACL says."""
     findings = []
     writers = other_writers(_read_acl(root), user_sid)
     if writers:
         findings.append(f"{root}: {', '.join(writers)}")
+    owner = _foreign_owner(root, user_sid)
+    if owner:
+        findings.append(f"{root}: owned by {owner}")
     for parent in root.parents:
         mask = _MOVE_MASK if parent.parent != parent else _DRIVE_MOVE_MASK
         movers = other_writers(_read_acl(parent), user_sid, mask, own_only=True)
         if movers:
             findings.append(f"{parent} (can move what is below): {', '.join(movers)}")
+        owner = _foreign_owner(parent, user_sid)
+        if owner:
+            findings.append(f"{parent} (can move what is below): owned by {owner}")
     return findings
 
 
@@ -351,9 +396,12 @@ def _check_runtime_acl(root: Path | None) -> Check:
     except OSError as error:
         return Check("runtime_acl", None, f"ACL of {root} could not be read: {error}")
     if findings:
-        detail = f"other accounts can change {root}; code they change runs as you: {'; '.join(findings)}"
+        who = "; ".join(findings)
+        detail = f"other accounts can change or own {root} or a folder above it; code they change runs as you: {who}"
         return Check("runtime_acl", None, detail, RUNTIME_FIX)
-    return Check("runtime_acl", True, f"only you, SYSTEM and Administrators can change {root} or the folders above it")
+    return Check(
+        "runtime_acl", True, f"only you, SYSTEM and Administrators can change or own {root} or the folders above it"
+    )
 
 
 def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
