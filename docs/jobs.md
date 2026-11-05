@@ -138,8 +138,8 @@ Get-Content "$env:LOCALAPPDATA\lfmap\logs\jobs-$(Get-Date -Format yyyy-MM-dd).js
 ## Checking the machine
 
 `uv run lfmap jobs doctor [--json]` checks, without changing anything, that this machine can run the jobs. It
-only runs `schtasks /Query`, `powercfg /query`, `whoami /user` and `icacls <root> /save` (into a temporary
-folder; both by full path in `%SystemRoot%\System32`), and asks Ollama for its version. Each line shows the check,
+only runs `schtasks /Query`, `powercfg /query`, `whoami /user`, `icacls <root> /save` and a two-line `Get-Acl` script (written to a temporary
+folder) that prints a folder owner; all by full path in `%SystemRoot%\System32`), and asks Ollama for its version. Each line shows the check,
 `ok`, `warn` or `FAIL`, what was found and, after `->`, how to fix it. It exits 1 when any check is `FAIL`;
 `warn` never fails. `--json` prints a list of `{name, ok, detail, fix}` with `ok` `true`, `null` (warn) or `false`.
 
@@ -154,12 +154,13 @@ folder; both by full path in `%SystemRoot%\System32`), and asks Ollama for its v
 | `sleep` | never sleeps on AC power | sleeps after N minutes, or `powercfg` unreadable | |
 | `ollama` | `http://localhost:11434/api/version` answers | no enabled job uses a plugin with `permissions.network = true` | needed but not answering; start Ollama |
 | `runtime_root` | the root has `scripts\Invoke-LfmapJob.ps1` and every task runs with `-RepoPath "<root>"` | `jobs.toml` unreadable, or a task runs from another tree; run `register` | the root has no runner script |
-| `runtime_acl` | only you, SYSTEM and Administrators can write the root or move a folder above it | another account (for example `lfmap-agent`, Users or Authenticated Users) has write, append, delete, change-permissions or take-ownership rights on the root or on what it inherits to; or the ACL could not be read | |
+| `runtime_acl` | only you, SYSTEM and Administrators can write or own the root, or move or own a folder above it | another account (for example `lfmap-agent`, Users or Authenticated Users) has write, append, delete, change-permissions or take-ownership rights on the root or on what it inherits to, or owns the root or a folder above it; or the ACL could not be read | |
 
 `runtime_acl` also reads each folder above the root and warns when another account can delete or rename it,
 delete the folder below it, or change its ACL or owner: whoever can move `D:\Development` can put another tree
-at `D:\Development\lfmap-runtime`. On a drive root only delete-child and ACL changes count. Keep the runtime
-directly under a drive root (`D:\lfmap-runtime`) or under folders only you can change. The check compares SIDs,
+at `D:\Development\lfmap-runtime`. The owner of the root and of each folder above it must be you, SYSTEM
+or Administrators: an owner can always rewrite the ACL, which `icacls /save` does not show. On a drive root
+only delete-child and ACL changes count. Keep the runtime directly under a drive root (`D:\lfmap-runtime`) or under folders only you can change. The check compares SIDs,
 not account names, so it works in any Windows language. It reads the root folder's own ACL (including entries
 it passes to its contents), not every file below it, and it does not subtract deny entries, so a deny can leave
 a warning that is not a real hole.

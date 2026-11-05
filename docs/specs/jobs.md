@@ -120,6 +120,9 @@ Handoff `docs/handoff/2026-10-30-agent-account.md`, issue #114.
   `S-1-3-0` any of write data, append, delete child, DELETE, WRITE_DAC, WRITE_OWNER, GENERIC_WRITE,
   GENERIC_ALL; an unknown rights code counts as write; and for each parent folder, an allow ACE that applies to
   the folder itself with delete child, DELETE, WRITE_DAC, WRITE_OWNER or GENERIC_ALL, without DELETE on a drive
-  root). The ACL comes from
+  root). It also warns when the root or a parent folder is owned by anyone but the current user, SYSTEM or
+  Administrators, since an owner holds an implicit WRITE_DAC. The ACL comes from
   `%SystemRoot%\System32\icacls.exe <root> /save <temp file>` (UTF-16 SDDL, compared by SID) and the user from
-  `%SystemRoot%\System32\whoami.exe /user /fo csv /nh`; both run as argument lists through `_run`, no shell.
+  `%SystemRoot%\System32\whoami.exe /user /fo csv /nh`; the owner SID from
+  `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File <temp script> <folder>`
+  (`Get-Acl -LiteralPath $Path`, the path is an argument, never part of the script text); all run as argument lists through `_run`, no shell.

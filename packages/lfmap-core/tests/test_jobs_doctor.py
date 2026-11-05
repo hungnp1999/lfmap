@@ -136,7 +136,7 @@ def system(monkeypatch):
     monkeypatch.setattr(jobs_doctor, "_http_get", fake_http_get)
     monkeypatch.setattr(jobs, "find_uv", lambda: Path("C:/uv/uv.exe"))
     monkeypatch.setattr(jobs, "find_pwsh", lambda: Path("C:/Program Files/PowerShell/7/pwsh.exe"))
-    acl: dict = {"sddl": RUNTIME_SDDL, "sid": USER_SID, "by_path": {}}
+    acl: dict = {"sddl": RUNTIME_SDDL, "sid": USER_SID, "by_path": {}, "owner": USER_SID, "owners": {}}
 
     def fake_read_acl(folder: Path) -> str:
         acl.setdefault("root", str(folder))
@@ -146,6 +146,15 @@ def system(monkeypatch):
         return result
 
     monkeypatch.setattr(jobs_doctor, "_read_acl", fake_read_acl)
+
+    def fake_read_owner(folder: Path) -> str:
+        acl.setdefault("owners_read", []).append(folder)
+        result = acl["owners"].get(str(folder), acl["owner"])
+        if isinstance(result, ToolError):
+            raise result
+        return result
+
+    monkeypatch.setattr(jobs_doctor, "_read_owner", fake_read_owner)
     monkeypatch.setattr(jobs_doctor, "_current_sid", lambda: acl["sid"])
     return {"outputs": outputs, "http": http, "calls": calls, "acl": acl}
 
@@ -451,6 +460,69 @@ def test_every_parent_is_read(jobs_file, registry, system, tmp_path, monkeypatch
     monkeypatch.setattr(jobs_doctor, "_read_acl", lambda folder: read.append(folder) or fake(folder))
     jobs_doctor.run_checks(registry)
     assert read == [root, *root.parents]
+
+
+@pytest.mark.parametrize("owner", [USER_SID, "S-1-5-18", "S-1-5-32-544"])
+def test_trusted_owner_is_fine(jobs_file, registry, system, owner):
+    system["acl"]["owner"] = owner
+    assert by_name(jobs_doctor.run_checks(registry))["runtime_acl"].ok is True
+
+
+def test_root_owned_by_another_account_warns(jobs_file, registry, system):
+    system["acl"]["owner"] = AGENT_SID
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert f"{jobs.repo_root()}: owned by {AGENT_SID}" in check.detail
+    assert "[runtime] root" in check.fix
+
+
+def test_parent_owned_by_another_account_warns(jobs_file, registry, system, tmp_path):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    system["acl"]["owners"][str(root.parent)] = "S-1-5-32-545"
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert f"{root.parent} (can move what is below): owned by Users (S-1-5-32-545)" in check.detail
+    assert f"{root}:" not in check.detail
+
+
+def test_every_owner_is_read(jobs_file, registry, system, tmp_path):
+    root = runtime_tree(tmp_path)
+    use_runtime(jobs_file, root)
+    jobs_doctor.run_checks(registry)
+    assert system["acl"]["owners_read"] == [root, *root.parents]
+
+
+def test_unreadable_owner_is_unknown(jobs_file, registry, system):
+    system["acl"]["owner"] = ToolError("backend_unavailable", "powershell.exe was not found (Windows only)")
+    check = by_name(jobs_doctor.run_checks(registry))["runtime_acl"]
+    assert check.ok is None
+    assert "powershell" in check.detail
+
+
+def test_read_owner_runs_a_script_from_system32(monkeypatch, tmp_path):
+    seen = []
+
+    def fake_run(args: list[str]) -> str:
+        seen.append(args)
+        assert Path(args[6]).read_text(encoding="utf-8") == jobs_doctor.OWNER_SCRIPT
+        return f"{AGENT_SID}\r\n"
+
+    monkeypatch.setenv("SystemRoot", r"C:\Windows")
+    monkeypatch.setattr(jobs_doctor, "_run", fake_run)
+    assert jobs_doctor._read_owner(tmp_path) == AGENT_SID
+    command = seen[0]
+    assert command[0] == r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    assert command[1:6] == ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"]
+    assert command[7] == str(tmp_path)
+    assert len(command) == 8
+    assert not Path(command[6]).exists()
+
+
+def test_read_owner_without_sid(monkeypatch, tmp_path):
+    monkeypatch.setattr(jobs_doctor, "_run", lambda args: "Get-Acl : denied")
+    with pytest.raises(ToolError):
+        jobs_doctor._read_owner(tmp_path)
 
 
 @pytest.mark.parametrize(
