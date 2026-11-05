@@ -2,7 +2,7 @@
 
 - Date: 2026-11-05
 - Issue: #154 (follows F6, PR #153; F5 report `docs/research/2026-11-04-framework-spike.md` section 3)
-- Status: design, awaiting Hùng's decision (gate 1, Friday 06/11 17:00 VN)
+- Status: design approved by Hùng on 2026-11-05 with decisions 1 = A, 2 = A, 3 = yes (section 7)
 - Handoff for the build: `docs/handoff/2026-11-05-f7-deterministic-checks.md`
 
 ## 1. Problem
@@ -55,10 +55,12 @@ Limits of this measure:
 - New columns per variant: seeds caught by the checks, seeds caught by checks or review, and check alarms on cases whose `expected_verdict` is `ready`.
 - The existing "seeds caught" column (Leading review alone) stays, so F6 and F7 compare directly.
 
-## 7. Decisions for Hùng
+## 7. Decisions (taken by Hùng on 2026-11-05: A, A, yes)
 
 1. **ADR-022 measure.** Option A (recommended): the filter-mode thresholds apply to the whole review layer (gates + checks + Leading review); the Leading-alone figure is still reported. Option B: keep the thresholds on the Leading review alone; then `exists`, `swallow` and `count` are recorded as known limits and ADR-022 likely stays Proposed. A changes how an ADR is measured, so it is your call.
 2. **Seeded re-run on DIEP-ANH.** The checks are deterministic; the 19-case matrix runs on Cloud in about a minute. Option A (recommended): drop the Saturday 2 h GPU slot; Cloud runs the matrix, and the Leading model is re-run only at the next real Plan run. Option B: keep the slot to see whether the Leading review names the bugs once a red check log is in front of it.
 3. **Card gap (`count`).** Recommended: keep the probe, mark it as a card gap in the report, and add "check the shape and count of external replies" to the Planner card checklist for 2a.2. No ADR change.
 
 Not a decision: S110/S112/S608 stay spike-only. Adding them to the root `ruff.toml` is a separate backlog issue (it would flag existing code to review first).
+
+Note: ADR-022 has no section of its own in `03_Decisions_ADR.md` yet, only a progress note inside ADR-024; its draft is in `docs/research/2026-10-23-local-model-tiers.md` (section ADR-022).

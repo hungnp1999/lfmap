@@ -4,7 +4,7 @@
 - Issue: #154 (sau F6, PR #153). Lịch tuần: #156.
 - Thiết kế: `docs/research/2026-11-05-f7-deterministic-checks.md`
 - Chuẩn bị sẵn: `docs/handoff/prep/2026-11-05-f7/` (probe + test đóng băng)
-- Người duyệt: anh Hùng, cổng 1 (chốt file bàn giao này và 3 quyết định ở mục "Câu hỏi mở"), khung 17:00 thứ Sáu 06/11
+- Người duyệt: anh Hùng, cổng 1. Đã chốt 05/11 08:21Z (tin nhắn trong thread): 3 quyết định ở mục "Quyết định của Hùng"; nội dung kỹ thuật không có chỉnh sửa (quản trị rủi ro)
 
 ## Bối cảnh
 
@@ -83,7 +83,7 @@ def checks_caught(attempt: Attempt) -> bool: ...
 - Cổng: review thường (không đổi ADR, không đổi chính sách).
 - Tuyến dự phòng: nếu một probe đỏ sai trên Windows (khác đường dẫn hoặc `os.replace`), ghi lại và hỏi; không sửa probe.
 
-### Task [PO] F7-R: chạy lại seed trên DIEP-ANH (chỉ khi Hùng chọn phương án B ở câu hỏi 2)
+### Task [PO] F7-R: chạy lại seed trên DIEP-ANH (HỦY: Hùng chọn A ở quyết định 2)
 
 - Môi trường: Local DIEP-ANH, tài khoản `lfmap-agent`, Ollama, khoảng 2 giờ GPU, khung tối thứ Bảy 07/11.
 - Blocked by: F7-B merge; preflight thứ Sáu 06/11.
@@ -103,11 +103,15 @@ def checks_caught(attempt: Attempt) -> bool: ...
 - Probe chỉ có cho K4, K7. Thẻ mới (Plan run, 2a.2) không có probe trừ khi Planner viết.
 - S608 có thể báo nhầm f-string chỉ chèn tên bảng hằng; khi đó `# noqa: S608` kèm lý do.
 
-## Câu hỏi mở (gom vào danh sách quyết định cho Hùng)
+## Quyết định của Hùng (05/11)
 
-1. Ngưỡng ADR-022 đo trên cả lớp review (gate + kiểm tra + Leading) hay chỉ Leading? Khuyến nghị: cả lớp (A).
-2. Bỏ khung GPU tối thứ Bảy (ma trận chạy trên Cloud) hay giữ để xem Leading phản ứng với log kiểm tra đỏ? Khuyến nghị: bỏ (A).
-3. Ghi `count` là lỗ của thẻ và thêm "kiểm hình dạng và số lượng phản hồi từ ngoài" vào checklist thẻ của Planner 2a.2? Khuyến nghị: có.
+1. **A**: ngưỡng ADR-022 đo trên cả lớp review (gate + kiểm tra + Leading). Số đo của riêng Leading vẫn được báo.
+2. **A**: bỏ khung GPU tối thứ Bảy 07/11; ma trận chạy trên Cloud. Task F7-R không thực hiện; Leading chỉ chạy lại ở lần Plan run thật tiếp theo.
+3. **Có**: `count` ghi là lỗ của thẻ K7 và thêm "kiểm hình dạng và số lượng phản hồi từ ngoài" vào checklist thẻ của Planner 2a.2.
+
+## Câu hỏi mở
+
+Không còn. Lưu ý tài liệu: ADR-022 chưa có mục riêng trong `03_Decisions_ADR.md` (chỉ có ghi chú trong ADR-024); bản nháp nằm ở `docs/research/2026-10-23-local-model-tiers.md`. Hùng nên quyết định có đưa ADR-022 vào 03 hay không khi chốt nó.
 
 ## Cập nhật tài liệu dự án
 
