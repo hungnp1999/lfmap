@@ -11,8 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from common.cases import load_expected
+from common.checks import CHECK_GATES
 from common.metrics import code_lines, folder_lines
-from common.models import RunRecord
+from common.models import Attempt, RunRecord
 from common.quote import seeds_caught
 
 HERE = Path(__file__).resolve().parent
@@ -30,6 +31,9 @@ class Tally:
     hallucinated: int = 0
     seeded: int = 0
     caught: int = 0
+    checks_seeds: int = 0
+    either_seeds: int = 0
+    check_alarms: int = 0
     verdict_match: int = 0
     gate_match: int = 0
     ready_wrong: int = 0
@@ -68,6 +72,11 @@ def add_run(tally: Tally, run: Path, cases: Path) -> None:
             _score_card(tally, record, card.id, load_expected(cases / card.id))
 
 
+def checks_caught(attempt: Attempt) -> bool:
+    """True when an F7 check (ruff_extra or probes) failed on this attempt."""
+    return any(g.name in CHECK_GATES and not g.ok for g in attempt.gates)
+
+
 def _score_card(tally: Tally, record: RunRecord, card_id: str, expected: dict) -> None:
     """First review of the case's diff against expected.json (the B0 measure: first-pass verdict and seeds)."""
     first_report = next((r for r in record.reports if r.card_id == card_id), None)
@@ -79,7 +88,12 @@ def _score_card(tally: Tally, record: RunRecord, card_id: str, expected: dict) -
     tally.ready_wrong += bool(first_report) and first_report.verdict == "ready" and wanted != "ready"
     tally.seeded += len(expected.get("seeded", []))
     if first_report and first_attempt:
-        tally.caught += len(seeds_caught(expected, first_attempt.diff, first_report.findings))
+        by_review = len(seeds_caught(expected, first_attempt.diff, first_report.findings))
+        by_checks = checks_caught(first_attempt)
+        tally.caught += by_review
+        tally.checks_seeds += len(expected.get("seeded", [])) if by_checks else 0
+        tally.either_seeds += len(expected.get("seeded", [])) if by_checks else by_review
+        tally.check_alarms += by_checks and wanted == "ready"
 
 
 def static_measures(variant: str) -> dict:
@@ -107,13 +121,15 @@ def print_tables(tallies: dict[str, Tally]) -> None:
     print("S5 (NOTES.md), S6 (changelogs), S7 (sketch).\n")
     print(
         "| Variant | runs | reviews | seeds caught | hallucinated / 10 reviews | model verdict = expected | "
-        "acted verdict = expected | ready where not expected |"
+        "acted verdict = expected | ready where not expected | seeds caught by checks | "
+        "seeds caught by checks or review | check alarms on ready cases |"
     )
-    print("| --- | --- | --- | --- | --- | --- | --- | --- |")
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for name, t in tallies.items():
         per10 = f"{10 * t.hallucinated / t.reviews:.1f}" if t.reviews else "n/a"
         cells = [name, t.runs, t.reviews, _pct(t.caught, t.seeded), per10]
         cells += [_pct(t.verdict_match, t.with_expected), _pct(t.gate_match, t.with_expected), t.ready_wrong]
+        cells += [_pct(t.checks_seeds, t.seeded), _pct(t.either_seeds, t.seeded), t.check_alarms]
         print("| " + " | ".join(map(str, cells)) + " |")
 
 

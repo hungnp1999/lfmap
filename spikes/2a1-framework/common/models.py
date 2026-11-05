@@ -49,6 +49,7 @@ class Package(BaseModel):
     verdict_mode: Literal["model", "gates"] = "model"
     pytest_cmd: list[str] = Field(default_factory=lambda: list(DEFAULT_PYTEST))
     ruff_cmd: list[str] = Field(default_factory=lambda: list(DEFAULT_RUFF))
+    checks: bool = True
 
 
 class GateResult(BaseModel):
