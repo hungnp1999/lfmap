@@ -47,9 +47,11 @@ Chi tiết trong ghi chú thiết kế mục 5–6. Tóm tắt API mà test đó
 
 ```python
 # common/checks.py
-PROBES_DIR: Path                      # spikes/2a1-framework/probes
-PROBES: dict[str, list[str]]          # target path -> probe file names
+PROBES_DIR: Path  # spikes/2a1-framework/probes
+PROBES: dict[str, list[str]]  # target path -> probe file names
 CHECK_GATES = {"ruff_extra", "probes"}
+
+
 def probes_for(target: str) -> list[Path]: ...
 def run_checks(package: Package, card: Card) -> list[GateResult]: ...  # [] without workdir
 # score.py
