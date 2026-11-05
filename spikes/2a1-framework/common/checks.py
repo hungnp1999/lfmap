@@ -23,7 +23,7 @@ def probes_for(target: str) -> list[Path]:
 
 
 def _ruff_extra(package: Package, card: Card, workdir: Path) -> GateResult:
-    cmd = [*package.ruff_cmd, "check", *RUFF_EXTRA, *RUFF_TYPED, card.target]
+    cmd = [*package.ruff_cmd, "check", *RUFF_EXTRA, *RUFF_TYPED, "--", card.target]
     return gates._run("ruff_extra", cmd, workdir)
 
 

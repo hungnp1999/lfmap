@@ -64,3 +64,10 @@ Limits of this measure:
 Not a decision: S110/S112/S608 stay spike-only. Adding them to the root `ruff.toml` is a separate backlog issue (it would flag existing code to review first).
 
 Note: ADR-022 has no section of its own in `03_Decisions_ADR.md` yet, only a progress note inside ADR-024; its draft is in `docs/research/2026-10-23-local-model-tiers.md` (section ADR-022).
+
+## 8. Result (task F7-B, built 2026-11-05)
+
+- Implemented in `spikes/2a1-framework/common/checks.py`, wired in `run_gates` (`Package.checks`, `run.py --no-checks`), `score.py` (`checks_caught` and three columns).
+- Matrix on the workspace at `018ffdf` (Linux): `tests/test_f7_checks.py` 37/37 green, including the 19-case matrix. Checks fail exactly on `K4-clean-seed-exists`, `-swallow`, `-order`, `-unlink`, `K6-seed-sql`, `K7-clean-seed-count`, `K4-real`, `K7-real`; the other 11 cases are not flagged.
+- Spike suite (`uv sync --all-groups`): all tests pass, 19 workspace tests skipped without `LFMAP_F7_WORKDIR`. One existing assertion (`test_common.py::test_model_attempt_passes_gates`) lists the gates and gained `ruff_extra`, with the maintainer's approval.
+- Root and spike `ruff check` and `ruff format --check` pass.
