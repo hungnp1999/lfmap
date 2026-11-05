@@ -118,10 +118,12 @@ def checks_caught(attempt: Attempt) -> bool: ...
 ## Prompt khởi động
 
 ```text
-Repo lfmap, task F7-B của issue #154. Đọc CLAUDE.md, rồi docs/handoff/2026-11-05-f7-deterministic-checks.md
-và docs/research/2026-11-05-f7-deterministic-checks.md (mục 5-6). Làm đúng các bước 1-7 của task F7-B,
-chỉ sửa các file ở mục Phạm vi. Probe và tests/test_f7_checks.py trong docs/handoff/prep/2026-11-05-f7/ là
-test đóng băng: chép nguyên, không sửa; nếu một test có vẻ sai thì dừng và hỏi. Nhánh feature/f7-checks từ main.
-Mọi commit có trailer Dev-Environment (và Claude-Session nếu ở Cloud). Trước khi merge chạy /security-review.
-Báo cáo cuối: kết quả pytest toàn spike, ma trận 19 case (bước 4), link PR. Trả lời tôi bằng tiếng Việt.
+Repo lfmap, task F7-B of issue #154. Read CLAUDE.md, then docs/handoff/2026-11-05-f7-deterministic-checks.md
+(task F7-B, sections "Phạm vi" and "Thiết kế") and docs/research/2026-11-05-f7-deterministic-checks.md
+(sections 5-6). Do steps 1-7 of task F7-B exactly and change only the files listed under "Phạm vi".
+The probes and tests/test_f7_checks.py in docs/handoff/prep/2026-11-05-f7/ are frozen tests: copy them
+unchanged; if a test looks wrong, stop and ask. Branch feature/f7-checks from up-to-date main.
+Every commit ends with a Dev-Environment trailer (plus Claude-Session on Cloud). Run /security-review before merging.
+Work and write in English. Final report: full spike pytest result, the 19-case matrix of step 4, PR link;
+write only that final summary in Vietnamese.
 ```
