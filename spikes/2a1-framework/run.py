@@ -58,6 +58,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="gates",
         help="gates: the gates decide ready or rework and the Leading review is advice; model: the F4 behaviour",
     )
+    run.add_argument("--no-checks", action="store_true", help="skip the F7 checks (ruff_extra, probes): F6-style run")
     run.add_argument("--ollama", default=URL)
     run.add_argument("--think", default=None, help="true, false, low, medium or high; default: model default")
     res = sub.add_parser("resume", help="finish a paused run in this new process")
@@ -86,6 +87,7 @@ def build_package(args: argparse.Namespace) -> tuple[Package, list | None]:
     else:
         package, replay = load_package(args.package, args.workdir), None
     package.verdict_mode = args.verdict_mode
+    package.checks = not args.no_checks
     if args.pytest_cmd:
         package.pytest_cmd = split_cmd(args.pytest_cmd)
     if args.ruff_cmd:

@@ -51,6 +51,21 @@ Checked once on Linux with the lfmap workspace at `018ffdf` (`pytest -q <card te
 | K6-seed-fold, K6-seed-order | 1 fails | pass | pass |
 | K7-clean-seed-proxy, K7-clean-seed-userinfo | 1 fails | pass | pass |
 
+## What the F7 checks see
+
+Task F7 adds two deterministic checks after the gates above (`common/checks.py`; `run.py --no-checks` turns them off): `ruff_extra` (`--select S110,S112,S608`, typed exceptions included) and `probes` (hidden tests in `probes/`, K4 and K7 targets only). Measured on Linux with the workspace at `018ffdf`: they fail on exactly these 8 cases and on none of the other 11.
+
+| Case | Check that fails |
+| --- | --- |
+| K4-clean-seed-swallow | `ruff_extra` (S110), `probes` |
+| K4-clean-seed-exists, -order, -unlink | `probes` |
+| K4-real | `probes` (temp file left behind) |
+| K6-seed-sql | `ruff_extra` (S608) |
+| K7-clean-seed-count | `probes` (card gap: the card never says to check the vector count) |
+| K7-real | `ruff_extra` (S110), `probes` |
+
+The probes were written after reading the seeds, so 6/6 is an upper bound, not a blind catch rate.
+
 ## Replay semantics
 
 `run.py run --case <name>` makes a one-card package. Plan is skipped; Work round 1 writes the files of `diff.patch` and runs the gates, but its result is never retried for a gate failure, so the Leading review always sees the case's diff verbatim (with the gate log, or with `test.log` when no worktree is given). A `rework` verdict sends the card to the Working model as usual.

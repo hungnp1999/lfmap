@@ -145,7 +145,14 @@ def test_snapshot_skips_caches_and_detects_changes(tmp_path: Path):
 def test_model_attempt_passes_gates(tmp_path: Path):
     attempt = model_attempt(make_package(tmp_path), CALC, 1, work_reply("calc.py", GOOD_CALC))
     assert attempt.ok, attempt.gate_log()
-    assert [g.name for g in attempt.gates] == ["scope", "tests_unchanged", "ruff_check", "ruff_format", "pytest"]
+    assert [g.name for g in attempt.gates] == [
+        "scope",
+        "tests_unchanged",
+        "ruff_check",
+        "ruff_format",
+        "pytest",
+        "ruff_extra",
+    ]
     assert "+    return a + b" in attempt.diff
 
 

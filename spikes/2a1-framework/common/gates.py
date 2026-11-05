@@ -117,7 +117,7 @@ def _tests_gate(card: Card, before: dict[str, str], after: dict[str, str]) -> Ga
 
 
 def run_gates(package: Package, card: Card, before: dict[str, str]) -> list[GateResult]:
-    """Scope, frozen tests, ruff check, ruff format --check and pytest; [] when the package has no workdir."""
+    """Scope, frozen tests, ruff, pytest and the F7 checks; [] when the package has no workdir."""
     if package.workdir is None:
         return []
     after = snapshot(package.workdir)
@@ -126,6 +126,10 @@ def run_gates(package: Package, card: Card, before: dict[str, str]) -> list[Gate
     gates.append(_run("ruff_format", [*package.ruff_cmd, "format", "--check", card.target], package.workdir))
     if card.tests:
         gates.append(_run("pytest", [*package.pytest_cmd, *card.tests], package.workdir))
+    if package.checks:
+        from common.checks import run_checks  # late import: checks uses _run from this module
+
+        gates += run_checks(package, card)
     return gates
 
 
