@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K6-seed-fold-789dff3d",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-fold": "escalate"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K6-clean-495a128c",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K6-clean": "ready"
+  }
+}

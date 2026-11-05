@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K6-seed-order-7ee865c6",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K6-seed-order": "escalate"
+  }
+}

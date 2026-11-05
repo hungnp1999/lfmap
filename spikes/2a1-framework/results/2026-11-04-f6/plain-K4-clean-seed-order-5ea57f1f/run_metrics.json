@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "K4-clean-seed-order",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 282.714,
+  "model_s": 276.768,
+  "overhead_s": 5.946,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 259772.7004624,
+      "seconds": 276.7677924000018,
+      "prompt_chars": 14343,
+      "reply_chars": 750
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

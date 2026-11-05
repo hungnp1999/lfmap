@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-K6-seed-empty-b14f8451",
+  "variant": "plain",
+  "cards": [
+    "K6-seed-empty"
+  ],
+  "verdicts": {
+    "K6-seed-empty": "escalate"
+  },
+  "advice": {
+    "K6-seed-empty": 0
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-04-f6\\plain-K6-seed-empty-b14f8451\\reports.json"
+}

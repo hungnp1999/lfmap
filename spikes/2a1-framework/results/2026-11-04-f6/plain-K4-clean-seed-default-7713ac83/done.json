@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-K4-clean-seed-default-7713ac83",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "K4-clean-seed-default": "escalate"
+  }
+}

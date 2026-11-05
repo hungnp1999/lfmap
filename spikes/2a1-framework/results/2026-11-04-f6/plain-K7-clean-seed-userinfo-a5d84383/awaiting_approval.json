@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-K7-clean-seed-userinfo-a5d84383",
+  "variant": "plain",
+  "cards": [
+    "K7-clean-seed-userinfo"
+  ],
+  "verdicts": {
+    "K7-clean-seed-userinfo": "escalate"
+  },
+  "advice": {
+    "K7-clean-seed-userinfo": 1
+  },
+  "report_path": "D:\\Development\\lfmap\\spikes\\2a1-framework\\results\\2026-11-04-f6\\plain-K7-clean-seed-userinfo-a5d84383\\reports.json"
+}

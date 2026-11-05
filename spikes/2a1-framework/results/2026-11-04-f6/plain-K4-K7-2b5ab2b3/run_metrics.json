@@ -1,0 +1,196 @@
+{
+  "variant": "plain",
+  "case": null,
+  "package": "cases\\packages\\K4-K7",
+  "import_s": 0.007,
+  "wall_s": 4475.219,
+  "model_s": 4426.855,
+  "overhead_s": 48.364,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 271570.2743551,
+      "seconds": 255.53185219998704,
+      "prompt_chars": 5618,
+      "reply_chars": 12434
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271825.8121685,
+      "seconds": 33.37246360001154,
+      "prompt_chars": 3866,
+      "reply_chars": 2324
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271866.031543,
+      "seconds": 20.73684669996146,
+      "prompt_chars": 11063,
+      "reply_chars": 2261
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271892.3094404,
+      "seconds": 30.703716600022744,
+      "prompt_chars": 3528,
+      "reply_chars": 4506
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271924.9138212,
+      "seconds": 32.42768859997159,
+      "prompt_chars": 15612,
+      "reply_chars": 3877
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271959.2379726,
+      "seconds": 11.045877600030508,
+      "prompt_chars": 3302,
+      "reply_chars": 1268
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271972.4387882,
+      "seconds": 12.721940200019162,
+      "prompt_chars": 10067,
+      "reply_chars": 1263
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 271987.3542491,
+      "seconds": 24.513868599955458,
+      "prompt_chars": 6276,
+      "reply_chars": 3035
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 272013.8112028,
+      "seconds": 25.176424899953417,
+      "prompt_chars": 9662,
+      "reply_chars": 3025
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 272040.8945057,
+      "seconds": 596.1511543000233,
+      "prompt_chars": 11398,
+      "reply_chars": 898
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 272637.0461188,
+      "seconds": 787.3071285000187,
+      "prompt_chars": 13148,
+      "reply_chars": 961
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 273424.3536992,
+      "seconds": 463.28333260002546,
+      "prompt_chars": 10250,
+      "reply_chars": 793
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 273887.6375484,
+      "seconds": 171.8879860000452,
+      "prompt_chars": 13986,
+      "reply_chars": 411
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274059.5283537,
+      "seconds": 36.934170999971684,
+      "prompt_chars": 7958,
+      "reply_chars": 2454
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274102.7651939,
+      "seconds": 22.046726700034924,
+      "prompt_chars": 10867,
+      "reply_chars": 2432
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274130.3724459,
+      "seconds": 30.252564200025517,
+      "prompt_chars": 16185,
+      "reply_chars": 3398
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274162.5286441,
+      "seconds": 32.50913229997968,
+      "prompt_chars": 10921,
+      "reply_chars": 4090
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274196.9376545,
+      "seconds": 13.539276199997403,
+      "prompt_chars": 10768,
+      "reply_chars": 1263
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274212.6405581,
+      "seconds": 12.919637299957685,
+      "prompt_chars": 9991,
+      "reply_chars": 1263
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274227.7533731,
+      "seconds": 26.842570599983446,
+      "prompt_chars": 9676,
+      "reply_chars": 3127
+    },
+    {
+      "model": "qwen2.5-coder:14b",
+      "started": 274256.5577359,
+      "seconds": 25.360575600003358,
+      "prompt_chars": 10170,
+      "reply_chars": 2979
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 274283.889947,
+      "seconds": 539.9118791999645,
+      "prompt_chars": 11574,
+      "reply_chars": 724
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 274823.8021083,
+      "seconds": 585.4176692000474,
+      "prompt_chars": 13369,
+      "reply_chars": 1966
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 275409.2205955,
+      "seconds": 415.3003768999479,
+      "prompt_chars": 10250,
+      "reply_chars": 552
+    },
+    {
+      "model": "qwen3.8:27b",
+      "started": 275824.521045,
+      "seconds": 220.9603408999974,
+      "prompt_chars": 14446,
+      "reply_chars": 885
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b",
+    "qwen2.5-coder:14b",
+    "qwen3.8:27b"
+  ],
+  "swaps": 4,
+  "guard_blocked": [],
+  "guard_allowed": 25
+}
