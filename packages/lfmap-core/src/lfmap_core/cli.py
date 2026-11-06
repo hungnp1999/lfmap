@@ -15,7 +15,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, grants, jobs, jobs_doctor
+from lfmap_core import approvals, flows, grants, jobs, jobs_doctor
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -184,6 +184,7 @@ def build_app(registry: Registry) -> typer.Typer:
     audit_app = typer.Typer(help="Audit logs.")
     jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
     events_app = typer.Typer(help="The event bus: run the event adapter, inspect and repair the queue.")
+    flows_app = typer.Typer(help="Declared flows from flows.toml.")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
@@ -191,6 +192,7 @@ def build_app(registry: Registry) -> typer.Typer:
     app.add_typer(audit_app, name="audit")
     app.add_typer(jobs_app, name="jobs")
     app.add_typer(events_app, name="events")
+    app.add_typer(flows_app, name="flows")
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
     def require_person(action: str, key: str) -> tuple[str, str]:
@@ -483,6 +485,40 @@ def build_app(registry: Registry) -> typer.Typer:
                 fix = f"  -> {check.fix}" if check.fix else ""
                 typer.echo(f"{check.name:<{width}}  {status:<4}  {check.detail}{fix}")
         if any(check.ok is False for check in checks):
+            raise typer.Exit(1)
+
+    @flows_app.command("list")
+    def flows_list(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """List the flows in flows.toml with their trigger and last run status."""
+        rows = [
+            {
+                "id": flow.id,
+                "trigger": flow.trigger.describe(),
+                "enabled": flow.enabled,
+                "steps": len(flow.steps),
+                "last_run": flows.last_run_status(flow.id),
+            }
+            for flow in flows.load_flows()
+        ]
+        if json_output:
+            typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
+            return
+        for row in rows:
+            state = "enabled" if row["enabled"] else "disabled"
+            typer.echo(approvals.visible(f"{row['id']}  {row['trigger']}  {state}  {row['last_run'] or '-'}"))
+
+    @flows_app.command("check")
+    def flows_check(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Check every flow against the registry; exit 1 when there is a finding."""
+        found = [(flow.id, text) for flow in flows.load_flows() for text in flows.check_flow(registry, flow)]
+        if json_output:
+            typer.echo(json.dumps([{"flow": i, "finding": t} for i, t in found], indent=2, ensure_ascii=False))
+        else:
+            for _, text in found:
+                typer.echo(approvals.visible(text))
+            if not found:
+                typer.echo("All flows ok")
+        if found:
             raise typer.Exit(1)
 
     def require_terminal(action: str) -> None:
