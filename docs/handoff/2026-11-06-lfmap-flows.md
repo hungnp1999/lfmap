@@ -18,7 +18,7 @@ Một luồng khai báo trong `flows.toml` tự khởi động (lịch hoặc s�
 
 Tiêu chí hoàn thành (cả handoff):
 - Spec mục 3–7 có code và test mục 10 xanh trên CI Linux và Windows.
-- Vòng lặp bước (dừng + resume) ≤ 150 dòng (spec mục 9, ADR-024 (2)).
+- `flows_run.py` ≤ 230 dòng đo như spike (cả file); ngưỡng 150 của ADR-024 đã chạm ở FL-2 và Hùng chốt (a') ngày 2026-11-06, xem spec mục 9.
 - Smoke FL-4 trên DIEP-ANH đạt: luồng do sự kiện kích hoạt dừng chờ duyệt, tiến trình thoát, duyệt ở cửa sổ mới thì luồng xong.
 
 ## Quyết định đã chốt
@@ -73,20 +73,20 @@ Mỗi task một phiên Claude Code (hoặc một lượt qwen), một PR vào `
 
 1. **TC-F1 [QW] (tùy chọn).** Chỉ chạy khi có khung GPU trống (không phải cuối tuần này). Card do phiên FL-1 soạn trong `/mnt/project-files/qwen-loop/cards/TC-F1/` cùng test đóng băng `docs/specs/flows-tests/test_flows_refs.py`. Preflight: Ollama chạy, `qwen2.5-coder:14b` có sẵn, GPU không có job khác. Xong khi: test xanh trong ≤ 3 vòng, Claude review. Tuyến dự phòng: trượt 3 vòng hoặc quá 2026-11-10 thì FL-1/FL-2 tự viết (quy tắc B6), ghi bài học vào sổ L1b.
 2. **FL-1 [CC].** Preflight: `main` mới nhất, `uv sync` xanh. Xong khi: mọi luật spec mục 3 và mục 4 có test; `lfmap flows check` thoát 1 khi có lỗi; không test nào chạm `LOCALAPPDATA` thật. Tuyến dự phòng: nếu một luật mục 3 không kiểm được lúc nạp (vd. input cần registry), ghi rõ trong PR và kiểm ở `check`, không bỏ luật.
-3. **FL-2 [CC].** Preflight: FL-1 đã merge. Xong khi: test mục 10 phần FL-2 xanh, kể cả dừng → tiến trình mới → approve; số dòng vòng lặp ghi trong PR (≤ 150); `/security-review` đã chạy và trả lời. Tuyến dự phòng: vượt 150 dòng thì dừng, báo con số và phần nào lớn; không tự bớt kiểm tra để đạt số.
+3. **FL-2 [CC].** Preflight: FL-1 đã merge. Xong khi: test mục 10 phần FL-2 xanh, kể cả dừng → tiến trình mới → approve; số dòng `flows_run.py` ghi trong PR (≤ 230, spec mục 9); `/security-review` đã chạy và trả lời. Tuyến dự phòng: vượt 230 dòng thì dừng, báo con số và phần nào lớn; không tự bớt kiểm tra để đạt số.
 4. **FL-3 [CC].** Preflight: FL-2 đã merge. Xong khi: test mục 10 phần FL-3 xanh; `jobs register` sinh đúng lệnh task cho luồng có lịch (không gọi Task Scheduler thật); ARCHITECTURE thêm luồng "Flow" và bất biến kênh `flow`; dòng PROVENANCE (in-house, tham khảo hành vi Node-RED/Activepieces, chỉ tài liệu n8n).
 5. **AG-F1 [AG].** Card viết khi FL-3 merge (cùng mẫu AG-E1). Chỉ `docs/flows.md` và một câu liên kết trong `docs/jobs.md`. Antigravity tối đa 1–2 card/tuần.
 6. **FL-4 [CC] (Local).** Remote Control trên DIEP-ANH trong `D:\Development\lfmap`. Preflight: anh duyệt phiên RC; `uv sync`; config thử trong thư mục tạm (`LOCALAPPDATA` riêng cho phiên). Luồng thử: trigger `markitdown.classify.completed` → `markitdown.export` vào thư mục export được phép → bước `approve`; chạy `lfmap events run --until-idle`, thấy run `awaiting_approval`, đóng cửa sổ, mở cửa sổ mới `lfmap approvals approve <id>`, run thành `completed`. Ghi kết quả vào `docs/research/` hoặc PR FL-3. Tuyến dự phòng: khác biệt Windows (đường dẫn, `os.replace` khi file đang mở) thì ghi lại và mở issue, không sửa trong smoke.
 
 ## Chuẩn bị sẵn
 
-- Spec `docs/specs/flows.md` (PR này): định dạng, tham chiếu, chạy, trigger, CLI, bảo mật, giới hạn 150 dòng, danh sách test, 3 luồng mẫu.
+- Spec `docs/specs/flows.md` (PR này): định dạng, tham chiếu, chạy, trigger, CLI, bảo mật, trần dòng của `flows_run.py`, danh sách test, 3 luồng mẫu.
 - Không có test đóng băng trong PR này: mỗi task viết test trước theo spec mục 10 (tiết kiệm hạn mức; spec đủ chi tiết để viết test).
 - Không cần dữ liệu thật; mọi test dùng `tmp_path`, plugin `echo` và đồng hồ giả.
 
 ## Rủi ro
 
-- Vòng lặp vượt 150 dòng → theo ADR-024 phải xem lại việc không dùng framework. Giảm: phạm vi nhỏ (không vòng lặp, không song song); tách phần nạp/tham chiếu/CLI khỏi phần đếm.
+- Ngưỡng 150 dòng của ADR-024 đã chạm ở FL-2 (223 dòng); Hùng chốt 2026-11-06 giữ plain, trần 230 dòng cho `flows_run.py`, trigger của FL-3 ở module riêng. Giảm: phạm vi nhỏ (không vòng lặp, không song song).
 - Output lớn (vd. `markitdown.convert` trả nguyên văn) làm file run phình: giới hạn 64 KiB, khuyến nghị dùng operation ghi file (`export`).
 - Một sự kiện được giao hai lần: `run_id = "ev-" + event.id` nên không tạo run thứ hai.
 - Anh sửa `flows.toml` khi một run đang chờ duyệt: resume từ chối, phải bắt đầu run mới.
@@ -102,7 +102,7 @@ Hùng đồng ý quyết định 1 (Flows trước Agent Router). Spec chat UI: 
 ## Cập nhật tài liệu dự án
 
 - `05_Roadmap.md` Phase 2, dòng LFMAP Flows: "spec 2026-11-06 (lfmap `docs/specs/flows.md`, handoff `docs/handoff/2026-11-06-lfmap-flows.md`)"; ghi Flows làm trước Agent Router.
-- `03_Decisions_ADR.md`: không ADR mới. Ghi chú ở ADR-018 (Hệ quả): luồng dùng chung hàng đợi approvals (kênh `flow`, proposal `flows.resume`, trần `max_tier` của luồng). Ghi chú ở ADR-024: giới hạn 150 dòng áp cho vòng lặp Flows.
+- `03_Decisions_ADR.md`: không ADR mới. Ghi chú ở ADR-018 (Hệ quả): luồng dùng chung hàng đợi approvals (kênh `flow`, proposal `flows.resume`, trần `max_tier` của luồng). Ghi chú ở ADR-024 (Hùng chốt 2026-11-06): ngưỡng 150 dòng đã chạm ở Flows (223 dòng, phần thêm là logic riêng LFMAP do ADR-024 (3) và bảo mật đòi); không mở lại framework; trần 230 dòng cho `flows_run.py`; lần xét lại tiếp theo theo tính năng (nhánh song song, vòng lặp, nhiều máy), không theo số dòng.
 - Kế hoạch RT (`commercial-replacements.md`): RT-04 "spec xong"; RT-09 làm ở FL-1..FL-4.
 - Checklist thẻ của Planner 2a.2 (quyết định F7 số 3, chờ handoff Router): "kiểm hình dạng và số lượng phản hồi từ ngoài".
 
@@ -130,8 +130,8 @@ docs/specs/flows.md (sections 5, 7-10) and the FL-2 task in docs/handoff/2026-11
 approval.py, approvals.py, tool.py, jobs.py and spikes/2a1-framework/variants/plain/flow.py (pause/resume pattern).
 Write the FL-2 tests of spec section 10 first. Add channel "flow" (decide() treats it like "job"), flows_run.py,
 the flows.resume proposal handling in `lfmap approvals approve|reject`, and `lfmap flows start|status|runs`.
-Measure the step loop with the folder_lines rules (spec section 9) and put the number in the PR body; if it is
-above 150, stop and report instead of trimming checks. Run /security-review and answer each finding.
+Measure flows_run.py with the folder_lines rules, whole file (spec section 9) and put the number in the PR body; if it is
+above 230, stop and report instead of trimming checks. Run /security-review and answer each finding.
 Update CHANGELOG. Trailers as in FL-1. Work in English; final summary only in Vietnamese.
 ```
 
@@ -140,7 +140,7 @@ FL-3:
 ```text
 Repo hungnp1999/lfmap, task FL-3. Branch feature/flows-triggers from main after FL-2 merged. Read CLAUDE.md,
 docs/specs/flows.md (sections 5-6, 10, 12) and the FL-3 task in docs/handoff/2026-11-06-lfmap-flows.md.
-Write the FL-3 tests first. Add the event trigger (one durable subscription "flows", run_id "ev-" + event.id),
+Write the FL-3 tests first. Put the triggers in a new module flows_triggers.py and do not grow flows_run.py past 230 lines (spec section 9). Add the event trigger (one durable subscription "flows", run_id "ev-" + event.id),
 the schedule trigger through `lfmap jobs register` (task \LFMAP\flow-<id> running `lfmap flows start <id>` via
 scripts/Invoke-LfmapJob.ps1; no real Task Scheduler in tests) and the flows.run.<status> events. Add the "Flow"
 main flow and the flow-channel invariant to ARCHITECTURE.md, a docs/PROVENANCE.md row, CHANGELOG.

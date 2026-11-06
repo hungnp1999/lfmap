@@ -19,9 +19,9 @@ Sources: behaviour only. Node-RED (Apache-2.0) and Activepieces (MIT, community 
 | --- | --- | --- |
 | `flows_refs.py` | `find_refs`, `resolve(value, scope)`: the `${...}` grammar of section 4, pure functions | TC-F1 (qwen) or FL-1 |
 | `flows.py` | `Flow`, `Step`, `Trigger`, `FlowsFile` (pydantic, `extra="forbid"`), `flows_path()`, `load_flows()`, `check_flow(registry, flow)` | FL-1 |
-| `flows_run.py` | `FlowRun` state, `start(...)`, `resume(...)`, the step loop, the approval pause | FL-2 |
+| `flows_run.py` | `FlowRun` state, `start(...)`, `resume(...)`, the step loop, the approval pause (cap 230 lines, section 9) | FL-2 |
 | `cli.py` | `lfmap flows list|check|start|status|runs`; `approvals approve` resumes a paused run | FL-2 |
-| `events_adapter.py` / `jobs.py` | event trigger subscription; schedule trigger through `jobs register` | FL-3 |
+| `flows_triggers.py`, `events_adapter.py` / `jobs.py` | event trigger subscription; schedule trigger through `jobs register` | FL-3 |
 
 Standard library and pydantic only. No new dependency.
 
@@ -108,7 +108,11 @@ No MCP or REST form in this handoff. Approval stays in `lfmap approvals approve|
 
 ## 9. Size limit (ADR-024 (2))
 
-The durable step loop with pause and resume (`flows_run.py` without imports, models and CLI glue) must stay at or below **150 lines** measured with `spikes/2a1-framework/common/metrics.folder_lines` rules. If FL-2 cannot meet it, stop and report: ADR-024 says this is the trigger to re-open the framework choice, and that is the owner's call.
+`flows_run.py` is measured like the spike's S1: the whole file, imports and models included, with `spikes/2a1-framework/common/metrics.folder_lines` rules.
+
+- Owner decision 2026-11-06 (PR #174, option a'): the 150-line mark of ADR-024 (2) was reached (FL-2: 223 lines against 135 for the spike's `plain`). The excess is LFMAP-specific logic that ADR-024 (3) and the security rules require (`flows.resume` proposal mapping, `check_resume`, flow file hash, output limit, crash to failed run). The framework rule of the spike (score at least 1.5 higher **and** at least 30 % fewer lines or a capability `plain` needed more than 150 lines for) is not met: a framework would replace at most the run-state storage (estimated 40-50 lines, under 30 %) and add dependencies. The framework choice stays closed.
+- Hard cap: **230 lines** for `flows_run.py`. FL-3 puts the event and schedule triggers in a separate module (`flows_triggers.py`) and must not grow `flows_run.py`; above the cap, stop and report.
+- The next re-opening is triggered by a named capability (parallel branches, loops, execution across machines), not by a line count.
 
 ## 10. Test list (written first by each task, in `packages/lfmap-core/tests/`)
 
