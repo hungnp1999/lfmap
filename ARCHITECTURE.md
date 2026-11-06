@@ -57,7 +57,7 @@ flowchart LR
 - No network beyond loopback: markitdown converts opened streams only, the embedder accepts loopback URLs and ignores proxy variables.
 - Runtime dependencies must carry a licence in the manifest's `allowed` list (`scripts/check_licenses.py`).
 - Writing a plugin's own `data_dir` is not a side effect (ADR-016).
-- Events: a plugin publishes only with `[adapters] events = true`, only `<plugin-id>.…` topics (two tokens or more), with `source` set to its id; `<plugin>.<operation>.requested|completed|failed` are published by core only. An event call runs on channel `event`, never asks anyone and is capped at `[events] max_tier` (default 0); above it the call becomes a proposal (`job = "events"`). `events.db` has a fixed path in the app folder.
+- Events: a plugin publishes only with `[adapters] events = true`, only `<plugin-id>.…` topics (two tokens or more), with `source` set to its id; `<plugin>.<operation>.requested|completed|failed` are published by core only. An event call runs on channel `event`, never asks anyone and is capped at `[events] max_tier` (default 0); above it the call becomes a proposal (`job` = the id the request carries from `lfmap jobs run`, else `"events"`). `events.db` has a fixed path in the app folder.
 
 ## Review habits
 

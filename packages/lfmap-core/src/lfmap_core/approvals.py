@@ -30,6 +30,8 @@ STATES: tuple[State, ...] = ("pending", "done", "rejected", "expired")
 DEFAULT_TTL_DAYS = 7
 MAX_TTL_DAYS = 30
 _ID = re.compile(r"\d{8}T\d{6}Z-[a-z][a-z0-9-]*-[0-9a-f]{8}")
+JOB_ID = re.compile(r"[a-z][a-z0-9-]*")
+EVENTS_JOB = "events"
 _CALL = {"job", "plugin", "operation", "input", "tier", "reason", "detail"}
 
 
@@ -151,13 +153,14 @@ def pending(now: datetime | None = None) -> list[Proposal]:
 
 @dataclass(frozen=True)
 class EventCall:
-    """A call requested by an event; queued like a job named `events` (ADR-018, docs/specs/events.md section 6)."""
+    """A call requested by an event; queued under the requesting job's id, or `events` when no job asked
+    (ADR-018, docs/specs/events.md section 6)."""
 
     plugin: str
     operation: str
     input: dict[str, Any]
     max_tier: int = 0
-    id: str = "events"
+    id: str = EVENTS_JOB
 
 
 def queue(

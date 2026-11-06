@@ -261,6 +261,33 @@ def test_t1_with_max_tier_1_runs_and_is_audited(adapter, bus, seen, user_dirs) -
     assert not (approvals_dir() / "pending").exists()
 
 
+def test_request_job_id_names_the_proposal(adapter, bus, seen) -> None:
+    bus.publish(f"{PLUGIN}.write.requested", {"input": {"names": ["a"]}, "job": "nightly-sync"}, source="core")
+    bus.drain()
+    [failed] = answers(seen)
+    [path] = (approvals_dir() / "pending").glob("*.json")
+    proposal = json.loads(path.read_text(encoding="utf-8"))
+    assert proposal["job"] == "nightly-sync"
+    assert proposal["id"] == failed.payload["error"]["details"]["approval_id"]
+    assert "-nightly-sync-" in proposal["id"]
+
+
+@pytest.mark.parametrize("job", ["../x", "Upper", "", 5, None, "a" * 3 + "\n"])
+def test_request_with_a_bad_job_id_fails_without_queueing(adapter, bus, seen, job) -> None:
+    bus.publish(f"{PLUGIN}.write.requested", {"input": {"names": ["a"]}, "job": job}, source="core")
+    bus.drain()
+    [failed] = answers(seen)
+    assert failed.payload["error"]["code"] == "invalid_input"
+    assert not (approvals_dir() / "pending").exists()
+
+
+def test_request_with_other_keys_is_still_refused(adapter, bus, seen) -> None:
+    bus.publish(f"{PLUGIN}.greet.requested", {"input": {"name": "Ann"}, "extra": 1}, source="core")
+    bus.drain()
+    [failed] = answers(seen)
+    assert failed.payload["error"]["code"] == "invalid_input"
+
+
 def test_t2_escalation_is_queued_even_with_max_tier_1(adapter, bus, seen, user_dirs) -> None:
     write_config(user_dirs, "[events]\nmax_tier = 1\n")
     request(bus, "write", {"names": ["a"], "escalate": "overwrite"})

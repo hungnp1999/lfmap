@@ -94,7 +94,7 @@ uv run lfmap approvals reject <id>        # moves it to approvals\rejected
 | `max_tier` | per job in `%LOCALAPPDATA%\lfmap\jobs.toml` ([docs/jobs.md](jobs.md)) |
 | `[events] max_tier` | in `config.toml`, for the event adapter ([docs/events.md](events.md#events-max_tier-and-the-approval-queue)) |
 
-With `via = "event"` both apply and the lower one wins. A call stopped by the event ceiling is queued under job `events`.
+With `via = "event"` both apply and the lower one wins. Either way the proposal is queued under the job's id; a request that names no job is queued under `events`.
 
 ## Commands
 

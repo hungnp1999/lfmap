@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typer.testing import CliRunner
 
 from lfmap_core import Tool, jobs, jobs_doctor, operation
+from lfmap_core.approval import audit_path
 from lfmap_core.approvals import approvals_dir
 from lfmap_core.cli import build_app
 from lfmap_core.errors import ToolError
@@ -25,6 +26,7 @@ class GreetInput(BaseModel):
 
 class WriteInput(BaseModel):
     names: list[str]
+    escalate: str | None = None
 
 
 class Output(BaseModel):
@@ -42,6 +44,8 @@ class EventTool(Tool):
     @operation("write")
     def write(self, inp: WriteInput) -> Output:
         """Pretend to write something."""
+        if inp.escalate:
+            self.ctx.require_approval(inp.escalate, detail="out.txt")
         return Output(message=",".join(inp.names))
 
 
@@ -112,7 +116,7 @@ def test_event_job_publishes_request_and_returns_completed(ev_registry, write_jo
     assert output == Output(message="Hello Hùng Hello Hùng")
     [request] = events(".greet.requested")
     [done] = events(".greet.completed")
-    assert request == {"input": {"name": "Hùng", "times": 2}}
+    assert request == {"input": {"name": "Hùng", "times": 2}, "job": "hello"}
     assert done["output"] == {"message": "Hello Hùng Hello Hùng"}
     assert counts() == {f"adapter-{PLUGIN}": {"ready": 0, "leased": 0, "done": 1, "dead": 0}}
 
@@ -151,18 +155,41 @@ def test_doctor_accepts_event_jobs_of_events_plugins(ev_registry, write_jobs) ->
 
 
 @pytest.mark.parametrize(
-    ("job_tier", "events_tier", "queued_as"),
-    [(1, 0, "events"), (0, 1, "write-job"), (0, 0, "write-job")],
+    ("job_tier", "events_tier", "reached_adapter"),
+    [(1, 0, True), (0, 1, False), (0, 0, False)],
 )
-def test_the_lower_of_both_ceilings_applies(ev_registry, write_jobs, user_dirs, job_tier, events_tier, queued_as):
+def test_the_lower_of_both_ceilings_applies(ev_registry, write_jobs, user_dirs, job_tier, events_tier, reached_adapter):
     write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"] }', max_tier=job_tier))
     write_config(user_dirs, f"[events]\nmax_tier = {events_tier}\n")
     with pytest.raises(ToolError) as error:
         jobs.run_job(ev_registry, "write-job")
     assert error.value.code == "permission_denied"
     [path] = (approvals_dir() / "pending").glob("*.json")
-    assert json.loads(path.read_text(encoding="utf-8"))["job"] == queued_as
-    assert bool(events(".write.requested")) == (queued_as == "events")
+    assert json.loads(path.read_text(encoding="utf-8"))["job"] == "write-job"
+    assert bool(events(".write.requested")) == reached_adapter
+
+
+def test_run_time_escalation_is_queued_under_the_job_id(ev_registry, write_jobs, user_dirs) -> None:
+    write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"], escalate = "overwrite" }', max_tier=1))
+    write_config(user_dirs, "[events]\nmax_tier = 1\n")
+    with pytest.raises(ToolError) as error:
+        jobs.run_job(ev_registry, "write-job")
+    approval_id = error.value.details["approval_id"]
+    [path] = (approvals_dir() / "pending").glob("*.json")
+    proposal = json.loads(path.read_text(encoding="utf-8"))
+    assert (proposal["id"], proposal["job"], proposal["tier"]) == (approval_id, "write-job", "T2")
+    assert "-write-job-" in approval_id
+
+
+def test_t1_event_job_writes_one_audit_line_per_channel(ev_registry, write_jobs, user_dirs) -> None:
+    write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"] }', max_tier=1))
+    write_config(user_dirs, "[events]\nmax_tier = 1\n")
+    jobs.run_job(ev_registry, "write-job")
+    lines = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
+    assert [(r["channel"], r["decision"], r["tier"]) for r in lines] == [
+        ("job", "allow", "T1"),
+        ("event", "allow", "T1"),
+    ]
 
 
 def test_both_ceilings_at_one_run_t1(ev_registry, write_jobs, user_dirs) -> None:

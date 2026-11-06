@@ -16,7 +16,7 @@ from typing import Any, get_args
 from pydantic import BaseModel
 
 from lfmap_core.approval import Policy
-from lfmap_core.approvals import EventCall, JobApprover, ttl
+from lfmap_core.approvals import EVENTS_JOB, JOB_ID, EventCall, JobApprover, ttl
 from lfmap_core.config import app_dir, load_config
 from lfmap_core.errors import ErrorCode, ToolError
 from lfmap_core.events import Event, EventBus, Handler
@@ -153,13 +153,17 @@ class EventAdapter:
 
     def _run(self, entry: PluginEntry, operation: str, request: Event) -> BaseModel:
         inp = request.payload.get("input", {})
-        if set(request.payload) - {"input"} or not isinstance(inp, dict):
-            raise ToolError("invalid_input", 'A request payload is {"input": {...}}', {"keys": sorted(request.payload)})
+        if set(request.payload) - {"input", "job"} or not isinstance(inp, dict):
+            message = 'A request payload is {"input": {...}} with an optional "job"'
+            raise ToolError("invalid_input", message, {"keys": sorted(request.payload)})
+        job = request.payload.get("job", EVENTS_JOB)
+        if not isinstance(job, str) or not JOB_ID.fullmatch(job):
+            raise ToolError("invalid_input", 'A request "job" is a job id', {"job": repr(job)})
         if entry.manifest.operation(operation) is None:
             raise ToolError("not_found", f"Unknown operation {entry.id}.{operation}", {"operation": operation})
         check_input(entry, operation, inp)
         config = load_config()
-        call = EventCall(entry.id, operation, inp, events_max_tier(config))
+        call = EventCall(entry.id, operation, inp, events_max_tier(config), job)
         gate = JobApprover(call, Policy.from_config(config), ttl(config), channel="event")
         gate(call_tier(entry, operation, inp, config), "side_effects")
         publisher = PluginEvents(entry.id, self._bus, causation=request)
@@ -226,10 +230,17 @@ def _answer(events: list[Event], request_id: str) -> Event | None:
 
 
 def request_operation(
-    registry: Registry, entry: PluginEntry, operation: str, inp: dict[str, Any], *, max_events: int
+    registry: Registry,
+    entry: PluginEntry,
+    operation: str,
+    inp: dict[str, Any],
+    *,
+    max_events: int,
+    job_id: str | None = None,
 ) -> BaseModel:
     """Publish `<plugin>.<operation>.requested` as core, drain at most `max_events` handler calls and return
-    the output from `.completed`. `.failed` raises its ToolError; no answer within the drain raises `timeout`
+    the output from `.completed`. With `job_id` the request names its job, so a proposal the adapter queues
+    carries that id instead of `events`. `.failed` raises its ToolError; no answer within the drain raises `timeout`
     and the request stays queued for the next drain."""
     bus = open_bus()
     watcher = f"request-{uuid.uuid4().hex[:16]}"
@@ -237,7 +248,8 @@ def request_operation(
     try:
         EventAdapter(registry, bus).attach()
         bus.subscribe(watcher, f"{entry.id}.{operation}.*", seen.append)
-        request = bus.publish(operation_topic(entry.id, operation, "requested"), {"input": inp}, source="core")
+        payload = {"input": inp} | ({"job": job_id} if job_id else {})
+        request = bus.publish(operation_topic(entry.id, operation, "requested"), payload, source="core")
         bus.drain(max_events=max_events)
     finally:
         with contextlib.suppress(ToolError):  # the watcher may not exist if subscribing failed

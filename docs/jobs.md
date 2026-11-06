@@ -33,8 +33,14 @@ bus (at most `--max-events` handler calls, default 1000) and reports the answer 
 
 Only plugins with `[adapters] events = true` accept it; otherwise the job fails with `invalid_input` and
 `lfmap jobs doctor` flags it. Both ceilings apply: the job's `max_tier` here and `[events] max_tier` in
-`config.toml` (default 0) in the event adapter, so the lower one wins. A call stopped by the job's ceiling is
-queued under the job's id; one stopped by the event ceiling is queued under `events`.
+`config.toml` (default 0) in the event adapter, so the lower one wins. The request carries the job's id
+(`{"input": ..., "job": "<id>"}`), so a call stopped by either ceiling, or escalated at run time, is queued
+under the job's id and shows that name in `lfmap approvals pending`. A request published without a job id is
+queued under `events`.
+
+A T1 job with `via = "event"` writes two lines to `audit.jsonl` for one run: one on channel `job` (the check in
+`lfmap jobs run`) and one on channel `event` (the adapter). This is intended: the two gates use different
+`max_tier` limits, and the second line is the only trace if the adapter fails before writing its own.
 
 See [docs/events.md](events.md) for the full event bus user guide, including publishing from a plugin, topic
 rules, idempotency, `[events] max_tier`, and the `lfmap events` commands.
