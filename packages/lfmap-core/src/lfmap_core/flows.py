@@ -102,6 +102,11 @@ def load_flows_file(path: Path | None = None) -> FlowsFile:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
         return FlowsFile()
+    return parse_flows(text, path)
+
+
+def parse_flows(text: str, path: Path) -> FlowsFile:
+    """The shape of `flows.toml` text read from `path` (named in errors); a run hashes and parses the same bytes."""
     try:
         return FlowsFile.model_validate(tomllib.loads(text))
     except tomllib.TOMLDecodeError as error:

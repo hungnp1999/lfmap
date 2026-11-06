@@ -10,6 +10,7 @@ import os
 import re
 import unicodedata
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -51,6 +52,11 @@ class Proposal(BaseModel):
     reason: str
     detail: str = ""
     preview: str | None = None
+
+
+def is_flow_resume(proposal: Proposal) -> bool:
+    """A paused flow run waiting for a person (`lfmap_core.flows_run`)."""
+    return proposal.plugin == "flows" and proposal.operation == "resume"
 
 
 def visible(text: str) -> str:
@@ -143,6 +149,10 @@ def sweep(now: datetime | None = None) -> list[str]:
                 raise
             continue
         moved.append(proposal.id)
+        if is_flow_resume(proposal):
+            from lfmap_core.flows_run import close  # flows_run imports this module
+
+            close(proposal, "expired")
     return moved
 
 
@@ -201,14 +211,15 @@ def _with_destination(reason: str, target: str, destination: str, data: DataLeve
 
 @dataclass
 class JobApprover:
-    """The approver of `lfmap jobs run` and of event calls (`channel="event"`). It never asks anyone (see
-    `job_decision`): a call that needs a person is queued as a proposal and refused with `permission_denied`
-    carrying its `approval_id`."""
+    """The approver of `lfmap jobs run`, of event calls (`channel="event"`) and of flow steps (`channel="flow"`).
+    It never asks anyone (see `job_decision`): a call that needs a person is queued as a proposal
+    and refused with `permission_denied` carrying its `approval_id`."""
 
     job: "Job | EventCall"
     policy: Policy
     lifetime: timedelta = timedelta(days=DEFAULT_TTL_DAYS)
     channel: Channel = "job"
+    proposer: Callable[[Tier, str, str], str] | None = None  # a flow step queues `flows.resume` instead of the call
 
     def __call__(
         self, tier: Tier, reason: str, target: str = "", destination: str = "", data: DataLevel = "normal"
@@ -228,7 +239,8 @@ class JobApprover:
             audit({**record, "decision": "deny", "reason": reason})
             details = {"operation": key, "tier": tier, "reason": reason, "hint": "[approval] in config.toml denies it"}
             raise ToolError("permission_denied", f"{key} is denied ({tier}, {reason})", details)
-        approval_id = queue(self.job, tier, reason, target, self.lifetime)
+        propose = self.proposer or (lambda t, r, d: queue(self.job, t, r, d, self.lifetime))
+        approval_id = propose(tier, reason, target)
         audit({**record, "decision": "queue", "reason": f"{reason}; proposal {approval_id}"})
         details = {
             "approval_id": approval_id,
