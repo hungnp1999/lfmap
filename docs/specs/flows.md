@@ -71,7 +71,7 @@ Rules checked by `check_flow` (and by `lfmap flows check`, which exits 1 on any 
 
 ## 5. Running (`flows_run.py`)
 
-- `start(registry, flow_id, trigger_payload, *, run_id=None)` creates a run; `run_id` from an event is `"ev-" + event.id` so a redelivered event does not start a second run (at-least-once bus, handler idempotent).
+- `start(registry, flow_id, trigger_payload, *, run_id=None)` creates a run; `run_id` from an event is `"ev-" + event.id + "-" + flow id` (one run per flow per event) so a redelivered event does not start a second run (at-least-once bus, handler idempotent).
 - State: one JSON file per run, `app_dir()/flows/runs/<run_id>.json`, written with temp file + `os.replace` after every step. Fields: flow id, flow file SHA-256, status (`running`, `awaiting_approval`, `completed`, `failed`, `rejected`, `expired`), trigger payload, per-step status and output, `approval_id`, times.
 - Step outputs are stored as `model_dump(mode="json")` (prefer operations that write files and return paths, such as `markitdown.export`, over ones that return document text, such as `markitdown.convert`); each stored output at most 64 KiB (`events_payload.MAX_PAYLOAD_BYTES`), else the step fails with `output_too_large`. Outputs carry references (paths, ids), not document text.
 - Each `call` step runs through `run_operation(entry, op, input, channel="flow", approver=JobApprover(...))` with the flow's `max_tier`. Channel `flow` is a new value that `decide` treats like `job`.
@@ -79,13 +79,13 @@ Rules checked by `check_flow` (and by `lfmap flows check`, which exits 1 on any 
 - `lfmap approvals approve <id>` (interactive terminal only, as today) on a `flows.resume` proposal resumes the run in that process: the paused step runs under `ApprovedGate` up to the tier the person saw (an `approve` step just passes), then the loop continues; a later step above the ceiling pauses again with a new proposal. `reject` sets the run `rejected`; an expired proposal sets it `expired` at the next `approvals pending` sweep.
 - Resume refuses a run whose flow file SHA-256 changed since the run started (`invalid_input`, "flow changed; start a new run").
 - A failing step (`ToolError`) sets the run `failed`, keeps earlier outputs, and stops. No automatic retry in the flow; the bus already retries event delivery.
-- After `completed`, `failed`, `rejected` or `expired`, core publishes `flows.run.<status>` with `{run_id, flow}` (only when the bus is open), so later flows or the Tauri console can react.
+- After `completed`, `failed`, `rejected` or `expired`, core publishes `flows.run.<status>` with `{run_id, flow}` (only into a bus that already exists: a run never creates `events.db`; a publish error never changes the run), so later flows or the Tauri console can react.
 
 ## 6. Triggers
 
 - `manual`: only `lfmap flows start <id> [--input-json FILE]`.
 - `schedule`: `lfmap jobs register` also registers each enabled scheduled flow as task `\LFMAP\flow-<id>` running `lfmap flows start <id>` through `scripts/Invoke-LfmapJob.ps1` (same runtime root, logs and exit codes as jobs). No new scheduler.
-- `event`: one durable subscription `flows` on the bus with the union of the enabled flows' patterns; its handler starts the matching flows (one run per flow per event). Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
+- `event`: one durable subscription `flows` on the bus with the union of the enabled flows' patterns (a bus subscription has one pattern, so the union is the narrowest single pattern that covers them, such as `markitdown.*.completed`, and the handler checks each flow's own pattern); its handler starts the matching flows (one run per flow per event). Only flows that pass `check_flow` are subscribed; an unusable `flows.toml` leaves the subscription as it is. Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
 
 ## 7. CLI
 
