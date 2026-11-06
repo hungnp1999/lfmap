@@ -505,7 +505,7 @@ def build_app(registry: Registry) -> typer.Typer:
             return
         for row in rows:
             state = "enabled" if row["enabled"] else "disabled"
-            typer.echo(f"{row['id']}  {row['trigger']}  {state}  {row['last_run'] or '-'}")
+            typer.echo(approvals.visible(f"{row['id']}  {row['trigger']}  {state}  {row['last_run'] or '-'}"))
 
     @flows_app.command("check")
     def flows_check(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:

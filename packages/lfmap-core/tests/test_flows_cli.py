@@ -144,3 +144,12 @@ def test_unreadable_file_is_a_tool_error(registry, put):
     result = invoke(registry, "check")
     assert result.exit_code != 0
     assert result.exception.code == "invalid_input"
+
+
+def test_list_escapes_control_characters_from_run_files(registry, put):
+    put(GOOD)
+    runs = app_dir() / "flows" / "runs"
+    runs.mkdir(parents=True)
+    record = {"flow": "nightly", "status": "done\x1b[31m"}
+    (runs / "r1.json").write_text(json.dumps(record), encoding="utf-8")
+    assert "\x1b" not in invoke(registry, "list").output
