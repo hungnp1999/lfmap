@@ -2,7 +2,7 @@
 
 Status: done 2026-11-06 (Cloud). Plan: `2026-11-06-leading-speed-plan.md` (project files, backlog #181). The GPU run (A3) is not done and needs the owner's approval A.
 
-The bench lives in the project files (`leading-bench/`, copied to `D:\Development\lfmap-tools\leading-bench` before the run). This note records what changed so the A3/A4 results can be read against it.
+The bench lives in the project files (`leading-bench/`; a copy is committed as `spikes/leading-bench/` because the Windows PC cannot read the project files; copied to `D:\Development\lfmap-tools\leading-bench` before the run). This note records what changed so the A3/A4 results can be read against it.
 
 ## A1: case set
 
