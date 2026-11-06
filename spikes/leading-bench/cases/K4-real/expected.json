@@ -1,0 +1,12 @@
+{
+  "id": "K4-real",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "temp file not removed when the write fails",
+    "corrupt sidecar JSON must be a cache miss, not an error",
+    "CRLF line endings not kept when reading the cache"
+  ],
+  "seeded": [],
+  "keywords": []
+}

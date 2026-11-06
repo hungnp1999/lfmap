@@ -1,0 +1,15 @@
+{
+  "id": "K7-clean-seed-proxy",
+  "card": "TC-K7",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "environment proxies are no longer ignored, so chunk text can leave the machine through a proxy"
+  ],
+  "seeded": [
+    "self._opener = urllib.request.build_opener()"
+  ],
+  "keywords": [
+    "proxy",
+    "proxies"
+  ]
+}

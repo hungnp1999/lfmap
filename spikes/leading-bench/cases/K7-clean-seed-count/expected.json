@@ -1,0 +1,18 @@
+{
+  "id": "K7-clean-seed-count",
+  "card": "TC-K7",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "the number of vectors returned is no longer checked against the batch"
+  ],
+  "seeded": [
+    "if not isinstance(embeddings, list):"
+  ],
+  "keywords": [
+    "len(",
+    "count",
+    "number of",
+    "length",
+    "mismatch"
+  ]
+}

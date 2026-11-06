@@ -1,0 +1,9 @@
+{
+  "id": "K6-clean",
+  "card": "TC-K6",
+  "expected_verdict": "ready",
+  "known_issues": [],
+  "seeded": [],
+  "keywords": [],
+  "label_review": "Re-read 2026-11-06: matches the card (quotes removed before the emptiness check, parameterised SQL, bm25 ascending). Gates pass. Label stays ready."
+}

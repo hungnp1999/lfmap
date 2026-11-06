@@ -1,0 +1,120 @@
+diff --git a/packages/lfmap-knowledge/src/lfmap_knowledge/embed.py b/packages/lfmap-knowledge/src/lfmap_knowledge/embed.py
+new file mode 100644
+index 0000000..947c165
+--- /dev/null
++++ b/packages/lfmap-knowledge/src/lfmap_knowledge/embed.py
+@@ -0,0 +1,114 @@
++import json
++import urllib.parse
++import urllib.request
++from ipaddress import AddressValueError, ip_address
++
++from lfmap_core import ToolError
++from lfmap_core.permissions import PermissionManager
++
++BATCH_SIZE = 32
++
++
++def check_loopback(url: str) -> str:
++    """
++    Validates that the given URL is a loopback address.
++
++    Args:
++        url (str): The URL to validate.
++
++    Returns:
++        str: The URL without trailing "/".
++
++    Raises:
++        ToolError: If the URL is not a loopback address.
++    """
++    parsed_url = urllib.parse.urlsplit(url)
++    if parsed_url.scheme not in ("http", "https"):
++        raise ToolError("invalid_input", "Ollama URL must be a loopback address", {"url": url})
++    if parsed_url.username or parsed_url.password:
++        raise ToolError("invalid_input", "Ollama URL must be a loopback address", {"url": url})
++    host = parsed_url.hostname
++    try:
++        if host == "localhost" or ip_address(host).is_loopback:
++            return url.rstrip("/")
++    except (AddressValueError, ValueError):
++        pass
++    raise ToolError("invalid_input", "Ollama URL must be a loopback address", {"url": url})
++
++
++class OllamaEmbedder:
++    """
++    Embedder class for interacting with the Ollama API.
++    """
++
++    def __init__(self, url: str, model: str, perms: PermissionManager, timeout: float = 120) -> None:
++        """
++        Initializes the OllamaEmbedder.
++
++        Args:
++            url (str): The URL of the Ollama server.
++            model (str): The model to use for embedding.
++            perms (PermissionManager): The permission manager.
++            timeout (float): The timeout for requests.
++
++        Raises:
++            ToolError: If the URL is not a loopback address.
++        """
++        self.url = check_loopback(url)
++        self.model = model
++        self.perms = perms
++        self.timeout = timeout
++
++    def embed(self, texts: list[str]) -> list[list[float]]:
++        """
++        Embeds a list of texts using the Ollama API.
++
++        Args:
++            texts (List[str]): The list of texts to embed.
++
++        Returns:
++            List[List[float]]: The list of embeddings.
++
++        Raises:
++            ToolError: If network permission is denied or the backend is unavailable.
++        """
++        if not texts:
++            return []
++
++        self.perms.require_network()
++
++        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++        embeddings = []
++        for i in range(0, len(texts), BATCH_SIZE):
++            batch = texts[i : i + BATCH_SIZE]
++            data = json.dumps({"model": self.model, "input": batch}).encode()
++            request = urllib.request.Request(
++                f"{self.url}/api/embed",
++                data=data,
++                headers={"Content-Type": "application/json"},
++            )
++            try:
++                with opener.open(request, timeout=self.timeout) as response:
++                    response_data = json.load(response)
++                    embeddings.extend(response_data.get("embeddings", []))
++            except (urllib.error.URLError, OSError, TimeoutError) as exc:
++                raise ToolError(
++                    "backend_unavailable", "Ollama is not reachable", {"reason": "ollama_unreachable"}
++                ) from exc
++
++        return embeddings
++
++    def ping(self) -> bool:
++        """
++        Checks if the Ollama server is reachable.
++
++        Returns:
++            bool: True if the server is reachable, False otherwise.
++        """
++        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++        request = urllib.request.Request(f"{self.url}/api/tags")
++        try:
++            with opener.open(request, timeout=self.timeout) as response:
++                return response.status == 200
++        except (urllib.error.URLError, OSError, TimeoutError):
++            return False

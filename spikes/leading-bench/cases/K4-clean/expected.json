@@ -1,0 +1,9 @@
+{
+  "id": "K4-clean",
+  "card": "TC-K4",
+  "expected_verdict": "ready",
+  "known_issues": [],
+  "seeded": [],
+  "keywords": [],
+  "label_review": "Re-read 2026-11-06 against the card and the frozen tests: sidecar written last, temp file removed on failure, corrupt sidecar is a cache miss, CRLF kept (newline=''). pytest, ruff check and ruff format pass. Label stays ready; B0b alarms were style or hardening beyond the card (not C1-C4)."
+}
