@@ -112,7 +112,7 @@ def search_files(
         params.extend(exclude_root_ids)
 
     rows = conn.execute(
-        f"SELECT {_FILE_COLUMNS} FROM files f JOIN roots r USING (root_id)"
+        f"SELECT {_FILE_COLUMNS} FROM files f JOIN roots r USING (root_id)"  # noqa: S608 - constant columns, literal where clauses, bound params
         f" WHERE {' AND '.join(where)} ORDER BY f.mtime_ns DESC, f.file_id",
         params,
     ).fetchall()
@@ -127,13 +127,13 @@ def find_file(conn: sqlite3.Connection, path: Path) -> sqlite3.Row:
     for row in conn.execute("SELECT root_id, path FROM roots"):
         try:
             relative = path.relative_to(row["path"])
-        except ValueError:
+        except ValueError:  # noqa: S112 - root does not contain the path; try the next root
             continue
         if len(row["path"]) > best_len:
             best, best_len = (row["root_id"], relative.as_posix()), len(row["path"])
     if best is not None:
         found = conn.execute(
-            f"SELECT {_FILE_COLUMNS} FROM files f JOIN roots r USING (root_id)"
+            f"SELECT {_FILE_COLUMNS} FROM files f JOIN roots r USING (root_id)"  # noqa: S608 - only the constant _FILE_COLUMNS is interpolated
             " WHERE f.root_id = ? AND f.rel_path = ? AND f.status != 'deleted'",
             best,
         ).fetchone()

@@ -105,7 +105,7 @@ def _pending_files() -> list[Proposal]:
             continue
         try:
             proposals.append(_read(path))
-        except ToolError:
+        except ToolError:  # noqa: S112 - invalid pending files are skipped by design (see docstring)
             continue
     return proposals
 

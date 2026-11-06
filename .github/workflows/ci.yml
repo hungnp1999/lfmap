@@ -21,6 +21,7 @@ jobs:
           uv sync --frozen --no-dev
           uv run --no-sync python scripts/check_licenses.py
           uv run --no-sync python scripts/dependency_share.py
+          uv run --no-sync python scripts/generate_sbom.py --check
       - name: Install with dev tools
         run: uv sync --frozen
       - name: Lint
