@@ -20,7 +20,7 @@ Rust shell (Tauri)  ── starts and stops ──►  Python sidecar: `lfmap se
                                    └─ talks to ──►  Ollama (OpenAI-compatible /v1/chat/completions, loopback)
 ```
 
-- The webview never holds the REST token and never talks to a socket itself: it calls Tauri commands; the Rust shell reads the token file (`%LOCALAPPDATA%\lfmap\rest_token`) and forwards. This keeps the REST adapter's rules (R3 token, Host/Origin checks, no CORS) unchanged, and avoids the `[rest] allowed_origins` option listed as an open point in [`rest.md`](rest.md) section 11.
+- The webview never holds the REST token and never talks to a socket itself: it calls Tauri commands; the Rust shell reads the token file (`%LOCALAPPDATA%\lfmap\rest_token`) and forwards. This keeps the REST adapter's rules (R3 token, Host/Origin checks, no CORS) unchanged, and avoids the `[rest] allowed_origins` option listed as open question 3 in [`rest.md`](rest.md) section 9.
 - The chat loop (prompt, model call, tool-call round trips, citations) is **Python in `lfmap-core`** (small module `chat.py`, standard library + pydantic), exposed as one REST route family; the UI is a thin client. Reason: the same loop then works from the CLI and tests, and permission checks stay in one language (CLAUDE.md: business logic in Python, adapters generic).
 - Model endpoint: any OpenAI-compatible URL from `config.toml`; default Ollama on loopback. A cloud endpoint is refused unless the plugin or call declares `cloud_ai` and the owner allows it (ADR-018 (4), Blueprint 4.4).
 
