@@ -180,7 +180,8 @@ def test_failing_step_fails_the_run_and_keeps_earlier_outputs(registry, put):
 
 
 def test_output_too_large_fails_the_step(registry, put):
-    put(flow_toml('id = "big"\ncall = "fake-plugin.greet"\ninput = { name = "AAAAAAAA", times = 20000 }', greet("never")))
+    big = 'id = "big"\ncall = "fake-plugin.greet"\ninput = { name = "AAAAAAAA", times = 20000 }'
+    put(flow_toml(big, greet("never")))
     run = flows_run.start(registry, "demo", {})
     assert run.status == "failed" and statuses(run) == ["failed", "pending"]
     assert run.steps[0].output is None

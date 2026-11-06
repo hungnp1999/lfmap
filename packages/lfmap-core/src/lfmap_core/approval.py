@@ -111,14 +111,15 @@ def decide(
     `can_elicit` says the adapter can ask the person (interactive terminal, MCP elicitation);
     `granted` says a time-limited grant from the interactive CLI covers this call.
     Neither a pre-approval nor MCP elicitation covers T3: an agent could answer for the person.
-    A scheduled job or an event call has nobody to ask and takes no grant or pre-approval (it uses `job_decision`).
+    A scheduled job, an event call or a flow step has nobody to ask and takes no grant or pre-approval
+    (it uses `job_decision`).
     """
     action = policy.action(plugin, op, tier)
     if action == "deny":
         return "deny"
     if action in ("allow", "audit"):
         return "allow"
-    if channel in ("job", "event"):
+    if channel in ("job", "event", "flow"):
         return "deny"
     if granted:
         return "allow"

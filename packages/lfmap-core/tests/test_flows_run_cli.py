@@ -188,10 +188,7 @@ def test_runs_lists_recent_runs_without_outputs(registry, put, terminal, user_di
 
 def paused_id(registry, put, user_dirs) -> str:
     put()
-    payload = user_dirs / "p.json"
-    payload.write_text(json.dumps({"who": "Ann"}), encoding="utf-8")
-    run(registry, "flows", "start", "demo", "--input-json", str(payload))
-    return flows_run.list_runs()[0].approval_id
+    return flows_run.start(registry, "demo", {"who": "Ann"}).approval_id
 
 
 def test_pending_lists_the_flow_proposal(registry, put, user_dirs, terminal):

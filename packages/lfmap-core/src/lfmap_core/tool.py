@@ -12,7 +12,7 @@ from lfmap_core.errors import ToolError
 
 OPERATION_ATTR = "__lfmap_operation__"
 
-Channel = Literal["sdk", "cli", "mcp", "rest", "job", "event"]
+Channel = Literal["sdk", "cli", "mcp", "rest", "job", "event", "flow"]
 
 
 class ToolContext(BaseModel):

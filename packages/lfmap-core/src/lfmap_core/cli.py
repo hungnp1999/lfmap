@@ -15,11 +15,13 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, flows, grants, jobs, jobs_doctor
+from lfmap_core import approvals, flows, flows_run, grants, jobs, jobs_doctor
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
 from lfmap_core.events_adapter import drain_after_job, open_bus, run_adapter
+from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
+from lfmap_core.permissions import PermissionManager
 from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import build_tool, call_tier, run_operation
 from lfmap_core.tool import OperationSpec
@@ -170,6 +172,51 @@ def _operation_command(entry: PluginEntry, spec: OperationSpec):
     return command
 
 
+def _print_run(run: flows_run.FlowRun, as_json: bool) -> None:
+    """A run step by step; outputs only with `--json`, errors without their details."""
+    if as_json:
+        typer.echo(run.model_dump_json(indent=2))
+        return
+    typer.echo(approvals.visible(f"{run.run_id}  {run.flow}  {run.status}"))
+    for step in run.steps:
+        note = f"  {step.error['code']}: {step.error['message']}" if step.error else ""
+        typer.echo(approvals.visible(f"  {step.id}  {step.status}{note}"))
+    if run.approval_id:
+        typer.echo(f"Approve with: lfmap approvals approve {run.approval_id}")
+
+
+def _input_json(file: str | None) -> dict[str, Any]:
+    """The trigger payload of `flows start --input-json FILE`: a JSON object of at most 64 KiB. The path is read
+    through a Permission Manager with no roots, so only a person at an interactive terminal may name a file."""
+
+    def audit_read(path: str) -> None:
+        audit(
+            {
+                "channel": "cli",
+                "plugin": "flows",
+                "tier": "T0",
+                "decision": "allow",
+                "reason": "read_outside_roots",
+                "target": path,
+            }
+        )
+
+    if file is None:
+        return {}
+    path = PermissionManager([], [], explicit_read=_interactive(), on_outside_read=audit_read).require_read(file)
+    try:
+        if path.stat().st_size > MAX_PAYLOAD_BYTES:
+            raise ToolError("invalid_input", f"{file} is larger than {MAX_PAYLOAD_BYTES} bytes")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as error:
+        raise ToolError("not_found", f"Cannot read {file}", {"error": error.strerror}) from error
+    except ValueError as error:
+        raise ToolError("invalid_input", f"{file} is not valid JSON", {"error": str(error)}) from error
+    if not isinstance(payload, dict):
+        raise ToolError("invalid_input", f"{file} must hold a JSON object")
+    return payload
+
+
 def build_app(registry: Registry) -> typer.Typer:
     app = typer.Typer(
         name="lfmap",
@@ -256,6 +303,20 @@ def build_app(registry: Registry) -> typer.Typer:
         record = {"channel": "cli", "plugin": proposal.plugin, "operation": proposal.operation, "tier": proposal.tier}
         audit({**record, "decision": decision, "reason": f"proposal {proposal.id}"})
 
+    def approve_flow(proposal: approvals.Proposal, json_output: bool) -> None:
+        flow, run, index = flows_run.check_resume(proposal)
+        step = flow.steps[index]
+        typer.echo(
+            f"Proposal {proposal.id} from flow {run.flow}, run {run.run_id}, created {proposal.created.isoformat()}"
+        )
+        typer.echo(approvals.visible(f"flows.resume ({proposal.tier}, {proposal.reason})"))
+        typer.echo("input: " + approvals.visible(json.dumps(proposal.input, ensure_ascii=False)))
+        if not typer.confirm(f"Resume run {run.run_id} at step {step.id} now?"):
+            typer.echo("Not approved; the proposal stays pending")
+            return
+        proposal_audit(proposal, "approve")
+        _print_run(flows_run.resume(registry, proposal, typer.confirm), json_output)
+
     @approvals_app.command("pending")
     def pending(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
         """Show job proposals waiting for approval; expired ones move to approvals\\expired."""
@@ -274,8 +335,13 @@ def build_app(registry: Registry) -> typer.Typer:
         approval_id: Annotated[str, typer.Argument(metavar="ID")],
         json_output: Annotated[bool, typer.Option("--json")] = False,
     ) -> None:
-        """Show a job proposal and, once confirmed, run it one time (interactive terminal only)."""
+        """Show a job proposal and, once confirmed, run it one time (interactive terminal only).
+
+        A flows.resume proposal resumes its paused flow run instead and carries on with the next steps."""
         proposal = queued_proposal("approve", approval_id)
+        if approvals.is_flow_resume(proposal):
+            approve_flow(proposal, json_output)
+            return
         entry = registry.get(proposal.plugin)
         declared = entry.manifest.operation(proposal.operation)
         if declared is None:
@@ -303,6 +369,8 @@ def build_app(registry: Registry) -> typer.Typer:
         proposal = queued_proposal("reject", approval_id)
         approvals.move(proposal.id, "rejected")
         proposal_audit(proposal, "reject")
+        if approvals.is_flow_resume(proposal):
+            flows_run.close(proposal, "rejected")
         typer.echo(f"Rejected {proposal.id}")
 
     @plugins_app.command("list")
@@ -520,6 +588,41 @@ def build_app(registry: Registry) -> typer.Typer:
                 typer.echo("All flows ok")
         if found:
             raise typer.Exit(1)
+
+    @flows_app.command("start")
+    def flows_start(
+        flow_id: Annotated[str, typer.Argument(metavar="FLOW")],
+        input_json: Annotated[
+            str | None, typer.Option("--input-json", help="JSON object file: the trigger payload.")
+        ] = None,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Start a run of FLOW; it stops at the first step above the flow's max_tier or at an approve step."""
+        run = flows_run.start(registry, flow_id, _input_json(input_json))
+        _print_run(run, json_output)
+        if run.status == "failed":
+            raise typer.Exit(1)
+
+    @flows_app.command("status")
+    def flows_status(
+        run_id: Annotated[str, typer.Argument(metavar="RUN")],
+        json_output: Annotated[bool, typer.Option("--json", help="Include the step outputs.")] = False,
+    ) -> None:
+        """Show one run, step by step."""
+        _print_run(flows_run.load_run(run_id), json_output)
+
+    @flows_app.command("runs")
+    def flows_runs(
+        flow: Annotated[str | None, typer.Option("--flow", help="Only runs of this flow.")] = None,
+        limit: Annotated[int, typer.Option("--limit", min=1)] = 20,
+    ) -> None:
+        """Recent runs, newest first."""
+        for run in flows_run.list_runs(flow, limit):
+            typer.echo(
+                approvals.visible(
+                    f"{run.run_id}  {run.flow}  {run.status}  {run.updated.isoformat(timespec='seconds')}"
+                )
+            )
 
     def require_terminal(action: str) -> None:
         if not _interactive():
