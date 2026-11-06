@@ -1,6 +1,6 @@
 # Module Spec: Workspace chat UI (Tauri, in-house)
 
-- Status: draft 2026-11-06, written before any code. Plan: RT-05 in [`docs/research/2026-10-23-commercial-replacements.md`](../research/2026-10-23-commercial-replacements.md) (G1, before Tauri starts).
+- Status: approved by Hùng 2026-11-06 (decision 2: first version read-only), written before any code. Plan: RT-05 in [`docs/research/2026-10-23-commercial-replacements.md`](../research/2026-10-23-commercial-replacements.md) (G1, before Tauri starts).
 - Roadmap: Phase 2 "Tauri Workspace: chat, danh sách plugin, agent console, phê duyệt hành động".
 - Decisions it rests on: ADR-021 (build the chat in-house, clean room for Open WebUI), ADR-003 (REST only when a client needs it), ADR-017/018/023 (tiers, approvals queue, who may approve), ADR-013 (embedded storage), ADR-024 (orchestration stays plain Python).
 - Replaces: Open WebUI (internal use only today, ADR-007). ADR-007 stays valid until this ships.
@@ -63,7 +63,7 @@ ADR-017/018 say approval happens in an interactive terminal ("lfmap approvals ap
 - **A (recommended for the first version):** S5 is read-only: it lists proposals and shows the exact command to paste into a terminal. No ADR change, no new attack surface.
 - **B:** S5 can approve. Needs a new ADR: how the window proves a person clicked (OS dialog from the Rust shell, not from the webview; token separate from the REST token; audit channel `ui`). Justified only once A has been used and found annoying.
 
-Hùng decides; A is assumed in the task list.
+**Decided 2026-11-06 (Hùng): option A.** Approving or any other interactive action from the UI moves to Phase 3 and is built in parallel with the security core and with drills that rehearse defence against attacks on the system; option B then needs its own ADR as a result of that work.
 
 ## 7. Security
 
@@ -90,11 +90,11 @@ Hùng decides; A is assumed in the task list.
 
 ## 10. Open points
 
-1. Approvals from the UI: A or B (section 6). Needs Hùng.
+1. ~~Approvals from the UI~~ Decided: A (read-only), interactive actions in Phase 3 with the security core and defence drills (section 6).
 2. Python sidecar packaging (PyInstaller was rejected for lfmap-core so far; the first build may require `uv` on PATH). Decide in CU-2.
 3. Whether the chat loop streams tool calls from Ollama's native tool API or through MCP; check on DIEP-ANH with the current models in CU-1.
 4. Frontend licence check of each chosen package against the Register (new "Software, frontend" rows) before CU-2 merges.
 
 ## 11. Definition of Done for this spec (RT-05)
 
-Screen list (section 3), API used (sections 2, 8), derived sources and licences (section 5), the open approval decision (section 6). Code starts only after Hùng answers section 10 point 1.
+Screen list (section 3), API used (sections 2, 8), derived sources and licences (section 5), the open approval decision (section 6). Point 1 of section 10 is answered; code starts with CU-1 after the Flows handoff.

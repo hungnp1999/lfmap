@@ -73,7 +73,9 @@ Same columns as the Register table: Model | size / tag | licence | class | check
 | Ministral | 8B (2410) | Mistral Research Licence | Avoid | _date_ |
 ```
 
-## 5. What stays open
+## 5. Decision and what stays open
+
+- Hùng approved this version of the matrix on 2026-11-06 and asked for a **monthly review** (first review 2026-12-06): re-check each row's licence text and tag, add new models that fit 16 GB, and report changes. Scheduled as a recurring task; see the review notes in this folder when it runs.
 
 - **Verification on DIEP-ANH** (about 10 minutes: `ollama show --license <tag>` needs the tag pulled; otherwise read the Hugging Face card in a browser): the "to verify" status of every new row. Not urgent: no new model is planned for the product; this matrix prevents a wrong pick later.
 - Completion criterion of RT-06 ("each row has a model-card link") is met by the link column; "licence read from the card" is not met until the verification above.

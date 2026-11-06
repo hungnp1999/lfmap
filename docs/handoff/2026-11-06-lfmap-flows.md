@@ -92,7 +92,9 @@ Mỗi task một phiên Claude Code (hoặc một lượt qwen), một PR vào `
 - Anh sửa `flows.toml` khi một run đang chờ duyệt: resume từ chối, phải bắt đầu run mới.
 - Hạn mức Pro: FL-1..FL-3 mỗi task một phiên Sonnet, không chạy song song với việc nặng khác.
 
-## Câu hỏi mở (cổng 1)
+## Câu hỏi mở (cổng 1): đã chốt 2026-11-06
+
+Hùng đồng ý quyết định 1 (Flows trước Agent Router). Spec chat UI: bản đầu chỉ đọc, thao tác duyệt/tương tác sang Phase 3 cùng lõi security và diễn tập phòng vệ. Ma trận giấy phép: đồng ý bản hiện tại, rà soát hàng tháng. Câu 2 bên dưới (trần mặc định 0) giữ như đề xuất.
 
 1. Quyết định 1: làm Flows trước Agent Router. Đề xuất: đồng ý.
 2. Trần mặc định `max_tier = 0` (luồng chỉ tự chạy bước không tác dụng phụ; `markitdown.export` là T1 nên phải đặt `max_tier = 1` cho luồng thử). Đề xuất: giữ 0.
