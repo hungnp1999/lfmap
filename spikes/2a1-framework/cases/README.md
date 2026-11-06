@@ -69,3 +69,10 @@ The probes were written after reading the seeds, so 6/6 is an upper bound, not a
 ## Replay semantics
 
 `run.py run --case <name>` makes a one-card package. Plan is skipped; Work round 1 writes the files of `diff.patch` and runs the gates, but its result is never retried for a gate failure, so the Leading review always sees the case's diff verbatim (with the gate log, or with `test.log` when no worktree is given). A `rework` verdict sends the card to the Working model as usual.
+
+## FL2-real (added 2026-11-06)
+
+First case from real LFMAP code instead of qwen output: `flows_run.py` as merged in PR #174 (`ac7ef50`), written by a Sonnet Working session. Expected verdict `ready`; `known_issues` are the three minor points found by a manual read, so it measures false findings and rework verdicts on code that passed CI and `/security-review`.
+
+- Worktree for the gates: `ac7ef50^` plus the frozen tests of #174 (`test_flows_run.py`, `test_flows_run_cli.py`, and the `approval.py`, `approvals.py`, `cli.py`, `flows.py`, `tool.py` changes of that commit), without `flows_run.py`; `diff.patch` adds it. Simplest: a worktree at `ac7ef50` with `flows_run.py` removed.
+- Run with `--no-checks` off (F7 checks on). Run one round only: a `rework` verdict would send the card to the Working model, which is not wanted for this case, so stop after the first Leading review and keep `state-dir`.
