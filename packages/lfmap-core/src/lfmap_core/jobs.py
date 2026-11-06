@@ -199,12 +199,19 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_ev
     return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
 
-def task_command(job: Job, repo: Path, uv: Path, script: Path, pwsh: Path | None = None) -> list[str]:
+def schedule_command(
+    name: str, selector: str, schedule: Schedule, repo: Path, uv: Path, script: Path, pwsh: Path | None = None
+) -> list[str]:
+    """`schtasks /Create` for task `\\LFMAP\\<name>` running the job runner script with `selector` (`-JobId x`)."""
     shell = f'"{pwsh}"' if pwsh else "pwsh"
-    action = f'{shell} -NoProfile -File "{script}" -JobId {job.id} -RepoPath "{repo}" -UvPath "{uv}"'
+    action = f'{shell} -NoProfile -File "{script}" {selector} -RepoPath "{repo}" -UvPath "{uv}"'
     if len(action) > MAX_ACTION:
         raise ToolError("invalid_input", f"Task action is longer than {MAX_ACTION} characters", {"action": action})
-    return ["schtasks", "/Create", "/TN", TASK_FOLDER + job.id, "/TR", action, *job.schedule.task_args(), "/F"]
+    return ["schtasks", "/Create", "/TN", TASK_FOLDER + name, "/TR", action, *schedule.task_args(), "/F"]
+
+
+def task_command(job: Job, repo: Path, uv: Path, script: Path, pwsh: Path | None = None) -> list[str]:
+    return schedule_command(job.id, f"-JobId {job.id}", job.schedule, repo, uv, script, pwsh)
 
 
 def delete_command(job_id: str) -> list[str]:
@@ -223,12 +230,24 @@ def registered_tasks(query_csv: str) -> set[str]:
 
 
 def register_commands(
-    jobs: list[Job], existing: set[str], repo: Path, uv: Path, script: Path, pwsh: Path | None = None
+    jobs: list[Job],
+    existing: set[str],
+    repo: Path,
+    uv: Path,
+    script: Path,
+    pwsh: Path | None = None,
+    extra: dict[str, list[str]] | None = None,
 ) -> list[list[str]]:
-    """Create a task for every enabled job; delete existing tasks whose job is disabled or gone."""
+    """Create a task for every enabled job, plus the `extra` tasks (task name -> create command, the scheduled
+    flows); delete existing tasks that belong to neither."""
+    extra = extra or {}
+    clash = sorted({job.id for job in jobs} & extra.keys())
+    if clash:
+        raise ToolError("invalid_input", f"Job id {clash[0]!r} is the task name of a flow", {"ids": clash})
     enabled = [job for job in jobs if job.enabled]
-    stale = existing - {job.id for job in enabled}
-    return [task_command(job, repo, uv, script, pwsh) for job in enabled] + [delete_command(i) for i in sorted(stale)]
+    stale = existing - {job.id for job in enabled} - extra.keys()
+    creates = [task_command(job, repo, uv, script, pwsh) for job in enabled]
+    return creates + list(extra.values()) + [delete_command(i) for i in sorted(stale)]
 
 
 def _schtasks(args: list[str]) -> str:

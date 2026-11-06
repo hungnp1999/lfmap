@@ -170,6 +170,14 @@ class EventAdapter:
         return run_operation(entry, operation, inp, channel="event", approver=gate, events=publisher)
 
 
+def attach_handlers(registry: Registry, bus: EventBus) -> None:
+    """Every durable subscription a draining process serves: the plugin adapters and the flows trigger."""
+    from lfmap_core import flows_triggers  # flows_triggers imports this module
+
+    EventAdapter(registry, bus).attach()
+    flows_triggers.attach(registry, bus)
+
+
 def run_adapter(
     registry: Registry,
     bus: EventBus,
@@ -181,7 +189,7 @@ def run_adapter(
 ) -> int:
     """`lfmap events run`: attach the adapter and drain in batches until `max_seconds` have passed, or until
     nothing is ready with `until_idle`. Returns the number of handler calls."""
-    EventAdapter(registry, bus).attach()
+    attach_handlers(registry, bus)
     deadline = clock() + max_seconds
     total = 0
     while True:
@@ -195,12 +203,15 @@ def run_adapter(
 
 
 def drain_after_job(registry: Registry, max_events: int) -> int:
-    """The bounded drain at the end of `lfmap jobs run`; nothing to do without an events-enabled plugin."""
-    if not any(entry.manifest.adapters.events for entry in registry.all()):
+    """The bounded drain at the end of `lfmap jobs run`; nothing to do without an events-enabled plugin or an
+    enabled flow with an event trigger."""
+    from lfmap_core import flows_triggers  # flows_triggers imports this module
+
+    if not (any(entry.manifest.adapters.events for entry in registry.all()) or flows_triggers.event_flows(registry)):
         return 0
     bus = open_bus()
     try:
-        EventAdapter(registry, bus).attach()
+        attach_handlers(registry, bus)
         return bus.drain(max_events=max_events)
     finally:
         bus.close()

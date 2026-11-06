@@ -128,7 +128,10 @@ hooks and code then run as you.
 ## The runner script
 
 `scripts\Invoke-LfmapJob.ps1 -JobId <id> [-RepoPath <repo>] [-UvPath <uv.exe>]` runs
-`uv run --directory <repo> lfmap jobs run <id> --json`, appends one JSON line to
+`uv run --directory <repo> lfmap jobs run <id> --json`. With `-FlowId <id>` instead of `-JobId` it runs
+`lfmap flows start <id> --json`: `lfmap jobs register` creates task `\LFMAP\flow-<id>` that way for each enabled
+flow with a `schedule` trigger (`docs/specs/flows.md` section 6; a job may not be called `flow-<id>` of a flow).
+The script appends one JSON line to
 `%LOCALAPPDATA%\lfmap\logs\jobs-YYYY-MM-DD.jsonl` (`started`, `finished`, `job`, `exit_code`, and `stdout`
 and `stderr` cut to 4000 characters) and exits with the code of `lfmap`. It exits 2 when uv cannot be found or
 when `-RepoPath` is not the repository the script lives in.

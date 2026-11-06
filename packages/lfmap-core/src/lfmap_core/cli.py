@@ -15,7 +15,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, flows, flows_run, grants, jobs, jobs_doctor
+from lfmap_core import approvals, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -521,12 +521,14 @@ def build_app(registry: Registry) -> typer.Typer:
             Path | None, typer.Option("--pwsh", help="Path to pwsh.exe; default found by full path.")
         ] = None,
     ) -> None:
-        """Create or update a task in \\LFMAP\\ for each enabled job; delete the tasks of the others."""
+        """Create or update a task in \\LFMAP\\ for each enabled job and scheduled flow; delete the others."""
         jobs_file = jobs.load_jobs_file()
         repo = repo or jobs.runtime_root(jobs_file)
         uv = uv or jobs.find_uv()
         pwsh = pwsh or jobs.find_pwsh()
         job_list = jobs_file.jobs
+        script = repo / "scripts" / "Invoke-LfmapJob.ps1"
+        flow_tasks = flows_triggers.task_commands(flows.load_flows(), repo, uv, script, pwsh)
         try:
             existing = jobs.existing_tasks()
         except ToolError as error:
@@ -534,8 +536,7 @@ def build_app(registry: Registry) -> typer.Typer:
                 raise
             typer.echo(f"Warning: {error.message}; assuming no task is registered yet", err=True)
             existing = set()
-        script = repo / "scripts" / "Invoke-LfmapJob.ps1"
-        for command in jobs.register_commands(job_list, existing, repo, uv, script, pwsh):
+        for command in jobs.register_commands(job_list, existing, repo, uv, script, pwsh, extra=flow_tasks):
             typer.echo(subprocess.list2cmdline(command))
             if not dry_run:
                 jobs._schtasks(command)

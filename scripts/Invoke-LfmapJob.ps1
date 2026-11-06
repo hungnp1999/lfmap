@@ -1,9 +1,11 @@
 <#
 .SYNOPSIS
-Run one LFMAP job (`lfmap jobs run <id>`) and append one JSON line to the daily job log.
+Run one LFMAP job (`lfmap jobs run <id>`) or one flow (`lfmap flows start <id>`) and append one JSON line to the
+daily job log.
 
 .DESCRIPTION
-Task Scheduler calls this script for every task in \LFMAP\ (see docs/jobs.md).
+Task Scheduler calls this script for every task in \LFMAP\ (see docs/jobs.md): -JobId for a job, -FlowId for a
+scheduled flow (task \LFMAP\flow-<id>, docs/specs/flows.md section 6). The log line names the task in `job`.
 `lfmap jobs register` starts it from the runtime root (`[runtime] root` in jobs.toml, ADR-023) and passes that
 root as -RepoPath. The script refuses a -RepoPath other than its own repository, so the runner and the code it
 runs always come from the same reviewed tree.
@@ -12,12 +14,19 @@ Log: %LOCALAPPDATA%\lfmap\logs\jobs-YYYY-MM-DD.jsonl. The exit code is the one o
 
 .EXAMPLE
 pwsh -NoProfile -File scripts\Invoke-LfmapJob.ps1 -JobId echo-hello
+
+.EXAMPLE
+pwsh -NoProfile -File scripts\Invoke-LfmapJob.ps1 -FlowId convert-inbox
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = 'Job')]
 param(
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory, ParameterSetName = 'Job')]
     [ValidatePattern('^[a-z][a-z0-9-]*$')]
     [string]$JobId,
+
+    [Parameter(Mandatory, ParameterSetName = 'Flow')]
+    [ValidatePattern('^[a-z][a-z0-9-]*$')]
+    [string]$FlowId,
 
     [string]$RepoPath = (Split-Path -Parent $PSScriptRoot),
 
@@ -58,12 +67,21 @@ if ($RepoPath -ine $ownRoot) {
 $env:PYTHONUTF8 = '1'
 $env:PYTHONIOENCODING = 'utf-8'
 
+if ($PSCmdlet.ParameterSetName -eq 'Flow') {
+    $taskName = "flow-$FlowId"
+    $lfmapArgs = @('flows', 'start', $FlowId)
+}
+else {
+    $taskName = $JobId
+    $lfmapArgs = @('jobs', 'run', $JobId)
+}
+
 $started = Get-Date
 $stderrFile = New-TemporaryFile
 try {
     # Text on stderr from a native command must not stop the script; the exit code decides.
     $ErrorActionPreference = 'Continue'
-    $stdout =(& $UvPath run --directory $RepoPath lfmap jobs run $JobId --json 2> $stderrFile.FullName) -join "`n"
+    $stdout =(& $UvPath run --directory $RepoPath lfmap @lfmapArgs --json 2> $stderrFile.FullName) -join "`n"
     $exitCode = $LASTEXITCODE
     $stderr = (Get-Content -LiteralPath $stderrFile.FullName -Raw -Encoding utf8) ?? ''
 }
@@ -79,7 +97,7 @@ $logFile = Join-Path $logDir ("jobs-{0}.jsonl" -f $started.ToString('yyyy-MM-dd'
 $record = [ordered]@{
     started   = $started.ToString('o')
     finished  = $finished.ToString('o')
-    job       = $JobId
+    job       = $taskName
     exit_code = $exitCode
     stdout    = Limit-Text $stdout
     stderr    = Limit-Text $stderr.TrimEnd()

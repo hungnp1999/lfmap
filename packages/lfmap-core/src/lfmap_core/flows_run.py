@@ -2,6 +2,7 @@
 
 A call step above the flow's `max_tier`, or an `approve` step, pauses the run behind one `flows.resume` proposal
 (T2, ADR-018, ADR-024); `lfmap approvals approve` resumes it in a new process. Run files hold references, not text.
+`_save` also announces a run that ended as `flows.run.<status>` (`flows_triggers.announce`).
 """
 
 import hashlib
@@ -15,7 +16,7 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 
-from lfmap_core import approvals
+from lfmap_core import approvals, flows_triggers
 from lfmap_core.approval import Asker, Gate, Policy, Tier
 from lfmap_core.config import app_dir, load_config
 from lfmap_core.errors import ToolError
@@ -110,6 +111,7 @@ def _save(run: FlowRun) -> None:
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(run.model_dump_json(indent=2), encoding="utf-8")
     os.replace(tmp, path)
+    flows_triggers.announce(run)
 
 
 def _flows_file() -> tuple[list[Flow], str]:
