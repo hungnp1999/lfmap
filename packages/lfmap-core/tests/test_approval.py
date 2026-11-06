@@ -44,6 +44,10 @@ def test_raise_tier_never_lowers():
         ("T3", "cli", False, True, "ask"),
         ("T3", "rest", True, True, "deny"),
         ("T3", "job", True, False, "deny"),
+        # a flow has nobody to ask, like a job
+        ("T1", "flow", False, False, "allow"),
+        ("T2", "flow", True, True, "deny"),
+        ("T3", "flow", True, True, "deny"),
     ],
 )
 def test_decision_table(tier, channel, preapproved, can_elicit, expected):
