@@ -195,7 +195,7 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_ev
     if job.via == "event":
         from lfmap_core.events_adapter import request_operation  # events_adapter imports this module
 
-        return request_operation(registry, entry, job.operation, job.input, max_events=max_events)
+        return request_operation(registry, entry, job.operation, job.input, max_events=max_events, job_id=job.id)
     return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
 
