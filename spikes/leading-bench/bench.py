@@ -129,15 +129,28 @@ def rate(count: int, ns: int) -> float:
 def measure(model: str, ctx: int) -> dict:
     unload_all()
     t0 = time.time()
-    warm = call("/api/generate", {"model": model, "prompt": "OK", "keep_alive": "30m",
-                                  "options": {"num_ctx": ctx, "num_predict": 1}})
+    warm = call(
+        "/api/generate",
+        {"model": model, "prompt": "OK", "keep_alive": "30m", "options": {"num_ctx": ctx, "num_predict": 1}},
+    )
     load_s = round(time.time() - t0, 1)
-    r = call("/api/generate", {"model": model, "prompt": SPEED_PROMPT, "stream": False, "keep_alive": "30m",
-                               "options": {"num_ctx": ctx, "num_predict": 600, "temperature": 0}})
+    r = call(
+        "/api/generate",
+        {
+            "model": model,
+            "prompt": SPEED_PROMPT,
+            "stream": False,
+            "keep_alive": "30m",
+            "options": {"num_ctx": ctx, "num_predict": 600, "temperature": 0},
+        },
+    )
     return {
-        "model": model, "num_ctx": ctx, "load_s": load_s,
+        "model": model,
+        "num_ctx": ctx,
+        "load_s": load_s,
         "load_ns_reported": warm.get("load_duration", 0),
-        "gpu_pct": gpu_share(model), "vram_mb": vram_mb(),
+        "gpu_pct": gpu_share(model),
+        "vram_mb": vram_mb(),
         "prompt_tok_s": rate(r.get("prompt_eval_count", 0), r.get("prompt_eval_duration", 0)),
         "gen_tok_s": rate(r.get("eval_count", 0), r.get("eval_duration", 0)),
         "gen_tokens": r.get("eval_count", 0),
@@ -173,7 +186,7 @@ def parse(text: str) -> dict:
         if 0 <= start < end:
             try:
                 return json.loads(text[start : end + 1])
-            except json.JSONDecodeError:
+            except json.JSONDecodeError:  # noqa: S110 - fall through to the invalid_json result
                 pass
     return {"verdict": "invalid_json", "findings": []}
 
@@ -206,7 +219,10 @@ def review(model: str, case: pathlib.Path, runs: pathlib.Path, repeat: int = 1) 
     if OPTS["num_gpu"] is not None:
         options["num_gpu"] = OPTS["num_gpu"]
     body = {
-        "model": model, "stream": False, "keep_alive": "30m", "options": options,
+        "model": model,
+        "stream": False,
+        "keep_alive": "30m",
+        "options": options,
         "messages": [{"role": "system", "content": STANDARD}, {"role": "user", "content": user}],
     }
     if OPTS["schema"]:
@@ -225,20 +241,34 @@ def review(model: str, case: pathlib.Path, runs: pathlib.Path, repeat: int = 1) 
     real = [f for f in findings if norm(f.get("quote", "")) and norm(f.get("quote", "")) in haystack]
     caught = [s for s in expected["seeded"] if caught_seed(s, expected.get("keywords", []), lines, real)]
     row = {
-        "model": model, "think": OPTS["think"], "schema": OPTS["schema"], "num_gpu": OPTS["num_gpu"],
-        "case": case.name, "repeat": repeat,
+        "model": model,
+        "think": OPTS["think"],
+        "schema": OPTS["schema"],
+        "num_gpu": OPTS["num_gpu"],
+        "case": case.name,
+        "repeat": repeat,
         "expected": expected["expected_verdict"],
-        "verdict": data.get("verdict"), "findings": len(findings), "quotes_found": len(real),
-        "hallucinated": len(findings) - len(real), "seeded": len(expected["seeded"]),
-        "seeded_caught": len(caught), "wall_s": wall,
+        "verdict": data.get("verdict"),
+        "findings": len(findings),
+        "quotes_found": len(real),
+        "hallucinated": len(findings) - len(real),
+        "seeded": len(expected["seeded"]),
+        "seeded_caught": len(caught),
+        "wall_s": wall,
         "gen_tok_s": rate(r.get("eval_count", 0), r.get("eval_duration", 0)),
-        "prompt_tokens": r.get("prompt_eval_count", 0), "gen_tokens": r.get("eval_count", 0),
-        "thinking_chars": len(msg.get("thinking", "") or ""), "done_reason": r.get("done_reason"),
+        "prompt_tokens": r.get("prompt_eval_count", 0),
+        "gen_tokens": r.get("eval_count", 0),
+        "thinking_chars": len(msg.get("thinking", "") or ""),
+        "done_reason": r.get("done_reason"),
     }
     detail = {
-        **row, "seeds_caught": caught, "seeds": expected["seeded"],
+        **row,
+        "seeds_caught": caught,
+        "seeds": expected["seeded"],
         "finding_list": [{**f, "valid": f in real} for f in findings],
-        "gpu_pct": gpu_share(model), "raw": text, "thinking": msg.get("thinking", ""),
+        "gpu_pct": gpu_share(model),
+        "raw": text,
+        "thinking": msg.get("thinking", ""),
     }
     (runs / f"{run_key(model, case.name, repeat)}.json").write_text(
         json.dumps(detail, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -248,8 +278,16 @@ def review(model: str, case: pathlib.Path, runs: pathlib.Path, repeat: int = 1) 
 
 def split(model: str, answers: pathlib.Path) -> float:
     t0 = time.time()
-    r = call("/api/generate", {"model": model, "prompt": SPLIT_PROMPT, "stream": False, "keep_alive": "30m",
-                               "options": {"num_ctx": REVIEW_CTX, "temperature": 0}})
+    r = call(
+        "/api/generate",
+        {
+            "model": model,
+            "prompt": SPLIT_PROMPT,
+            "stream": False,
+            "keep_alive": "30m",
+            "options": {"num_ctx": REVIEW_CTX, "temperature": 0},
+        },
+    )
     safe = model.replace(":", "_").replace("/", "_")
     (answers / f"{safe}__split.md").write_text(r.get("response", ""), encoding="utf-8")
     return round(time.time() - t0, 1)

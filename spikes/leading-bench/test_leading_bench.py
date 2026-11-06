@@ -47,15 +47,33 @@ class Fake(BaseHTTPRequestHandler):
         for name, reply in REPLIES.items():
             if name in case:
                 verdict = reply
-        self._send({"message": {"content": json.dumps(verdict)}, "done_reason": "stop",
-                    "eval_count": 10, "eval_duration": 10**9})
+        self._send(
+            {
+                "message": {"content": json.dumps(verdict)},
+                "done_reason": "stop",
+                "eval_count": 10,
+                "eval_duration": 10**9,
+            }
+        )
 
 
 def run_bench(url: str, out: pathlib.Path, *extra: str) -> str:
     done = subprocess.run(
-        [sys.executable, str(HERE / "bench.py"), "--models", "m:1", "--reviews-only", "--url", url,
-         "--out", str(out), *extra],
-        capture_output=True, text=True, check=True,
+        [
+            sys.executable,
+            str(HERE / "bench.py"),
+            "--models",
+            "m:1",
+            "--reviews-only",
+            "--url",
+            url,
+            "--out",
+            str(out),
+            *extra,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return done.stdout
 
@@ -76,8 +94,11 @@ class BenchTest(unittest.TestCase):
         REPLIES.clear()
         REPLIES["ORDER BY score DESC"] = {
             "verdict": "rework",
-            "findings": [{"check": "C1", "quote": "ORDER BY score DESC", "problem": "worst first"},
-                         {"check": "C1", "quote": "this line is invented", "problem": "x"}]}
+            "findings": [
+                {"check": "C1", "quote": "ORDER BY score DESC", "problem": "worst first"},
+                {"check": "C1", "quote": "this line is invented", "problem": "x"},
+            ],
+        }
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / "o"
             run_bench(self.url, out, "--repeats", "2", "--cases", "K6-seed-order", "K6-clean", "--num-gpu", "54")
@@ -87,8 +108,9 @@ class BenchTest(unittest.TestCase):
             self.assertEqual(len(chats), 4)
             self.assertTrue(all(c["options"]["num_gpu"] == 54 for c in chats))
             run = json.loads((out / "runs" / next(f for f in files if "K6-seed-order__r2" in f)).read_text("utf-8"))
-            self.assertEqual((run["verdict"], run["repeat"], run["seeded_caught"], run["hallucinated"]),
-                             ("rework", 2, 1, 1))
+            self.assertEqual(
+                (run["verdict"], run["repeat"], run["seeded_caught"], run["hallucinated"]), ("rework", 2, 1, 1)
+            )
             self.assertEqual([f["valid"] for f in run["finding_list"]], [True, False])
             before = len(chats)
             text = run_bench(self.url, out, "--repeats", "3", "--cases", "K6-seed-order", "K6-clean")
@@ -105,10 +127,29 @@ class BenchTest(unittest.TestCase):
         self.assertEqual(seeds, 12)
 
 
-def make_run(case: str, repeat: int, verdict: str, wall: float, seeded: int = 0, caught: int = 0,
-             findings: int = 0, invented: int = 0, expected: str = "rework") -> dict:
-    return {"model": "x", "case": case, "repeat": repeat, "verdict": verdict, "wall_s": wall, "seeded": seeded,
-            "seeded_caught": caught, "findings": findings, "hallucinated": invented, "expected": expected}
+def make_run(
+    case: str,
+    repeat: int,
+    verdict: str,
+    wall: float,
+    seeded: int = 0,
+    caught: int = 0,
+    findings: int = 0,
+    invented: int = 0,
+    expected: str = "rework",
+) -> dict:
+    return {
+        "model": "x",
+        "case": case,
+        "repeat": repeat,
+        "verdict": verdict,
+        "wall_s": wall,
+        "seeded": seeded,
+        "seeded_caught": caught,
+        "findings": findings,
+        "hallucinated": invented,
+        "expected": expected,
+    }
 
 
 class AggregateTest(unittest.TestCase):
@@ -157,8 +198,9 @@ class AggregateTest(unittest.TestCase):
         self.assertFalse(res["rows"][0]["false_ready_seed"])
 
     def test_unpaired_ignored_and_render(self) -> None:
-        res = self.result([make_run("a", 1, "rework", 5), make_run("a", 2, "rework", 5)],
-                          [make_run("a", 1, "rework", 50)])
+        res = self.result(
+            [make_run("a", 1, "rework", 5), make_run("a", 2, "rework", 5)], [make_run("a", 1, "rework", 50)]
+        )
         self.assertEqual(res["summary"]["unpaired"], [["a", 2]])
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertIn("RESULT:", agg.render(res))
