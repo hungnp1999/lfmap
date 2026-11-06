@@ -60,6 +60,7 @@ Checked at `606342b` (2026-10-23) by reading module headers, searching the tree 
 | License check | `scripts/check_licenses.py` | In-house | — | Claude Code | #1, #10, #18, #43 |
 | Job runner script | `scripts/Invoke-LfmapJob.ps1` | In-house | — | Claude Code | #25 |
 | License watch, dependency share | `scripts/license_watch.py`, `scripts/dependency_share.py` | In-house | — | Claude Code | RT-01, RT-11 |
+| SBOM and third-party notices generator | `scripts/generate_sbom.py` | In-house | CycloneDX 1.6 JSON format (specification only, Apache-2.0); no CycloneDX code or library used | Claude Code | RT-10 |
 | CI, CodeQL, provenance check, commit hook | `.github/`, `.githooks/`, `.claude/hooks/` | In-house | GitHub Actions and CodeQL documented configuration | Claude Code | #1, #60 |
 
 ### Spikes (Internal: not distributed, not workspace members)
@@ -80,4 +81,4 @@ One entry each time a Reference source is studied for an in-house replacement (R
 
 - A pull request that adds a package, plugin or module, or copies code from anywhere, adds or updates its row here in the same pull request.
 - Copied code keeps its original copyright notice in the file header and names the source commit, as the markitdown ports above do.
-- Before a release (trigger K4), re-run the marker search and compare the rows with `THIRD_PARTY_NOTICES` and the SBOM (RT-10).
+- Before a release (trigger K4), re-run the marker search and compare the rows with `THIRD_PARTY_NOTICES.md` and the SBOM (RT-10, `docs/sbom/README.md`); CI already fails when those two files are stale.
