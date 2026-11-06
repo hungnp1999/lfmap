@@ -195,7 +195,8 @@ def related(
     for start in range(0, len(ids), BATCH):
         batch = ids[start : start + BATCH]
         rows = conn.execute(
-            "SELECT f.file_id, f.rel_path, f.root_id, r.path AS root_path FROM files f JOIN roots r USING (root_id)"
+            "SELECT f.file_id, f.rel_path, f.root_id, r.path AS root_path"  # noqa: S608 - only '?' placeholders are interpolated; values are bound
+            " FROM files f JOIN roots r USING (root_id)"
             f" WHERE f.status != 'deleted' AND f.file_id IN ({','.join('?' * len(batch))})",
             batch,
         )

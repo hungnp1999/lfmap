@@ -176,7 +176,7 @@ class SqliteBus:
         db.execute("BEGIN IMMEDIATE")
         try:
             row = db.execute(
-                f"SELECT d.event_seq, d.subscription, d.attempts, {_EVENT_COLUMNS}"
+                f"SELECT d.event_seq, d.subscription, d.attempts, {_EVENT_COLUMNS}"  # noqa: S608 - only the constant _EVENT_COLUMNS and '?' placeholders are interpolated
                 " FROM deliveries d JOIN events e ON e.seq = d.event_seq"
                 f" WHERE d.subscription IN ({marks})"
                 " AND ((d.state = 'ready' AND d.available_at <= ?) OR (d.state = 'leased' AND d.lease_until <= ?))"
@@ -201,7 +201,7 @@ class SqliteBus:
 
     def _settle(self, seq: int, name: str, token: str, sets: str, values: tuple) -> None:
         self._conn().execute(
-            f"UPDATE deliveries SET {sets}, lease_until = NULL, lease_token = NULL"
+            f"UPDATE deliveries SET {sets}, lease_until = NULL, lease_token = NULL"  # noqa: S608 - `sets` is a literal from _settle callers; values are bound
             " WHERE event_seq = ? AND subscription = ? AND lease_token = ? AND state = 'leased'",
             (*values, seq, name, token),
         )
@@ -232,7 +232,7 @@ class SqliteBus:
         rows = (
             self._conn()
             .execute(
-                f"SELECT d.subscription, d.attempts, d.last_error, {_EVENT_COLUMNS}"
+                f"SELECT d.subscription, d.attempts, d.last_error, {_EVENT_COLUMNS}"  # noqa: S608 - only the constant _EVENT_COLUMNS is interpolated
                 " FROM deliveries d JOIN events e ON e.seq = d.event_seq"
                 " WHERE d.state = 'dead' AND (? IS NULL OR d.subscription = ?) ORDER BY d.event_seq, d.subscription",
                 (subscription, subscription),
@@ -296,7 +296,7 @@ class SqliteBus:
         params = ("request-%", self._clock() - older_than)
         db.execute("BEGIN IMMEDIATE")
         try:
-            db.execute(f"DELETE FROM deliveries WHERE subscription IN ({stale})", params)
+            db.execute(f"DELETE FROM deliveries WHERE subscription IN ({stale})", params)  # noqa: S608 - `stale` is a constant subquery; values are bound
             deleted = db.execute("DELETE FROM subscriptions WHERE name LIKE ? AND created_at < ?", params).rowcount
             db.execute("COMMIT")
         except BaseException:

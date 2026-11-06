@@ -64,7 +64,7 @@ def _kill_tree(process: subprocess.Popen) -> None:
     else:
         try:
             os.killpg(process.pid, signal.SIGKILL)
-        except OSError:
+        except OSError:  # noqa: S110 - best-effort kill; the process group may already be gone
             pass
     process.kill()
 

@@ -177,7 +177,7 @@ def parse(text: str) -> dict:
         if 0 <= start < end:
             try:
                 return json.loads(text[start : end + 1])
-            except json.JSONDecodeError:
+            except json.JSONDecodeError:  # noqa: S110 - unparsable fallback; caller returns invalid_json
                 pass
     return {"verdict": "invalid_json", "findings": []}
 

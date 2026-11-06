@@ -125,7 +125,7 @@ def parse_json(text: str) -> dict:
     for candidate in (text, text[text.find("{") : text.rfind("}") + 1]):
         try:
             data = json.loads(candidate)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # noqa: S112 - unparsable candidate; try the next one
             continue
         if isinstance(data, dict):
             return data
@@ -156,7 +156,7 @@ def parse_cards(text: str) -> list[Card]:
     for item in parse_json(text).get("cards", []):
         try:
             cards.append(Card.model_validate(item))
-        except ValidationError:
+        except ValidationError:  # noqa: S112 - invalid card entries are skipped (see docstring)
             continue
     return cards
 
