@@ -2,7 +2,10 @@ line-length = 120
 target-version = "py312"
 
 [lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "S110", "S112", "S608"]
 
 [lint.isort]
 known-first-party = ["lfmap_core", "lfmap_*"]
+
+[lint.flake8-bandit]
+check-typed-exception = true

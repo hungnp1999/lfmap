@@ -149,7 +149,7 @@ def _files_by_hash(
         where.append("f.mtime_ns > ?")
         params.append(after_ns)
     rows = conn.execute(
-        "SELECT f.file_id, f.root_id, f.rel_path, f.content_hash, r.path AS root_path"
+        "SELECT f.file_id, f.root_id, f.rel_path, f.content_hash, r.path AS root_path"  # noqa: S608 - '?' placeholders and literal where clauses; values are bound
         f" FROM files f JOIN roots r USING (root_id) WHERE {' AND '.join(where)}",
         params,
     ).fetchall()
