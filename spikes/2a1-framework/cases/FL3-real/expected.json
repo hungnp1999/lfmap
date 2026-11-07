@@ -1,0 +1,11 @@
+{
+  "id": "FL3-real",
+  "card": "FL-3",
+  "expected_verdict": "ready",
+  "known_issues": [
+    "one bus subscription with the union pattern for all event flows: a changed union drops deliveries still queued for the old pattern (documented; per-flow subscriptions are a follow-up)",
+    "handle() raises the first start error after trying all flows, so one broken flow makes the bus redeliver the event to the others, which then find their run and return it"
+  ],
+  "seeded": [],
+  "keywords": []
+}

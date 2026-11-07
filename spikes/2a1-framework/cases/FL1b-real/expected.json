@@ -1,0 +1,10 @@
+{
+  "id": "FL1b-real",
+  "card": "FL-1",
+  "expected_verdict": "ready",
+  "known_issues": [
+    "`${trigger}` with no key is accepted and resolves to the whole trigger object, which the spec grammar (`trigger.<key>...`) does not clearly allow"
+  ],
+  "seeded": [],
+  "keywords": []
+}

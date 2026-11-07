@@ -1,0 +1,11 @@
+{
+  "id": "FL1-real",
+  "card": "FL-1",
+  "expected_verdict": "ready",
+  "known_issues": [
+    "last_run_status picks the newest run by file mtime, not by the run's created time, so a later save of an older run can win",
+    "a trigger event pattern is checked for flows.* and .requested only through may_match on the first and last token, not by matching real topics"
+  ],
+  "seeded": [],
+  "keywords": []
+}

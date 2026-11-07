@@ -76,3 +76,10 @@ First case from real LFMAP code instead of qwen output: `flows_run.py` as merged
 
 - Worktree for the gates: `ac7ef50^` plus the frozen tests of #174 (`test_flows_run.py`, `test_flows_run_cli.py`, and the `approval.py`, `approvals.py`, `cli.py`, `flows.py`, `tool.py` changes of that commit), without `flows_run.py`; `diff.patch` adds it. Simplest: a worktree at `ac7ef50` with `flows_run.py` removed.
 - Run with `--no-checks` off (F7 checks on). Run one round only: a `rework` verdict would send the card to the Working model, which is not wanted for this case, so stop after the first Leading review and keep `state-dir`.
+
+## FL1-real, FL1b-real, FL3-real (added 2026-11-07)
+
+Three more real-code cases, same shape as FL2-real (expected `ready`, `known_issues` = residual points found by a manual read, not seeds): `flows.py` and `flows_refs.py` as merged in PR #173 (`45a1039`), `flows_triggers.py` as merged in PR #176 (`a3fe9b7`). Together with FL2-real they give four real-code cases for the shadow tally (ADR-022).
+
+- Gate worktree: detached at the PR's merge commit with only the case's target file removed (`diff.patch` adds it back); the card has no `tests`, so the pytest gate and probes do not run, as for FL2-real.
+- One Leading round per case (see the FL2-real note); repeats at temperature 0 are near-identical, so one run per case.
