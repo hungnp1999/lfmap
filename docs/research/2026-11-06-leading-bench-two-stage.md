@@ -1,6 +1,6 @@
 # Leading bench for the two-stage review (tasks A1 and A2)
 
-Status: done 2026-11-06 (Cloud). Plan: `2026-11-06-leading-speed-plan.md` (project files, backlog #181). The GPU run (A3) is not done and needs the owner's approval A.
+Status: done 2026-11-06 (Cloud); A3 run, two-stage rejected (see Outcome). Plan: `2026-11-06-leading-speed-plan.md` (project files, backlog #181). 
 
 The bench lives in the project files (`leading-bench/`; a copy is committed as `spikes/leading-bench/` because the Windows PC cannot read the project files; copied to `D:\Development\lfmap-tools\leading-bench` before the run). This note records what changed so the A3/A4 results can be read against it.
 
@@ -37,9 +37,9 @@ Caveat for A4: the framework spike showed that 6 of the 12 seeds are also visibl
 
 Tests: `python -m unittest test_leading_bench` in the bench folder (6 tests, a fake Ollama on loopback, no GPU): repeats, `num_gpu` passed, resume skips finished runs, 20 cases / 12 seeds, pipeline rule, false-ready, invented quotes, unpaired runs.
 
-## Next
+## Outcome
 
-A3 on DIEP-ANH after approval A (about 4 h GPU), then A4. Commands for A3 are in the `bench.py` docstring.
+A3 ran on DIEP-ANH on 2026-11-06 (qwen3.8:27b, then gpt-oss:20b, 3 repeats). The owner decided afterwards that the two-stage review is rejected and plan B is parked; backlog #181 is closed. The per-run JSON and the `aggregate_twostage.py` printout did not reach the project files from the Cloud side, so this note records no numbers; they stay in `D:\Development\lfmap-tools\leading-bench\out\A3-qwen` and `A3-gptoss` on the PC. The 20-case bench, `--repeats` and the aggregator stay in the repo for future model checks (rerun: `python aggregate_twostage.py --stage1 out/A3-gptoss --stage2 out/A3-qwen`).
 
 ## Project documents to update
 
