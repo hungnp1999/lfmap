@@ -1,0 +1,18 @@
+{
+  "id": "K4-clean-seed-unlink",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "temp file is not removed when the write fails"
+  ],
+  "seeded": [
+    "    except BaseException:"
+  ],
+  "keywords": [
+    "temp",
+    "unlink",
+    "leftover",
+    "left behind",
+    "clean"
+  ]
+}

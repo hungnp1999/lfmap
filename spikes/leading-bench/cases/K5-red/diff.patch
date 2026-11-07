@@ -1,0 +1,155 @@
+diff --git a/packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py b/packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py
+new file mode 100644
+index 0000000..9618bc8
+--- /dev/null
++++ b/packages/lfmap-knowledge/src/lfmap_knowledge/chunker.py
+@@ -0,0 +1,149 @@
++import re
++from dataclasses import dataclass
++
++
++@dataclass(frozen=True)
++class Chunk:
++    ordinal: int
++    heading_path: str
++    char_start: int
++    char_end: int
++    text: str
++
++
++def chunk_markdown(text: str, target_chars: int = 1500, max_chars: int = 3000) -> list[Chunk]:
++    """
++    Splits a markdown text into chunks based on headings and content blocks.
++
++    Args:
++        text (str): The markdown text to be chunked.
++        target_chars (int): The target number of characters for each chunk.
++        max_chars (int): The maximum number of characters allowed for a chunk.
++
++    Returns:
++        List[Chunk]: A list of chunks, each containing a portion of the text.
++    """
++    # Regular expression to match ATX headings
++    heading_regex = re.compile(r"^(#{1,6})[ \t]+(.*)$", re.MULTILINE)
++
++    # Find all headings
++    headings = list(heading_regex.finditer(text))
++
++    # Initialize variables
++    chunks = []
++    current_chunk = []
++    current_char_start = 0
++    current_heading_path = ""
++    heading_stack = []
++    ordinal = 0
++
++    # Process each heading
++    for match in headings:
++        heading_level = len(match.group(1))
++        heading_text = match.group(2).strip()
++
++        # Update heading path
++        while heading_stack and heading_level <= heading_stack[-1][0]:
++            heading_stack.pop()
++        heading_stack.append((heading_level, heading_text))
++        current_heading_path = " > ".join(h[1] for h in heading_stack)
++
++        # Process the current section
++        if current_chunk:
++            _flush_chunk(chunks, current_chunk, current_char_start, ordinal, current_heading_path)
++            ordinal += 1
++            current_chunk = []
++
++        # Start a new section with the heading
++        current_chunk.append(text[current_char_start : match.start()])
++        current_char_start = match.start()
++
++    # Process the last section
++    if current_chunk:
++        _flush_chunk(chunks, current_chunk, current_char_start, ordinal, current_heading_path)
++
++    return chunks
++
++
++def _flush_chunk(
++    chunks: list[Chunk], current_chunk: list[str], current_char_start: int, ordinal: int, current_heading_path: str
++) -> None:
++    """
++    Flushes the current chunk to the list of chunks.
++
++    Args:
++        chunks (List[Chunk]): The list of chunks to append to.
++        current_chunk (List[str]): The current chunk to process.
++        current_char_start (int): The starting character index of the current chunk.
++        ordinal (int): The ordinal number of the current chunk.
++        current_heading_path (str): The heading path for the current chunk.
++    """
++    # Merge consecutive blocks into one chunk
++    merged_text = "\n\n".join(current_chunk).strip()
++    if merged_text:
++        chunks.append(
++            Chunk(ordinal, current_heading_path, current_char_start, current_char_start + len(merged_text), merged_text)
++        )
++
++
++def _split_long_paragraph(paragraph: str, max_chars: int) -> list[str]:
++    """
++    Splits a long paragraph into smaller chunks based on sentence boundaries.
++
++    Args:
++        paragraph (str): The paragraph to be split.
++        max_chars (int): The maximum number of characters allowed for each chunk.
++
++    Returns:
++        List[str]: A list of smaller chunks.
++    """
++    sentences = re.split(r"(?<=[.!?])\s+", paragraph)
++    chunks = []
++    current_chunk = ""
++
++    for sentence in sentences:
++        if len(current_chunk) + len(sentence) + 1 <= max_chars:
++            current_chunk += sentence + " "
++        else:
++            chunks.append(current_chunk.strip())
++            current_chunk = sentence + " "
++
++    if current_chunk:
++        chunks.append(current_chunk.strip())
++
++    return chunks
++
++
++def _split_long_table(table: str, max_chars: int) -> list[str]:
++    """
++    Splits a long table into smaller chunks based on rows.
++
++    Args:
++        table (str): The table to be split.
++        max_chars (int): The maximum number of characters allowed for each chunk.
++
++    Returns:
++        List[str]: A list of smaller chunks.
++    """
++    lines = table.splitlines()
++    header = lines[0]
++    separator = lines[1]
++    data_rows = lines[2:]
++
++    chunks = []
++    current_chunk = [header, separator]
++    current_size = len(header) + len(separator) + 2  # +2 for newlines
++
++    for row in data_rows:
++        if current_size + len(row) + 1 <= max_chars:
++            current_chunk.append(row)
++            current_size += len(row) + 1  # +1 for newline
++        else:
++            chunks.append("\n".join(current_chunk))
++            current_chunk = [header, separator, row]
++            current_size = len(header) + len(separator) + len(row) + 3  # +3 for newlines
++
++    if current_chunk:
++        chunks.append("\n".join(current_chunk))
++
++    return chunks

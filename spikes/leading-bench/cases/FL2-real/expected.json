@@ -1,0 +1,12 @@
+{
+  "id": "FL2-real",
+  "card": "FL-2",
+  "expected_verdict": "ready",
+  "known_issues": [
+    "a resumed step is audited on channel cli instead of flow",
+    "start() checks that the run file exists and creates it later, so two processes draining the same event at once can both start a run",
+    "a crash between the first save and the first step leaves a run in status running forever"
+  ],
+  "seeded": [],
+  "keywords": []
+}

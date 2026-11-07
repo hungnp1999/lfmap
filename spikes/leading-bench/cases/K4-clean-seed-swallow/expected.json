@@ -1,0 +1,19 @@
+{
+  "id": "K4-clean-seed-swallow",
+  "card": "TC-K4",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "an OSError while writing the .json sidecar is swallowed: the call reports success, the cache is never complete and the error is hidden"
+  ],
+  "seeded": [
+    "    except OSError:"
+  ],
+  "keywords": [
+    "swallow",
+    "silently",
+    "ignore",
+    "hidden",
+    "hides",
+    "suppress"
+  ]
+}

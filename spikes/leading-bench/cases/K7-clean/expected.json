@@ -1,0 +1,9 @@
+{
+  "id": "K7-clean",
+  "card": "TC-K7",
+  "expected_verdict": "ready",
+  "known_issues": [],
+  "seeded": [],
+  "keywords": [],
+  "label_review": "Re-read 2026-11-06: loopback check without userinfo, no-proxy opener, vector count checked, ping false without network permission; gates pass. Label stays ready. Hardening beyond the card (count check, ping permission) is not a finding; JSON decode errors mapped to ollama_unreachable is a minor remark at most."
+}

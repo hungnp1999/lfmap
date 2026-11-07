@@ -1,0 +1,18 @@
+{
+  "id": "K7-clean-seed-userinfo",
+  "card": "TC-K7",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "URLs with user:password@ are accepted; the card forbids userinfo"
+  ],
+  "seeded": [
+    "if parts.scheme in (\"http\", \"https\"):"
+  ],
+  "keywords": [
+    "userinfo",
+    "username",
+    "password",
+    "credential",
+    "@"
+  ]
+}
