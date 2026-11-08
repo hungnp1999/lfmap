@@ -2,7 +2,7 @@
 
 LFMAP (product name **Lan Hài**) is developed in a private repository. Contributors join **by personal invitation** from the project owner; there is no public call for contributions yet.
 
-> Status: draft (issue #200). The Contributor License Agreement in `docs/legal/CLA.md` is waiting for legal review. No external contribution is merged before it is final.
+> The Contributor License Agreement in `docs/legal/CLA.md` is version 1.0, adopted before legal review (issue #200); it may be revised after that review.
 
 ## Before your first pull request
 

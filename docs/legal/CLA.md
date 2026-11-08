@@ -1,8 +1,8 @@
 # LFMAP Individual Contributor License Agreement / Thoả thuận cấp phép đóng góp cá nhân
 
-Version 0.1 (DRAFT, 2026-11-08, issue #200). Based on the Apache Software Foundation Individual Contributor License Agreement v2.2, adapted for a project owned by one individual. **Not final: waiting for review by a lawyer. Do not sign this draft.**
+Version 1.0 (2026-11-08, issue #200). Based on the Apache Software Foundation Individual Contributor License Agreement v2.2, adapted for a project owned by one individual. Adopted by the Project Owner before legal review; a later version may follow that review and applies only to Contributions made after You sign it.
 
-Phiên bản 0.1 (BẢN NHÁP, 2026-11-08, issue #200). Dựa trên Thoả thuận cấp phép đóng góp cá nhân v2.2 của Apache Software Foundation, điều chỉnh cho dự án thuộc sở hữu của một cá nhân. **Chưa phải bản cuối: đang chờ luật sư rà soát. Không ký bản nháp này.**
+Phiên bản 1.0 (2026-11-08, issue #200). Dựa trên Thoả thuận cấp phép đóng góp cá nhân v2.2 của Apache Software Foundation, điều chỉnh cho dự án thuộc sở hữu của một cá nhân. Chủ dự án áp dụng trước khi luật sư rà soát; phiên bản sau (nếu có) chỉ áp dụng cho các Đóng góp thực hiện sau khi Bạn ký phiên bản đó.
 
 ---
 
@@ -86,7 +86,7 @@ Cảm ơn bạn quan tâm đến LFMAP (tên sản phẩm "Lan Hài", sau đây 
 
 Signed copies are kept by the Project Owner and are never committed to this repository. Bản đã ký do Chủ dự án lưu giữ, không bao giờ đưa vào kho mã này.
 
-## Open questions for legal review / Câu hỏi cho luật sư
+## Questions for a later legal review / Câu hỏi cho lần rà soát pháp lý sau
 
 1. Is the section 3 relicensing right enough for the owner to register the whole program in their own name, or is the section 9 assignment needed (and should it be mandatory)? / Quyền cấp phép lại ở điều 3 đã đủ để chủ dự án đăng ký quyền tác giả toàn bộ chương trình đứng tên mình chưa, hay cần chuyển nhượng ở điều 9 (và có nên bắt buộc)?
 2. Does an assignment of future works (section 9) need a separate contract per contribution under Vietnamese law? / Theo luật Việt Nam, chuyển nhượng tác phẩm hình thành trong tương lai (điều 9) có cần hợp đồng riêng cho từng đóng góp không?
