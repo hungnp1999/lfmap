@@ -18,3 +18,10 @@ Cloud sessions cannot read the user-owned Projects board (the proxy blocks Graph
 ## Data that leaves the machine
 
 Only metadata of the three repositories (titles and labels of issues the owner already keeps on GitHub, alert metadata) goes back to GitHub. `pwsh scripts\Export-Status.ps1 -DryRun` fetches and counts without writing or pushing.
+
+## Mistakes found while building it (2026-11-08)
+
+- **First dry run failed:** isomp has Dependabot alerts disabled, so the API answers 403 and the whole export stopped. Fixed: that repo is marked `disabled` in `repos` and the export goes on.
+- **First real run logged `FAIL` on its second pass:** the clone was made from the default branch, so `origin/status-snapshot` did not exist and `git reset` failed. The first pass had pushed correctly. Fixed with an explicit fetch refspec; two later runs reported `unchanged`.
+- **Task path:** the tasks were first registered with `-ScriptPath` pointing at a Claude worktree, because the PR was not merged yet. After merge, re-run `Register-StatusTask.ps1 -ScriptPath D:\lfmap-runtime\scripts\Export-Status.ps1` so they do not depend on a worktree that may be deleted.
+- **Auto-mode blocks:** pushing the data branch and opening the PR were refused until the owner approved them in the thread; no check was bypassed.
