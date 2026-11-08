@@ -1,0 +1,19 @@
+{
+  "id": "FL1-seed-default",
+  "card": "FL1",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "mutable default argument: `seen` is shared between calls, so a second flow (or a second check_flow) that calls the same operation is reported as calling it twice"
+  ],
+  "seeded": [
+    "def _call_findings(registry: Registry, step: Step, seen: list[str] = []) -> list[str]:"
+  ],
+  "keywords": [
+    "mutable",
+    "default",
+    "shared",
+    "between calls",
+    "state",
+    "persist"
+  ]
+}

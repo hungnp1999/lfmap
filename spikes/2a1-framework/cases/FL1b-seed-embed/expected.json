@@ -1,0 +1,19 @@
+{
+  "id": "FL1b-seed-embed",
+  "card": "FL1b",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "a list or dict is inserted into a longer string with str(), which the spec allows only for str, int, float and bool"
+  ],
+  "seeded": [
+    "_SCALARS = (str, int, float, bool, list, dict)"
+  ],
+  "keywords": [
+    "list",
+    "dict",
+    "non-scalar",
+    "embedded",
+    "insert",
+    "scalar"
+  ]
+}

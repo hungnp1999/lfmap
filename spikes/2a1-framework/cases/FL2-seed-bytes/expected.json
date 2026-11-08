@@ -1,0 +1,19 @@
+{
+  "id": "FL2-seed-bytes",
+  "card": "FL2",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "the output limit counts characters, not bytes: non-ASCII output can be up to 4 times larger than MAX_PAYLOAD_BYTES"
+  ],
+  "seeded": [
+    "    size = len(json.dumps(output, ensure_ascii=False))"
+  ],
+  "keywords": [
+    "bytes",
+    "characters",
+    "encode",
+    "utf-8",
+    "non-ascii",
+    "multi-byte"
+  ]
+}

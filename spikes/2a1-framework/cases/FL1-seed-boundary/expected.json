@@ -1,0 +1,20 @@
+{
+  "id": "FL1-seed-boundary",
+  "card": "FL1",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "off by one: max_tier 1, which the spec allows, is refused"
+  ],
+  "seeded": [
+    "    if not 0 <= flow.max_tier < MAX_TIER:"
+  ],
+  "keywords": [
+    "off-by-one",
+    "off by one",
+    "boundary",
+    "inclusive",
+    "max_tier",
+    "rejects",
+    "refused"
+  ]
+}

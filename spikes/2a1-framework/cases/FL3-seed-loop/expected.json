@@ -1,0 +1,20 @@
+{
+  "id": "FL3-seed-loop",
+  "card": "FL3",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "`or` became `and`: a flows.run.* event no longer returns early, so a flow can start another flow"
+  ],
+  "seeded": [
+    "    if event.topic.startswith(\"flows.\") and event.topic.endswith(\".requested\"):"
+  ],
+  "keywords": [
+    "or",
+    "and",
+    "flows.",
+    "loop",
+    "another flow",
+    "requested",
+    "recurs"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "FL3-seed-swallow",
+  "card": "FL3",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "a flow that cannot start is swallowed: the handler no longer raises, so the bus never retries or dead-letters the event"
+  ],
+  "seeded": [
+    "        except ToolError:"
+  ],
+  "keywords": [
+    "swallow",
+    "silently",
+    "ignore",
+    "hidden",
+    "hides",
+    "suppress",
+    "retry",
+    "dead-letter"
+  ]
+}
