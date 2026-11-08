@@ -31,6 +31,7 @@
 
 ### Fixed
 
+- `lfmap jobs doctor` no longer flashes a console window on Windows when run from a scheduled task: `_run` starts `powershell.exe`, `schtasks`, `icacls` and the other helpers with `CREATE_NO_WINDOW`. No behaviour change otherwise.
 - `lfmap jobs doctor` `runtime_acl` also reads the owner of the runtime root and of each folder above it (#120): `icacls /save` shows only the DACL, and an owner holds an implicit `WRITE_DAC`. The owner SID comes from a two-line `Get-Acl` script run from `%SystemRoot%\System32` as an argument list (no shell, the path is an argument), and warns unless it is the current user, SYSTEM or Administrators.
 - `lfmap events prune` also removes `request-*` watcher subscriptions older than a day (and their deliveries) that a killed `lfmap jobs run` with `via = "event"` left behind (#124).
 - Security (#108, option 1): `approvals grant`, `approvals revoke` and `config add-folder` print a random 6-character code (no 0/O or 1/I) and run only when the person types it back; a wrong code or end of input refuses with `permission_denied`, writes nothing and is audited as `deny`. `grant` checks tier and duration before asking. On Windows the interactive check also needs `GetConsoleWindow()` to return a window, so hidden consoles of agent shells no longer count as a person. This raises the bar but does not stop an agent of the same Windows user that drives a visible console; a separate Windows user for agents is the pending ADR.

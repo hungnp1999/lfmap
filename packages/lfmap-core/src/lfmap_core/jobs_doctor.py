@@ -76,9 +76,14 @@ class Check:
     fix: str = ""
 
 
+_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
 def _run(args: list[str]) -> str:
     try:
-        result = subprocess.run(args, capture_output=True, text=True, errors="replace", check=False)
+        result = subprocess.run(
+            args, capture_output=True, text=True, errors="replace", check=False, creationflags=_NO_WINDOW
+        )
     except FileNotFoundError as error:
         raise ToolError("backend_unavailable", f"{args[0]} was not found (Windows only)") from error
     if result.returncode != 0:
