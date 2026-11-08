@@ -9,12 +9,11 @@
     "    if event.topic.startswith(\"flows.\") and event.topic.endswith(\".requested\"):"
   ],
   "keywords": [
-    "or",
-    "and",
-    "flows.",
-    "loop",
+    "flows.run",
     "another flow",
-    "requested",
-    "recurs"
+    "flow loop",
+    "infinite",
+    "requested topic",
+    "and instead of or"
   ]
 }

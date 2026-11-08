@@ -9,11 +9,11 @@
     "    size = len(json.dumps(output, ensure_ascii=False))"
   ],
   "keywords": [
-    "bytes",
-    "characters",
-    "encode",
-    "utf-8",
+    "characters instead of bytes",
+    "counts characters",
+    "character count",
     "non-ascii",
-    "multi-byte"
+    "multi-byte",
+    "len(json.dumps"
   ]
 }

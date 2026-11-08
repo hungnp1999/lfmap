@@ -9,11 +9,10 @@
     "def _call_findings(registry: Registry, step: Step, seen: list[str] = []) -> list[str]:"
   ],
   "keywords": [
-    "mutable",
-    "default",
-    "shared",
-    "between calls",
-    "state",
-    "persist"
+    "mutable default",
+    "default argument",
+    "shared between calls",
+    "persists between calls",
+    "default value of []"
   ]
 }

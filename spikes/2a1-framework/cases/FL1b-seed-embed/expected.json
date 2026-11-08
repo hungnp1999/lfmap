@@ -9,11 +9,10 @@
     "_SCALARS = (str, int, float, bool, list, dict)"
   ],
   "keywords": [
-    "list",
-    "dict",
+    "list or dict",
     "non-scalar",
-    "embedded",
-    "insert",
-    "scalar"
+    "list and dict",
+    "dict in _scalars",
+    "_scalars"
   ]
 }

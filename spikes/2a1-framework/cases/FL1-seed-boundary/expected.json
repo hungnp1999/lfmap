@@ -11,10 +11,9 @@
   "keywords": [
     "off-by-one",
     "off by one",
-    "boundary",
+    "max_tier 1",
+    "< max_tier",
     "inclusive",
-    "max_tier",
-    "rejects",
-    "refused"
+    "boundary"
   ]
 }

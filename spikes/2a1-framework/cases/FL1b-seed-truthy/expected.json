@@ -10,10 +10,9 @@
   ],
   "keywords": [
     "truthy",
-    "empty",
-    "false",
-    "zero",
-    "spec",
-    "bool"
+    "is not none",
+    "empty list",
+    "empty string",
+    "0 and false"
   ]
 }

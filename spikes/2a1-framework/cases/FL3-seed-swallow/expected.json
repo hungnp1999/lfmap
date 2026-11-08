@@ -11,11 +11,9 @@
   "keywords": [
     "swallow",
     "silently",
-    "ignore",
-    "hidden",
-    "hides",
-    "suppress",
-    "retry",
+    "never raised",
+    "never re-raised",
+    "dead code",
     "dead-letter"
   ]
 }
