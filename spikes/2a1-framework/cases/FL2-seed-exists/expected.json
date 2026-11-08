@@ -10,10 +10,9 @@
   ],
   "keywords": [
     "traversal",
-    "outside",
-    "before the",
-    "validated",
-    "guard",
-    "_path"
+    "outside the runs",
+    "before the guard",
+    "before the realpath",
+    "before _path"
   ]
 }
