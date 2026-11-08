@@ -112,7 +112,7 @@ try {
             Invoke-Git rm -rf --quiet --ignore-unmatch . | Out-Null
         }
     } else {
-        & git -C $CloneDir fetch --quiet origin $Branch 2>$null
+        & git -C $CloneDir fetch --quiet origin "+refs/heads/${Branch}:refs/remotes/origin/$Branch" 2>$null
         if ($LASTEXITCODE -eq 0) { Invoke-Git reset --quiet --hard "origin/$Branch" | Out-Null }
     }
     New-Item -ItemType Directory -Force -Path (Join-Path $CloneDir 'status') | Out-Null
