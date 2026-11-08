@@ -1,0 +1,20 @@
+{
+  "id": "FL3-seed-idem",
+  "card": "FL3",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "the run id no longer contains the flow id: the second flow matching the same event finds the first flow's run and never starts"
+  ],
+  "seeded": [
+    "            flows_run.start(registry, flow.id, event.payload, run_id=f\"ev-{event.id}\")"
+  ],
+  "keywords": [
+    "run_id",
+    "second flow",
+    "same event",
+    "flow id",
+    "collide",
+    "only one",
+    "idempot"
+  ]
+}

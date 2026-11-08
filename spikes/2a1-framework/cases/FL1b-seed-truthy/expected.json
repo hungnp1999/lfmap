@@ -1,0 +1,19 @@
+{
+  "id": "FL1b-seed-truthy",
+  "card": "FL1b",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "truthy() treats 0, False, empty string, empty list and empty dict as true, against spec section 4"
+  ],
+  "seeded": [
+    "    return value is not None"
+  ],
+  "keywords": [
+    "truthy",
+    "empty",
+    "false",
+    "zero",
+    "spec",
+    "bool"
+  ]
+}

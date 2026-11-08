@@ -1,0 +1,19 @@
+{
+  "id": "FL2-seed-swallow",
+  "card": "FL2",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "an OSError while replacing the run file is swallowed: the step is reported done but the state was never saved"
+  ],
+  "seeded": [
+    "    except OSError:"
+  ],
+  "keywords": [
+    "swallow",
+    "silently",
+    "ignore",
+    "hidden",
+    "hides",
+    "suppress"
+  ]
+}

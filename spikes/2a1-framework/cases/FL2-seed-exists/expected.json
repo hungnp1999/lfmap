@@ -1,0 +1,19 @@
+{
+  "id": "FL2-seed-exists",
+  "card": "FL2",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "start() builds a path from the caller's run_id and checks it exists before the run id is validated and the path is guarded (_path), so a run id like ../x probes files outside the runs folder"
+  ],
+  "seeded": [
+    "    if (runs_dir() / f\"{run_id}.json\").exists():"
+  ],
+  "keywords": [
+    "traversal",
+    "outside",
+    "before the",
+    "validated",
+    "guard",
+    "_path"
+  ]
+}

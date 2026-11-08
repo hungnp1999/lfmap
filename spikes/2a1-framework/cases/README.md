@@ -83,3 +83,25 @@ Three more real-code cases, same shape as FL2-real (expected `ready`, `known_iss
 
 - Gate worktree: detached at the PR's merge commit with only the case's target file removed (`diff.patch` adds it back); the card has no `tests`, so the pytest gate and probes do not run, as for FL2-real.
 - One Leading round per case (see the FL2-real note); repeats at temperature 0 are near-identical, so one run per case.
+
+## Seeds on real code (added 2026-11-08)
+
+Eleven copies of the four real modules above, each with one seeded bug (`expected_verdict: rework`), so the Leading shadow tally has seeds that are not qwen output. Kinds: caller value used before the guard (`FL2-seed-exists`), swallowed exception (`FL2-seed-swallow`, `FL3-seed-swallow`), wrong condition (`FL2-seed-wrongprop`, `FL1-seed-boundary`, `FL3-seed-loop`), chars instead of bytes (`FL2-seed-bytes`), mutable default (`FL1-seed-default`), spec violation (`FL1b-seed-truthy`, `FL1b-seed-embed`), identity collision (`FL3-seed-idem`).
+
+What the deterministic checks see (measured on Linux, 2026-11-08, frozen tests of #173, #174, #176 at the merge commits, `ruff check`, `ruff check --select S110,S112,S608`):
+
+| Seed | Frozen tests | ruff | ruff_extra |
+| --- | --- | --- | --- |
+| FL2-seed-exists | pass | pass | pass |
+| FL2-seed-swallow | pass | **fail** | **fail** (S110) |
+| FL2-seed-wrongprop | **fail** | pass | pass |
+| FL2-seed-bytes | pass | pass | pass |
+| FL1-seed-default | **fail** | **fail** (B006 unsafe fix) | pass |
+| FL1-seed-boundary | **fail** | pass | pass |
+| FL1b-seed-truthy | **fail** | pass | pass |
+| FL1b-seed-embed | **fail** | pass | pass |
+| FL3-seed-loop | pass | pass | pass |
+| FL3-seed-idem | **fail** | pass | pass |
+| FL3-seed-swallow | **fail** | **fail** (S110) | **fail** (S110) |
+
+The cards have no `tests`, so the pytest gate does not run in the harness: the Leading review sees the diff only, and `ruff`/`ruff_extra` still run. Report the catch rate over all 11, and over the 3 that no test and no ruff rule sees (`FL2-seed-exists`, `FL2-seed-bytes`, `FL3-seed-loop`). The seeded files are exactly the real file at the PR's merge commit with one replacement. `expected.json` gives the seeded line, which `common.quote.seeds_caught` matches by quote or keyword.

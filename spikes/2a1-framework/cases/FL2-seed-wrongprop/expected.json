@@ -1,0 +1,19 @@
+{
+  "id": "FL2-seed-wrongprop",
+  "card": "FL2",
+  "expected_verdict": "rework",
+  "known_issues": [
+    "close() no longer checks approval_id: rejecting or expiring any other proposal that names this run closes it"
+  ],
+  "seeded": [
+    "    if run.status != \"awaiting_approval\":"
+  ],
+  "keywords": [
+    "approval_id",
+    "another proposal",
+    "any proposal",
+    "wrong proposal",
+    "mismatch",
+    "different proposal"
+  ]
+}
