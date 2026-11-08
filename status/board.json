@@ -1,0 +1,1995 @@
+{
+  "project": 2,
+  "owner": "hungnp1999",
+  "items": [
+    {
+      "number": 47,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: record Phase 1 MVP acceptance in docs/phase1 1.0",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 48,
+      "repo": "hungnp1999/lfmap",
+      "title": "Per-script approval tiers for powershell.run (ADR-020)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 49,
+      "repo": "hungnp1999/lfmap",
+      "title": "Bump certifi to 2026.10.19 (GHSA-6q48-6c7w-9gw2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 50,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Phase 1 real-folder trial (TC-918) and limits L20-L23",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 51,
+      "repo": "hungnp1999/lfmap",
+      "title": "knowledge: report Ollama HTTP errors and warn on embed_concurrency > 1",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 52,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Phase 1 retro 1.2 (post-acceptance work, actions A8-A11)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 53,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: align knowledge spec with merged schema (retro A4)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 54,
+      "repo": "hungnp1999/lfmap",
+      "title": "knowledge: ignore sentence headings (L20) and cut weak get_context hits (L23)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 55,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: REST adapter spec, handoff and prepared tests (Roadmap 1.3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 56,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: research plan for replacing non-commercial components",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 57,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: REST adapter deferred to Phase 2 start (ADR-003 kept)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 58,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Docling spike for Roadmap 1.2 (conditional GO)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 59,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: commercial replacement plan prefers in-house and derivative work",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 60,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore: record the development environment of every commit",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 61,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: record ADR-021 acceptance and ADR-006 amendment",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 62,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): disable onnxruntime telemetry on import",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 63,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: G0 research baselines (RT-01, RT-02, RT-11, RT-13)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 64,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: research local Leading Agent tier and ADR-022 draft",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 65,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: experience store for local Working Agents",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 66,
+      "repo": "hungnp1999/lfmap",
+      "title": "ci: fail pull requests with unsigned commits",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 67,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: B0 benchmark of local Leading Agent candidates",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 68,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Docling spike results from Windows, recommend GO",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 69,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(knowledge): prune get_context hits on per-list scaled scores, not RRF",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 70,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(markitdown): optional Docling backend for PDFs (Roadmap 1.2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 71,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Docling spike GPU results",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 72,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: handoff and spec for the Phase 2a.1 framework spike",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 73,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: handoff for knowledge pdf_backend = docling (Roadmap 1.2, D3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 74,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: handoff for the qwen experience store (L1b)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 75,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(knowledge): pdf_backend setting to extract PDFs with Docling (Roadmap 1.2, D3a)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 76,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: B0b rerun of Leading Agent candidates",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 77,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: review hybrid AI notes and revise ADR-022 draft",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 78,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: review vibe-coding tools and record the working method",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 79,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: add ARCHITECTURE.md and review habits to CLAUDE.md",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 80,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(markitdown): name missing OCR languages for the Docling backend",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 81,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore(licenses): reviewed LGPL exceptions for fpdf2 and img2pdf",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 82,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: plan bench W0 for the qwen-loop Working model",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 83,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): refuse plugins that need a newer core (L9, qwen card TC-V1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 84,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: B0c flash attention bench for the Leading model",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 85,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: bench W0 results, keep qwen2.5-coder:14b as Working model",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 86,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): lfmap_core.naming + frozen tests for qwen cards TC-O1..O3",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 87,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Phase 2a EventBus spec, handoff and frozen tests",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 88,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: B0d num_gpu bench for the Leading model",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 89,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): use the qwen-written lfmap_core.naming (cards TC-O1..O3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 90,
+      "repo": "hungnp1999/lfmap",
+      "title": "test(knowledge): add iso-vi get_context relevance bench",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 91,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Antigravity deputy agent rules and handoff",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 92,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): review the proposed operating model against current governance",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 93,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Antigravity App 2.x settings in the deputy handoff",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 94,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Antigravity file access and MCP rules in the deputy handoff",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 95,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(core): add guide and module map to README (AG-P1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 96,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: task issue template and Closes line for the operating model",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 97,
+      "repo": "hungnp1999/lfmap",
+      "title": "EB-1: topics, events and SQLite event store",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 98,
+      "repo": "hungnp1999/lfmap",
+      "title": "EB-2: event adapter, ctx.events and the event channel",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 99,
+      "repo": "hungnp1999/lfmap",
+      "title": "EB-3: lfmap events CLI and drain after jobs run",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 100,
+      "repo": "hungnp1999/lfmap",
+      "title": "EB-4: Windows smoke test of the EventBus on DIEP-ANH",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 101,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): EventBus core with in-process and SQLite buses (EB-1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 102,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): event adapter, ctx.events and the event channel (EB-2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 103,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): lfmap events commands and bounded drain after jobs run (EB-3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 104,
+      "repo": "hungnp1999/lfmap",
+      "title": "EB-5: a core way to publish <plugin>.<op>.requested (jobs run event mode)",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 105,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: EventBus Windows smoke results on pc-01 (EB-4)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 106,
+      "repo": "hungnp1999/lfmap",
+      "title": "Interactive-terminal check accepts stdin redirected from NUL on Windows",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 107,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(core): require a real console for TTY-only commands on Windows",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 108,
+      "repo": "hungnp1999/lfmap",
+      "title": "Same-user agent can still reach a real console for TTY-only commands (ADR-017)",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 109,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(core): typed confirmation code and console window check for self-granting commands",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 110,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): jobs through the event bus with via = \"event\" (EB-5)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 111,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: EB-5 follow-ups, item 1 (job id in proposals) and an audit-lines note",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 112,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): run agents under a separate Windows account (ADR-023)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 113,
+      "repo": "hungnp1999/lfmap",
+      "title": "AA-1/AA-2: create the agent account on pc-01 and sign in tools there",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P2"
+      ]
+    },
+    {
+      "number": 114,
+      "repo": "hungnp1999/lfmap",
+      "title": "AA-3: jobs run from a reviewed runtime root, with an ACL check in jobs doctor",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 115,
+      "repo": "hungnp1999/lfmap",
+      "title": "AA-4..AA-6: smoke under the agent account, move jobs/MCP to the runtime, docs",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 116,
+      "repo": "hungnp1999/lfmap",
+      "title": "AA-3: jobs run from a reviewed runtime root, ACL check in jobs doctor",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 117,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): Antigravity task AG-E1, event bus user guide",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 118,
+      "repo": "hungnp1999/lfmap",
+      "title": "AG-E1: user guide for the event bus (docs/events.md)",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P3"
+      ]
+    },
+    {
+      "number": 119,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore(deps): Bump virtualenv from 21.14.11 to 21.14.13 in the uv group across 1 directory",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "dependencies",
+        "python:uv"
+      ]
+    },
+    {
+      "number": 120,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: jobs doctor runtime_acl also checks the folder owner",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 121,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(provenance): pc-01 agent account signs with its own key (ADR-023)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 122,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: event bus user guide (AG-E1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 123,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(phase1): close Phase 1b in the phase record",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 124,
+      "repo": "hungnp1999/lfmap",
+      "title": "AG-J1: prune stale request-* watcher subscriptions",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-10-31",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P3"
+      ]
+    },
+    {
+      "number": 125,
+      "repo": "hungnp1999/lfmap",
+      "title": "AG-D2: user guide for approvals and grants (docs/approvals.md)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-01",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P3"
+      ]
+    },
+    {
+      "number": 126,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): Antigravity cards AG-J1 and AG-D2",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 127,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(spike): Phase 2a.1 framework spike skeleton and plain variant (F0, F1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 128,
+      "repo": "hungnp1999/lfmap",
+      "title": "AG-F2: spike variant pydanticai (task F2)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-10-31",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P2"
+      ]
+    },
+    {
+      "number": 129,
+      "repo": "hungnp1999/lfmap",
+      "title": "AG-F3: spike variant langgraph (task F3)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-01",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P2"
+      ]
+    },
+    {
+      "number": 130,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): Antigravity cards AG-F2 and AG-F3 for the spike variants",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 131,
+      "repo": "hungnp1999/lfmap",
+      "title": "31/10 · PO: run the AA-4 smoke under lfmap-agent",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-10-31",
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 132,
+      "repo": "hungnp1999/lfmap",
+      "title": "05/11 17:00 · PO: read Dependabot alert #2 (high)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-05",
+      "due": "2026-11-05",
+      "labels": [
+        "exec:PO",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 133,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: fix Dependabot alert #2 by a lock bump",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 134,
+      "repo": "hungnp1999/lfmap",
+      "title": "02/11 · AG-R1: run.py options for gate commands (spike F4 prep)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-02",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P2"
+      ]
+    },
+    {
+      "number": 135,
+      "repo": "hungnp1999/lfmap",
+      "title": "02/11 · AG-Q1: write two qwen S cards with frozen tests for score.py",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-02",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P2"
+      ]
+    },
+    {
+      "number": 136,
+      "repo": "hungnp1999/lfmap",
+      "title": "03/11 · QW-S1/QW-S2: qwen runs the score.py cards",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-03",
+      "due": null,
+      "labels": [
+        "exec:QW",
+        "P2",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 137,
+      "repo": "hungnp1999/lfmap",
+      "title": "03/11 · AG-B0e: Ollama FA off and CUDA eager loading test",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-03",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P1",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 138,
+      "repo": "hungnp1999/lfmap",
+      "title": "03/11 night · AG-F4: real run of the framework spike",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-03",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P1",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 139,
+      "repo": "hungnp1999/lfmap",
+      "title": "02/11 · AG-A5: AA-5 move jobs and MCP to D:\\lfmap-runtime",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-02",
+      "due": null,
+      "labels": [
+        "exec:AG",
+        "P1"
+      ]
+    },
+    {
+      "number": 140,
+      "repo": "hungnp1999/lfmap",
+      "title": "04/11 after 18:00 · CC: F5 shadow review, spike report, ADR-024 draft",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-04",
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 141,
+      "repo": "hungnp1999/lfmap",
+      "title": "Plan 31/10–04/11: task order until the Claude quota reset",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-10-31",
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 142,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): pydanticai variant (AG-F2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 143,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(events): prune stale request-* watcher subscriptions (AG-J1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 144,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): langgraph variant (AG-F3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 145,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: approvals and grants user guide (AG-D2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 146,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): run.py gate-command options and qwen scoring cards (AG-R1, AG-Q1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 147,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): scoring.py written by qwen (QW-S1, QW-S2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 148,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): leader runs with num_gpu 54 for F4",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 149,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(2a.1): F4 real-run results (2026-11-02)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 150,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): framework spike result and ADR-024 (F5)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po"
+      ]
+    },
+    {
+      "number": 151,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: agent account smoke results and AA-6 notes (ADR-023)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 152,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(spike): harness defects before the next shadow run (F6)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 153,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(f6): shadow re-run results 2026-11-04",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 154,
+      "repo": "hungnp1999/lfmap",
+      "title": "05/11 · CC: design deterministic checks for the gate-invisible seeds (F7)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-05",
+      "due": "2026-11-07",
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 155,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 09:00 · CC: handoff draft for the next Phase 2a step after ADR-024",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-08",
+      "due": "2026-11-08",
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 156,
+      "repo": "hungnp1999/lfmap",
+      "title": "Plan 05/11–08/11: task order until the Sunday report",
+      "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-05",
+      "due": "2026-11-08",
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 157,
+      "repo": "hungnp1999/lfmap",
+      "title": "Epic (backlog): JARVIS roadmap after Phase 3, as LFMAP plugins",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "enhancement",
+        "exec:PO",
+        "P3"
+      ]
+    },
+    {
+      "number": 158,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): F7 design for deterministic checks of gate-invisible seeds",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "gate:po"
+      ]
+    },
+    {
+      "number": 159,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike(f7): deterministic checks ruff_extra and probes",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 160,
+      "repo": "hungnp1999/lfmap",
+      "title": "Fix jobs doctor runtime_acl to also check the folder owner",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 161,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: RT-06 license matrix for models that run on 16 GB VRAM",
+      "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 162,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: RT-05 spec for the Tauri chat UI",
+      "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 163,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: RT-10 SBOM (CycloneDX) and generated THIRD_PARTY_NOTICES, then ruff S110/S112/S608",
+      "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 164,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: add the Planner 2a.2 checklist item for the K7-style count gap",
+      "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 165,
+      "repo": "hungnp1999/lfmap",
+      "title": "06/11 · CC: RT-04 spec for LFMAP Flows (only if #155 picks Flows)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 166,
+      "repo": "hungnp1999/lfmap",
+      "title": "Next week · RT-07: inventory Hùng's n8n flows and map them to LFMAP Flows",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": "2026-11-09",
+      "due": "2026-11-13",
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 167,
+      "repo": "hungnp1999/lfmap",
+      "title": "Next week · RT-08: thin OpenAI-compatible client for the Embedder, try llama-server with bge-m3",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": "2026-11-09",
+      "due": "2026-11-13",
+      "labels": [
+        "exec:CC",
+        "P3",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 168,
+      "repo": "hungnp1999/lfmap",
+      "title": "Next week · RT-09: LFMAP Flows prototype running one real flow on jobs + EventBus",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 169,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Flows handoff and spec (#155), RT-06 licence matrix, RT-05 chat UI spec",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po"
+      ]
+    },
+    {
+      "number": 170,
+      "repo": "hungnp1999/lfmap",
+      "title": "Carry the job id in event approval proposals (#111)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 171,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(scripts): CycloneDX SBOM and THIRD_PARTY_NOTICES generator (RT-10)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 172,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore(ruff): enable S110, S112, S608 (bandit subset)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 173,
+      "repo": "hungnp1999/lfmap",
+      "title": "FL-1: flows model, reference grammar, lfmap flows list|check",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 174,
+      "repo": "hungnp1999/lfmap",
+      "title": "FL-2: flows_run, channel flow, flows.resume approvals",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 175,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Flows line mark decision (ADR-024 note, 230-line cap)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 176,
+      "repo": "hungnp1999/lfmap",
+      "title": "FL-3: flow triggers (event, schedule) and flows.run.<status> events",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 177,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore(hooks): set origin/HEAD in cloud sessions for /security-review",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 178,
+      "repo": "hungnp1999/lfmap",
+      "title": "Flows: one bus subscription per flow instead of a covering pattern",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 179,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Flows FL-4 Windows smoke results",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 180,
+      "repo": "hungnp1999/lfmap",
+      "title": "spikes: add FL2-real case for the first real Leading review",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 181,
+      "repo": "hungnp1999/lfmap",
+      "title": "Backlog: evaluate capy-flash engine for faster qwen3.8:27b (Leading tier)",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "P3"
+      ]
+    },
+    {
+      "number": 182,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Leading bench set and two-stage aggregation (plan A1, A2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 183,
+      "repo": "hungnp1999/lfmap",
+      "title": "Backlog: local model speed research (MoE expert streaming from SSD), revisit on triggers",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "P3"
+      ]
+    },
+    {
+      "number": 184,
+      "repo": "hungnp1999/lfmap",
+      "title": "ADR-022 amendment: Sonnet (Cloud) as primary Leading Agent (draft for Hùng's gate)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po"
+      ]
+    },
+    {
+      "number": 185,
+      "repo": "hungnp1999/lfmap",
+      "title": "spikes: add FL1-real, FL1b-real and FL3-real cases",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 186,
+      "repo": "hungnp1999/lfmap",
+      "title": "spikes: add 11 seeded copies of the real Flows modules",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 187,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(jobs-doctor): hide console windows of helper commands",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 188,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): architecture review before Phase 2b (core strength)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 189,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core: ModelClient Protocol in lfmap-core and a thin llm plugin",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 190,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core: fold jobs into Flows (one runner, one proposal kind)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 191,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core acceptance suite from Hùng's business scenarios",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 192,
+      "repo": "hungnp1999/lfmap",
+      "title": "Plugin Contract v0.2 and a compatibility fixture",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 193,
+      "repo": "hungnp1999/lfmap",
+      "title": "Knowledge: weekly retrieval regression bench",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 194,
+      "repo": "hungnp1999/lfmap",
+      "title": "Chat UI spec: web-first, Tauri later as a shell",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 195,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core tidy-up: one lfmap doctor, fold event helper modules",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 196,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core: lfmap backup / restore of owner state (no backup exists today)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 197,
+      "repo": "hungnp1999/lfmap",
+      "title": "Security core S1: data classes feed the approval tier (ADR-025, before organizer)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 198,
+      "repo": "hungnp1999/lfmap",
+      "title": "Security core S3: read-only Windows Security checks in lfmap doctor",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 199,
+      "repo": "hungnp1999/lfmap",
+      "title": "Phase 3 spike: phone passkey (WebAuthn) to sign approvals",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "security-review"
+      ]
+    },
+    {
+      "number": 200,
+      "repo": "hungnp1999/lfmap",
+      "title": "CONTRIBUTING.md and a contributor agreement (CLA or DCO) before outside code",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision"
+      ]
+    },
+    {
+      "number": 201,
+      "repo": "hungnp1999/lfmap",
+      "title": "Packaging spike: Windows installer before sharing with early users",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 202,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: draft CONTRIBUTING and bilingual CLA (#200)",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 203,
+      "repo": "hungnp1999/lfmap",
+      "title": "Export board and Dependabot alerts snapshot from DIEP-ANH for Cloud sessions",
+      "type": "Issue",
+      "status": "In Review",
+      "start": null,
+      "due": null,
+      "labels": [
+        "P2"
+      ]
+    },
+    {
+      "number": 204,
+      "repo": "hungnp1999/lfmap",
+      "title": "Export board and Dependabot alerts snapshot for Cloud sessions",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 55,
+      "repo": "hungnp1999/MarkitdownTool",
+      "title": "06/11 evening · PO: Windows test run for PR #52 (markitdown 0.1.9)",
+      "type": "Issue",
+      "status": "Done",
+      "start": "2026-11-06",
+      "due": "2026-11-06",
+      "labels": [
+        "exec:AG",
+        "P2"
+      ]
+    }
+  ]
+}
