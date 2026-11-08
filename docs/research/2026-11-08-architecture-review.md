@@ -114,6 +114,33 @@ This keeps all Roadmap Phase 2 content and changes only the order.
 
 C4, C6, C8, C10 are reversible core or hygiene work and can be scheduled without a decision.
 
-## 6. Not covered
+## 6. Decisions recorded (Hùng, 2026-11-08 07:03Z)
+
+1. C1 accepted: `ModelClient` goes into the core in Phase 2, not spread across plugins.
+2. C2 accepted: core acceptance scenarios are built together from business cases Hùng provides.
+3. C3 accepted: components with similar functions are merged to simplify the architecture; the same review is applied to other components, with a risk analysis for Hùng to approve where needed (section 7).
+4. C5 accepted: local-agent research is capped; most work keeps relying on cloud agents for now.
+5. C7 accepted: web UI first; Tauri once the core and basic features run stably.
+6. Commercialisation topics (C9) are discussed in Phase 3.
+
+Issues: #189 ModelClient (C1, K2), #190 jobs into Flows (C3, K1), #191 core acceptance suite (C2), #192 Plugin Contract v0.2 (C4), #193 retrieval bench (C6), #194 web-first chat UI spec (C7), #195 doctor and event helpers (K3, K4). The Roadmap Phase 2 list and an ADR-018 note in `03_Decisions_ADR.md` were updated outside the repo on 2026-11-08.
+
+## 7. Consolidation scan (decision 3)
+
+Every durable mechanism and helper group in `lfmap-core` and around it, checked for overlap. `run_operation` (`runtime.py`) is already the single call path for CLI, MCP, jobs, events and flows, so the gate itself needs no merge.
+
+| # | Overlap | Proposal | Risk | Needs approval |
+| --- | --- | --- | --- | --- |
+| K1 | Jobs and Flows (C3): two runners, two proposal kinds (job proposal, `flows.resume`), two config files (`jobs.toml`, `flows.toml`) | One Flow runner; a job is read from `jobs.toml` as a one-step scheduled flow; one proposal kind; `jobs` CLI kept as a thin alias; Task Scheduler and the approvals queue unchanged | Medium: approvals already queued by old jobs must still resolve (keep the old reader for one release); audit channel `job` stays for those runs | Approved (decision 3); ADR-018 note added |
+| K2 | Model clients (C1): `embed.py` (Ollama native API), planned `chat.py` loop, RT-08 OpenAI-compatible embedder client, `spikes/2a1-framework/common` loopback client | One `ModelClient` Protocol in core (chat + embed), one OpenAI-compatible implementation, loopback-only unless the routing policy and gate allow a cloud endpoint; `knowledge` and later `chat` use it; the spike keeps its own copy (not distributed) | Medium: embedding vectors must stay identical when the transport changes (same model, compare vectors on the bench before switching); security-review for the routing/egress part | Approved (decision 1) |
+| K3 | Diagnostics: `jobs doctor`, `flows check`, `events status` | One `lfmap doctor` that runs all checks and keeps the three as sub-views | Low: output format change only | No |
+| K4 | Event helpers split for qwen cards: `topics.py`, `events_names.py`, `events_payload.py`, `events_retry.py` (about 220 lines in 4 files) | Fold into `events.py` / `events_sqlite.py` when next touched; no behaviour change | Low: imports in tests change | No |
+| K5 | Durable state in three styles: JSON files (approvals pending, flow runs, `grants.json`), SQLite (`events.db`), JSONL (`audit.jsonl`) | **Not now.** A single SQLite state store would give atomic run + proposal writes, but ADR-023 relies on separate owner-side files with their own ACL, and ADR-018/024 name the file formats. Revisit only if the C2 acceptance suite shows a consistency defect between a run file and its proposal | Medium to high (touches three ADRs and the security boundary) | Yes, only if revisited |
+| K6 | Leading bench in two places: `/mnt/project-files/leading-bench/` and `spikes/leading-bench/` | Repo copy becomes the only source; project-files copy deleted after Hùng's OK | Low | Deleting the project-files copy: yes |
+| K7 | Conversion code in MarkitdownTool and `lfmap-markitdown` (C8) | MarkitdownTool frozen at 2.x for bug fixes; conversion grows in `lfmap-markitdown`; joining them is a Phase 3 topic with packaging | Low | No |
+
+Not merged on purpose: `approval.py` (gate and tiers), `approvals.py` (queue) and `grants.py` (time-limited grants) are three different jobs on one boundary; `mcp_adapter.py`, the planned REST adapter and `events_adapter.py` stay separate thin adapters over `run_operation` (ADR-001).
+
+## 8. Not covered
 
 Code-level security review (per PR with `/security-review`), Phase 3 marketplace and Team Edition, pricing.
