@@ -1709,7 +1709,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "ADR-022 amendment: Sonnet (Cloud) as primary Leading Agent (draft for Hùng's gate)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -1959,7 +1959,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Export board and Dependabot alerts snapshot from DIEP-ANH for Cloud sessions",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -1971,7 +1971,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Export board and Dependabot alerts snapshot for Cloud sessions",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
