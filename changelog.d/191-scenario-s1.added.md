@@ -1,0 +1,1 @@
+Scenario S1 (#191, tender package search) recorded in `docs/specs/acceptance-scenarios.md` with the core gaps it exposes (web-fetch plugin, declared recipient list for sending, multilingual keyword matching, scripted pages, duplicate memory). Docs only.

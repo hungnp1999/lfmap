@@ -58,3 +58,33 @@ Sketch of the flow Claude would write: schedule trigger, then `markitdown.conver
 2. Writes `flows.toml` plus synthetic inputs and a pass/fail check, as a regression case under `docs/specs/flows-tests/` or the plugin tests.
 3. Lists gaps found in the core (a missing plugin operation, an approval that cannot be expressed) as issues, before building anything.
 4. Runs it on DIEP-ANH and reports.
+
+## S1: Tender package search
+
+Source: the owner's real workflow, recorded 2026-11-09 (the notes in brackets are the owner's answers to the follow-up questions). Public data only.
+
+- Why it matters: 2 to 3 hours a week; by hand, tenders are missed and updates are late because they depend on one person's calendar.
+- Frequency: daily.
+- Trigger: a schedule (time of day to be set).
+- Input: text on two public websites (baodauthau.vn and muasamcong.mof.gov.vn); Vietnamese, English and Russian. Only browser access today; no API or RSS known (to be checked).
+- Steps today:
+  1. Open the Bao Dau thau site or the national e-procurement site.
+  2. Search by keyword: a product name (about 2 words) or a solution name (about 4 words).
+  3. Collect the tender packages found.
+  4. Send a notice to the people concerned by chat or email.
+- Expected output: a table (Excel or similar) sent automatically by chat or email.
+- Your approval: none for the send, because the recipients are a fixed internal list declared in advance; each recipient checks the content and forwards it to management (owner decision 2026-11-09).
+- Data class: normal.
+- Leaves the machine?: yes: the table goes to the declared internal recipients by chat or email. Fetching public pages is outbound traffic too.
+- Success check: each row has enough to find the original page again (link), plus field, closing date and bidding form; a package is selected when a keyword matches (no other rule).
+- Failure to avoid: wrong data in the table, or a package that does not fit the need being selected; a missed package.
+- Plugins you expect: `web` (new: fetch pages from an allowed list of hosts), `file` (write the Excel table), `email` or chat (new), possibly `llm` only for Russian or English matching.
+- Test data available?: yes, real public pages saved as samples; no synthetic data needed.
+
+### Core gaps this scenario exposes (to become issues before any plugin is built)
+
+1. No web-fetch plugin. It is a network path, so it needs an allow-list of hosts, a rate limit, a size limit and a gate decision (read of public data, T1 or lower).
+2. No send plugin and no "declared recipient list" rule. Sending to a fixed internal list needs a new approval rule: a pre-approved destination set, owner-edited in `config.toml`, never changed by a flow (compare `[approval.destinations]`).
+3. Keyword matching across Vietnamese, English and Russian: diacritics and case folding; Russian needs no model if only exact terms are matched.
+4. Pages that need a browser (scripts) cannot be read by a plain fetch; check first whether the site offers an export or API.
+5. Duplicates across days: the flow needs a memory of tenders already sent (a state file or the events store).
