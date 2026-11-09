@@ -15,6 +15,10 @@ def test_parse_duration():
             grants.parse_duration(bad)
 
 
+def test_grant_records_the_owner_principal(user_dirs):
+    assert grants.add("p.op", "T1", timedelta(hours=1))["principal"] == "owner"
+
+
 def test_maximum_duration(user_dirs):
     with pytest.raises(ToolError):
         grants.add("p.op", "T3", timedelta(hours=25))
