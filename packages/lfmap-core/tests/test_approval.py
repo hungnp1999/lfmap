@@ -106,6 +106,11 @@ def test_audit_appends_json_lines(user_dirs):
     assert second["target"] == "D:\\Tài liệu"
 
 
+def test_audit_lines_carry_the_owner_principal(user_dirs):
+    audit({"plugin": "p", "decision": "allow"})
+    assert json.loads(audit_path().read_text(encoding="utf-8"))["principal"] == "owner"
+
+
 def test_audit_refuses_unknown_fields(user_dirs):
     with pytest.raises(ValueError):
         audit({"plugin": "p", "content": "secret text"})

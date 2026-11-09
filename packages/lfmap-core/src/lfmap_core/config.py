@@ -19,6 +19,9 @@ FOLDER_NAMES = ("documents", "exports", "knowledge", "scripts")
 _SECTION = re.compile(r"^\s*\[")
 _PATHS_HEADER = re.compile(r"^\s*\[paths\]\s*(#.*)?$")
 
+PRINCIPAL = "owner"
+"""Who acts. Always `owner` today; later users only add values. Records without a principal mean `owner`."""
+
 
 def app_dir() -> Path:
     base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
