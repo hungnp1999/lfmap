@@ -4,10 +4,12 @@ A job runs one plugin operation on a schedule, with nobody at the keyboard (ADR-
 does the scheduling: every job is a task in the `\LFMAP\` folder that runs `scripts\Invoke-LfmapJob.ps1`,
 which calls `lfmap jobs run <id>`. LFMAP has no scheduler loop of its own.
 
-> **Planned (issue #190, not implemented yet):** a job will be read as a one-step scheduled flow and run by the
-> Flows runner; `jobs.toml`, the task names, `lfmap jobs ...` and the tier table below stay as they are, and
-> proposals queued by jobs before the change remain approvable for one release. Design:
-> [docs/specs/flows.md](specs/flows.md) section 13.
+> Since #190 a job is read as a one-step scheduled flow and runs through the Flows runner
+> ([docs/specs/flows.md](specs/flows.md) section 13). `jobs.toml`, task names, `lfmap jobs ...` and the tier
+> table below are unchanged. Differences: audit lines of a job run use channel `flow`; a call above the job's
+> `max_tier` pauses the run behind a `flows.resume` proposal (the `job` column shows the job id); a job run
+> writes a run file (`flows\runs\`) only while it waits for approval; `lfmap flows list` and `flows check`
+> include jobs. Proposals queued by jobs before this change can still be approved for one release.
 
 ## Declaring jobs
 
@@ -43,7 +45,7 @@ Only plugins with `[adapters] events = true` accept it; otherwise the job fails 
 under the job's id and shows that name in `lfmap approvals pending`. A request published without a job id is
 queued under `events`.
 
-A T1 job with `via = "event"` writes two lines to `audit.jsonl` for one run: one on channel `job` (the check in
+A T1 job with `via = "event"` writes two lines to `audit.jsonl` for one run: one on channel `flow` (the check in
 `lfmap jobs run`) and one on channel `event` (the adapter). This is intended: the two gates use different
 `max_tier` limits, and the second line is the only trace if the adapter fails before writing its own.
 
@@ -63,7 +65,7 @@ destinations. What a call does depends on its tier (ADR-017) and the job's `max_
 | T3 (external) | queued for approval | queued for approval |
 
 `[approval]` in `config.toml` can only tighten this: `deny` refuses the call without queueing it, and T1 set
-to `ask` is queued. Every decision above T0 is written to `audit.jsonl` with channel `job`.
+to `ask` is queued. Every decision above T0 is written to `audit.jsonl` with channel `flow` (`job` for proposals queued before #190).
 
 ## Approving queued calls
 

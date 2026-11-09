@@ -15,7 +15,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor
+from lfmap_core import approvals, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor, jobs_flow
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -499,7 +499,7 @@ def build_app(registry: Registry) -> typer.Typer:
     ) -> None:
         """Run one job now, as Task Scheduler would, then drain the event bus (bounded by --max-events)."""
         try:
-            _print_output(jobs.run_job(registry, job_id, max_events=max_events), json_output)
+            _print_output(jobs_flow.run_job(registry, job_id, max_events=max_events), json_output)
         finally:
             try:
                 handled = drain_after_job(registry, max_events)
@@ -567,7 +567,7 @@ def build_app(registry: Registry) -> typer.Typer:
                 "steps": len(flow.steps),
                 "last_run": flows.last_run_status(flow.id),
             }
-            for flow in flows.load_flows()
+            for flow in jobs_flow.load_all()
         ]
         if json_output:
             typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
@@ -579,7 +579,7 @@ def build_app(registry: Registry) -> typer.Typer:
     @flows_app.command("check")
     def flows_check(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
         """Check every flow against the registry; exit 1 when there is a finding."""
-        found = [(flow.id, text) for flow in flows.load_flows() for text in flows.check_flow(registry, flow)]
+        found = [(flow.id, text) for flow in jobs_flow.load_all() for text in flows.check_flow(registry, flow)]
         if json_output:
             typer.echo(json.dumps([{"flow": i, "finding": t} for i, t in found], indent=2, ensure_ascii=False))
         else:

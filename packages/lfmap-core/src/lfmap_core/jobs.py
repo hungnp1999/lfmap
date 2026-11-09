@@ -17,12 +17,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from lfmap_core.approval import Policy
-from lfmap_core.approvals import JobApprover, ttl
-from lfmap_core.config import app_dir, load_config
+from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
-from lfmap_core.registry import PluginEntry, Registry
-from lfmap_core.runtime import call_tier, run_operation
+from lfmap_core.registry import PluginEntry
 
 TASK_FOLDER = "\\LFMAP\\"
 QUERY = ["schtasks", "/Query", "/FO", "CSV", "/NH"]
@@ -172,31 +169,6 @@ def check_via(entry: PluginEntry, job: Job) -> None:
     if job.via == "event" and not entry.manifest.adapters.events:
         message = f'Job {job.id!r} uses via = "event" but plugin {job.plugin} has [adapters] events = false'
         raise ToolError("invalid_input", message, {"job": job.id, "plugin": job.plugin})
-
-
-def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_events: int = 1000) -> BaseModel:
-    """Run one job. With `via = "event"` the call goes through the event adapter: core publishes
-    `<plugin>.<operation>.requested`, drains at most `max_events` handler calls and returns the result.
-    The job's `max_tier` is checked here and `[events] max_tier` in the adapter, so the lower one applies."""
-    job = next((j for j in load_jobs(path) if j.id == job_id), None)
-    if job is None:
-        raise ToolError("not_found", f"Unknown job {job_id!r}", {"job": job_id})
-    if not job.enabled:
-        raise ToolError("invalid_input", f"Job {job_id!r} is disabled", {"job": job_id})
-    entry = registry.get(job.plugin)
-    declared = entry.manifest.operation(job.operation)
-    if declared is None:
-        raise ToolError("not_found", f"Unknown operation {job.plugin}.{job.operation}", {"job": job_id})
-    check_input(entry, job.operation, job.input)
-    check_via(entry, job)
-    config = load_config()
-    gate = JobApprover(job, Policy.from_config(config), ttl(config))
-    gate(call_tier(entry, job.operation, job.input, config), "side_effects")
-    if job.via == "event":
-        from lfmap_core.events_adapter import request_operation  # events_adapter imports this module
-
-        return request_operation(registry, entry, job.operation, job.input, max_events=max_events, job_id=job.id)
-    return run_operation(entry, job.operation, job.input, channel="job", approver=gate)
 
 
 def schedule_command(

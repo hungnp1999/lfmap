@@ -65,6 +65,7 @@ class Step(BaseModel):
     approve: str | None = None
     input: dict[str, Any] = Field(default_factory=dict)
     when: str | None = None
+    via: Literal["call", "event"] = "call"  # "event": core publishes `<plugin>.<operation>.requested` (jobs only)
 
 
 class Flow(BaseModel):
@@ -175,6 +176,8 @@ def _call_findings(registry: Registry, step: Step) -> list[str]:
         entry = registry.get(plugin)
         if entry.manifest.operation(operation) is None:
             return [f"Unknown operation {plugin}.{operation}"]
+        if step.via == "event" and not entry.manifest.adapters.events:
+            return [f'via = "event" but plugin {plugin} has [adapters] events = false']
         if not find_refs(step.input):  # inputs with references are checked again after resolving
             check_input(entry, operation, step.input)
     except ToolError as error:

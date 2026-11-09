@@ -3,7 +3,7 @@
 - Package: `lfmap-core` (flat modules next to `jobs.py` and `events*.py`)
 - Roadmap: Phase 2 item "LFMAP Flows"; research plan RT-04 (this spec) and RT-09 (first working flow) in [`docs/research/2026-10-23-commercial-replacements.md`](../research/2026-10-23-commercial-replacements.md)
 - Decisions: ADR-021 (build in-house, clean room for n8n), ADR-024 (no agent framework; pause = file state + `resume` in a new process; the pause maps to an ADR-018 proposal `flows.resume`, T2), ADR-017/018 (tiers, non-interactive calls go to the approvals queue), ADR-006 as amended (no background service in Phase 2)
-- Folding jobs into flows (architecture review C3/K1, issue #190, ADR-018 note 2026-11-08): section 13 of this spec. **Status: accepted 2026-11-09 (owner approved the three decisions of 13.7); code follows in a separate PR.**
+- Folding jobs into flows (architecture review C3/K1, issue #190, ADR-018 note 2026-11-08): section 13 of this spec. **Status: accepted 2026-11-09 (owner approved the three decisions of 13.7); implemented in the #190 code PR.**
 - Handoff and task list: [`docs/handoff/2026-11-06-lfmap-flows.md`](../handoff/2026-11-06-lfmap-flows.md)
 
 ## 1. Purpose
@@ -166,7 +166,7 @@ Goal: one runner and one proposal kind. A job in `jobs.toml` is translated on lo
 
 ### 13.3 Proposals and audit
 
-- A translated job that needs more than its ceiling pauses like any flow: one `flows.resume` proposal (T2 as section 5; the tier shown to the person is still the call's own tier). `approvals pending` shows the job id in the `job` column as today.
+- A translated job that needs more than its ceiling pauses like any flow: one `flows.resume` proposal (T2 as section 5; the reason names the call's own tier). `approvals pending` shows the job id in the `job` column as today.
 - Run state: a translated job writes a run file **only when it pauses** (needed for resume); a run that completes or fails writes none, as jobs never had run files, so an hourly job does not create 24 files a day. Its result is the `jobs-YYYY-MM-DD.jsonl` line and `audit.jsonl`. (Open question 1.)
 - Audit channel: runs of translated jobs use channel `flow`. The channel `job` stays valid in `audit.jsonl` and in `approvals` for old lines and old proposals (section 13.4).
 - A `via = "event"` translated job still writes two audit lines for one T1 run (flow gate and event adapter), as `docs/jobs.md` explains.

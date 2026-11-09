@@ -10,8 +10,10 @@ from lfmap_core import approvals, cli, grants, jobs
 from lfmap_core.approval import Policy, audit_path, decide, job_decision
 from lfmap_core.approvals import approvals_dir
 from lfmap_core.cli import build_app
+from lfmap_core.config import load_config
 from lfmap_core.errors import ToolError
 from lfmap_core.mcp_adapter import build_server
+from lfmap_core.runtime import call_tier, run_operation
 
 runner = CliRunner()
 
@@ -47,10 +49,15 @@ def audit_records() -> list[dict]:
 
 
 def queued_id(registry, job_id="nightly") -> str:
-    result = run(registry, "jobs", "run", job_id)
-    assert result.exception.code == "permission_denied"
-    assert result.exception.message == "Queued for approval"
-    return result.exception.details["approval_id"]
+    """Queue a proposal the way jobs did before they became flows (#190): the legacy reader must still approve it."""
+    job = next(j for j in jobs.load_jobs() if j.id == job_id)
+    entry, config = registry.get(job.plugin), load_config()
+    gate = approvals.JobApprover(job, Policy.from_config(config), approvals.ttl(config))
+    with pytest.raises(ToolError) as error:
+        gate(call_tier(entry, job.operation, job.input, config), "side_effects")
+        run_operation(entry, job.operation, job.input, channel="job", approver=gate)
+    assert error.value.message == "Queued for approval"
+    return error.value.details["approval_id"]
 
 
 @pytest.fixture
@@ -91,10 +98,7 @@ def test_decide_never_asks_or_preapproves_for_jobs(tier):
 
 def test_max_tier_0_only_queues_a_local_write(user_dirs, monkeypatch, registry):
     write_jobs(user_dirs, monkeypatch, job_block())
-    calls = []
-    monkeypatch.setattr(jobs, "run_operation", lambda *args, **kwargs: calls.append(args))
     approval_id = queued_id(registry)
-    assert calls == []
     [path] = files("pending")
     assert path.name == f"{approval_id}.json"
     proposal = json.loads(path.read_text(encoding="utf-8"))

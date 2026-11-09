@@ -16,7 +16,7 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 
-from lfmap_core import approvals, flows_triggers
+from lfmap_core import approvals, flows_triggers, jobs_flow
 from lfmap_core.approval import Asker, Gate, Policy, Tier
 from lfmap_core.config import app_dir, load_config
 from lfmap_core.errors import ToolError
@@ -24,7 +24,7 @@ from lfmap_core.events_payload import MAX_PAYLOAD_BYTES, encode_payload
 from lfmap_core.flows import Flow, Step, check_flow, flows_path, parse_flows
 from lfmap_core.flows_refs import resolve, truthy
 from lfmap_core.registry import Registry
-from lfmap_core.runtime import call_tier, run_operation
+from lfmap_core.runtime import call_tier
 
 Status = Literal["running", "awaiting_approval", "completed", "failed", "rejected", "expired"]
 StepStatus = Literal["pending", "awaiting_approval", "completed", "skipped", "failed"]
@@ -107,6 +107,8 @@ def list_runs(flow: str | None = None, limit: int = 20) -> list[FlowRun]:
 def _save(run: FlowRun) -> None:
     run.updated = datetime.now(UTC)
     path = _path(run.run_id)
+    if run.status != "awaiting_approval" and not path.exists() and jobs_flow.is_job(run.flow):
+        return flows_triggers.announce(run)  # a job run leaves a file only while it waits for approval
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(run.model_dump_json(indent=2), encoding="utf-8")
@@ -114,15 +116,16 @@ def _save(run: FlowRun) -> None:
     flows_triggers.announce(run)
 
 
-def _flows_file() -> tuple[list[Flow], str]:
-    """The flows and the SHA-256 of the exact bytes they were parsed from."""
+def _flows_file() -> tuple[list[Flow], dict[str, str]]:
+    """The flows (declared and translated jobs) and, per flow id, the hash a run binds to: the SHA-256 of the
+    exact `flows.toml` bytes for a declared flow."""
     path = flows_path()
     try:
         raw = path.read_bytes()
     except FileNotFoundError:
         raw = b""
     try:
-        return parse_flows(raw.decode("utf-8"), path).flows, hashlib.sha256(raw).hexdigest()
+        return jobs_flow.extend(parse_flows(raw.decode("utf-8"), path).flows, hashlib.sha256(raw).hexdigest())
     except UnicodeDecodeError as error:
         raise ToolError("invalid_input", f"{path} is not UTF-8 text") from error
 
@@ -153,7 +156,7 @@ def start(registry: Registry, flow_id: str, trigger_payload: dict[str, Any], *, 
     run_id = f"{now:%Y%m%dT%H%M%SZ}-{flow_id[:40]}-{uuid.uuid4().hex[:8]}" if run_id is None else run_id
     if _path(run_id).exists():
         return load_run(run_id)
-    flows, sha = _flows_file()
+    flows, shas = _flows_file()
     flow = next((f for f in flows if f.id == flow_id), None)
     if flow is None:
         raise ToolError("not_found", f"Unknown flow {flow_id!r}", {"flow": flow_id})
@@ -162,7 +165,9 @@ def start(registry: Registry, flow_id: str, trigger_payload: dict[str, Any], *, 
     if findings := check_flow(registry, flow):
         raise ToolError("invalid_input", f"Flow {flow_id!r} did not pass its checks", {"findings": findings})
     steps = [StepRun(id=s.id) for s in flow.steps]
-    run = FlowRun(run_id=run_id, flow=flow.id, flow_sha256=sha, payload=trigger_payload, steps=steps, created=now)
+    run = FlowRun(
+        run_id=run_id, flow=flow.id, flow_sha256=shas[flow.id], payload=trigger_payload, steps=steps, created=now
+    )
     return advance(registry, flow, run)
 
 
@@ -219,7 +224,7 @@ def _execute(
     def propose(tier: Tier, reason: str, detail: str) -> str:
         what = f"{step.call} needs {tier} ({reason}), flow ceiling T{flow.max_tier}" if step.call else reason
         asked = {"run_id": run.run_id, "step": step.id, "call": step.call, "resolved_input": resolved}
-        call = approvals.EventCall("flows", "resume", asked, id="flows")
+        call = approvals.EventCall("flows", "resume", asked, id=flow.id if jobs_flow.is_job(flow.id) else "flows")
         return approvals.queue(call, "T2", f"{run.flow}/{step.id}: {what}", detail, lifetime)
 
     job = approvals.EventCall(plugin, operation, resolved, flow.max_tier)
@@ -229,8 +234,7 @@ def _execute(
         return None
     entry = registry.get(plugin)
     gate(call_tier(entry, operation, resolved, config), "side_effects")
-    channel = "flow" if approved is None else "cli"
-    output = run_operation(entry, operation, resolved, channel=channel, approver=gate).model_dump(mode="json")
+    output = jobs_flow.call(registry, entry, flow.id, step, resolved, gate, approved).model_dump(mode="json")
     size = len(json.dumps(output, ensure_ascii=False).encode("utf-8"))
     if size > MAX_PAYLOAD_BYTES:
         raise ToolError(
@@ -249,8 +253,8 @@ def check_resume(proposal: approvals.Proposal) -> tuple[Flow, FlowRun, int]:
     run = load_run(str(proposal.input.get("run_id")))
     if run.status != "awaiting_approval" or run.approval_id != proposal.id:
         raise ToolError("invalid_input", f"Run {run.run_id} is not waiting for this proposal", {"id": proposal.id})
-    flows, sha = _flows_file()
-    if sha != run.flow_sha256:
+    flows, shas = _flows_file()
+    if shas.get(run.flow) != run.flow_sha256:
         raise ToolError("invalid_input", "flow changed; start a new run", {"run_id": run.run_id})
     flow = next((f for f in flows if f.id == run.flow), None)
     index = next((i for i, s in enumerate(run.steps) if s.status == "awaiting_approval"), None)
