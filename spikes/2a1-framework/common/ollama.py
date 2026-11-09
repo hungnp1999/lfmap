@@ -1,6 +1,7 @@
 """Ollama chat client on loopback (handoff D4), standard library only; environment proxies are ignored."""
 
 import json
+import os
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
@@ -11,8 +12,8 @@ from common.models import Models
 URL = "http://127.0.0.1:11434"
 LEADING = "qwen3.8:27b"
 WORKING = "qwen2.5-coder:14b"
-NUM_CTX = 16384
-NUM_PREDICT = 8192
+NUM_CTX = int(os.environ.get("LFMAP_NUM_CTX", 16384))  # default is the measured F6/F7 setting
+NUM_PREDICT = int(os.environ.get("LFMAP_NUM_PREDICT", 8192))  # reply cap, thinking included: 8192 tokens hit at ~590 s
 KEEP_ALIVE = "30m"
 TIMEOUT = 3600
 LEADING_NUM_GPU = 54  # B0c/B0e: 54 of 66 layers of the 27b fit 16 GB, +45 % tok/s over the default split

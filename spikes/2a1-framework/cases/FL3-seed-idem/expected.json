@@ -9,12 +9,10 @@
     "            flows_run.start(registry, flow.id, event.payload, run_id=f\"ev-{event.id}\")"
   ],
   "keywords": [
-    "run_id",
+    "missing flow id",
+    "omits the flow id",
+    "without the flow id",
     "second flow",
-    "same event",
-    "flow id",
-    "collide",
-    "only one",
-    "idempot"
+    "same event"
   ]
 }

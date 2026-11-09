@@ -50,7 +50,8 @@ def test_case_is_consistent(case: Path):
     assert expected["id"] == case.name
     assert expected["expected_verdict"] in ("ready", "rework", "escalate")
     assert set(files_from_patch(card.replay_diff or "")) == {card.target}
-    assert card.tests and card.tests[0].startswith("packages/lfmap-knowledge/tests/")
+    if not case.name.startswith("FL"):  # FL cases are real Flows code reviewed without a pytest gate (cases/README.md)
+        assert card.tests and card.tests[0].startswith("packages/lfmap-knowledge/tests/")
     lines = [ln[1:] for ln in (card.replay_diff or "").splitlines()]
     for seed in expected["seeded"]:
         assert position(lines, seed) >= 0, seed

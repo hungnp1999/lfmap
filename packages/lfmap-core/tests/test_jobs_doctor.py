@@ -1,4 +1,5 @@
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -619,3 +620,15 @@ def test_current_sid_missing(monkeypatch):
     monkeypatch.setattr(jobs_doctor, "_run", lambda args: "nothing")
     with pytest.raises(ToolError):
         jobs_doctor._current_sid()
+
+
+def test_run_hides_the_console_window(monkeypatch):
+    seen: dict[str, object] = {}
+
+    def fake_subprocess_run(args, **kwargs):
+        seen.update(kwargs)
+        return subprocess.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(jobs_doctor.subprocess, "run", fake_subprocess_run)
+    assert jobs_doctor._run(["whoami.exe"]) == "ok"
+    assert seen["creationflags"] == getattr(subprocess, "CREATE_NO_WINDOW", 0)

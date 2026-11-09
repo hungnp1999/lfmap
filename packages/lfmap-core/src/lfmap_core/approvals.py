@@ -44,6 +44,7 @@ class Proposal(BaseModel):
     id: str = Field(pattern=rf"^{_ID.pattern}$")
     created: AwareDatetime
     expires: AwareDatetime
+    principal: str = "owner"
     job: str = Field(pattern=r"^[a-z][a-z0-9-]*$")
     plugin: str
     operation: str

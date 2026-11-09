@@ -16,7 +16,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from lfmap_core import grants
-from lfmap_core.config import app_dir
+from lfmap_core.config import PRINCIPAL, app_dir
 from lfmap_core.errors import ToolError
 from lfmap_core.manifest import SideEffects
 from lfmap_core.tool import Channel
@@ -30,7 +30,9 @@ DataLevel = Literal["normal", "private", "secret"]
 TIERS: tuple[Tier, ...] = ("T0", "T1", "T2", "T3")
 DATA_LEVELS: tuple[DataLevel, ...] = ("normal", "private", "secret")
 MAX_DESTINATION_DAYS = 90
-AUDIT_FIELDS = frozenset({"time", "channel", "plugin", "operation", "tier", "decision", "reason", "target"})
+AUDIT_FIELDS = frozenset(
+    {"time", "principal", "channel", "plugin", "operation", "tier", "decision", "reason", "target"}
+)
 
 
 def base_tier(side_effects: SideEffects) -> Tier:
@@ -156,7 +158,7 @@ def audit(record: dict[str, Any], path: Path | None = None) -> None:
     unknown = set(record) - AUDIT_FIELDS
     if unknown:
         raise ValueError(f"unknown audit fields: {sorted(unknown)}")
-    line = {"time": datetime.now(UTC).isoformat(timespec="seconds"), **record}
+    line = {"time": datetime.now(UTC).isoformat(timespec="seconds"), "principal": PRINCIPAL, **record}
     path = path or audit_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8", newline="\n") as file:

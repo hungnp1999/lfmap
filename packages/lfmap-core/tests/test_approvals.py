@@ -102,8 +102,14 @@ def test_max_tier_0_only_queues_a_local_write(user_dirs, monkeypatch, registry):
     assert proposal["input"] == {"names": ["a"]} and proposal["tier"] == "T1" and proposal["preview"] is None
     created, expires = datetime.fromisoformat(proposal["created"]), datetime.fromisoformat(proposal["expires"])
     assert expires - created == timedelta(days=7)
+    assert proposal["principal"] == "owner"
     last = audit_records()[-1]
-    assert last["channel"] == "job" and last["decision"] == "queue" and approval_id in last["reason"]
+    assert (
+        last["channel"] == "job"
+        and last["principal"] == "owner"
+        and last["decision"] == "queue"
+        and approval_id in last["reason"]
+    )
 
 
 def test_runtime_escalation_is_queued(user_dirs, monkeypatch, registry):
