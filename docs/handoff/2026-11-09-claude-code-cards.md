@@ -1,6 +1,6 @@
 # Claude Code (Cloud) start prompts, plan #208 (09/11–11/11)
 
-Cloud sessions cannot read `/mnt/project-files`; everything a card needs is in this repo or in its issue. Where a card names a project file, the owner pastes the needed part.
+Cloud sessions cannot read `/mnt/project-files`; everything a card needs is in this repo (reference copies under `docs/reference/`) or in its issue.
 
 Environment for all cards: Cloud (project default env, SessionStart hook runs `uv sync`), repo `hungnp1999/lfmap`, Sonnet. Branch from up-to-date `main`. Docs-only PRs skip `/security-review`. Every commit keeps the `Dev-Environment` and `Claude-Session` trailers. Open the PR as non-draft with `Closes #N`, update `CHANGELOG.md` `[Unreleased]`.
 
@@ -19,7 +19,7 @@ Not Claude Code Cloud: #207 (Local QW, needs run script + preflight comment by M
 ## Card A: #189 ModelClient Module Spec (docs only)
 
 - File scope: new `docs/specs/model-client.md`; one line in `CHANGELOG.md`. No code.
-- Inputs: issue #189, `docs/research/2026-11-08-architecture-review.md` (C1, K2), Blueprint §4.4 in the Blueprint (project file, not in the repo: ask the owner to paste section 4.4 if you need it), `docs/specs/knowledge.md` (embed), ADR-022/ADR-024 in ADR text (project file; the repo has only notes in docs/).
+- Inputs: issue #189, `docs/research/2026-11-08-architecture-review.md` (C1, K2), Blueprint §4.4 in `docs/reference/blueprint-section-4.md`, `docs/specs/knowledge.md` (embed), ADR-022/ADR-024 in ADR text (project file; the repo has only notes in docs/).
 - Spec must cover: `ModelClient` Protocol (chat, embed); one OpenAI-compatible stdlib implementation, loopback default; routing policy local/cloud as `config.toml` data; cloud endpoint through the gate (`cloud_ai`, `[approval.destinations]`, T3 otherwise) and `egress_log`; access via `ctx`; thin `llm` plugin (`summarise`, `extract`, `classify`); migration of `knowledge` embeddings only after identical vectors on the iso-vi bench; frozen test list written first; open questions for Hùng. Fold RT-08 (#167).
 - Frozen tests (in the spec, to implement later): Protocol conformance with a fake server; loopback refusal of non-loopback host without approval; egress_log line per cloud call; routing by config.
 - Blockers: none. Opus only if Hùng allows.
@@ -61,7 +61,7 @@ Read CLAUDE.md, ARCHITECTURE.md, issue #190 and section 13 of docs/specs/flows.m
 
 Prompt:
 ```
-Read CLAUDE.md, ARCHITECTURE.md, /mnt/project-files/lfmap-docs/02_Plugin_Contract.md (v0.1.1), PR #209, docs/specs/events.md, docs/specs/flows.md (incl. §13) and docs/specs/model-client.md if merged. Write Plugin Contract v0.2 to match the current code (not aspirational) and add a frozen old-plugin fixture test in lfmap-core that must keep loading and running. Tests first. Docs for the contract go in the PR as a diff for the owner to copy to the project file. Run uv run pytest and ruff. Open a PR with "Refs #192".
+Read CLAUDE.md, ARCHITECTURE.md, docs/reference/plugin-contract.md (v0.1.1), PR #209, docs/specs/events.md, docs/specs/flows.md (incl. §13) and docs/specs/model-client.md if merged. Write Plugin Contract v0.2 to match the current code (not aspirational) and add a frozen old-plugin fixture test in lfmap-core that must keep loading and running. Tests first. Update docs/reference/plugin-contract.md in the PR; the owner copies it to the project file. Run uv run pytest and ruff. Open a PR with "Refs #192".
 ```
 
 ## Card E: #191 scenario template (docs only, Wed 11/11)

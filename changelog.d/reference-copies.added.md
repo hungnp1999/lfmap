@@ -1,0 +1,1 @@
+`docs/reference/plugin-contract.md` (copy of Plugin Contract v0.1.1) and `docs/reference/blueprint-section-4.md` (Blueprint section 4, Hybrid AI design and the Agent Router rule), so Cloud sessions can read them; the project files stay the source. Docs only.
