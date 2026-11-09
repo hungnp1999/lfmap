@@ -4,6 +4,7 @@
 
 ### Added
 
+- `docs/reference/plugin-contract.md` (copy of Plugin Contract v0.1.1) and `docs/reference/blueprint-section-4.md` (Blueprint section 4, Hybrid AI design and the Agent Router rule), so Cloud sessions can read them; the project files stay the source. Docs only.
 - `docs/specs/acceptance-scenarios.md` (#191): fill-in template for the owner's real business workflows, with one worked synthetic example; the input of the core acceptance suite (architecture review C2). Docs only.
 - `CONTRIBUTING.md`, `CONTRIBUTORS.md` and `docs/legal/CLA.md` (CLA v1.0, #200): invitation-only contribution rules and a bilingual (English/Vietnamese) Individual Contributor License Agreement based on the Apache ICLA v2.2, with a relicensing right for the owner, an AI-use disclosure clause, an optional assignment of economic rights and questions for a later legal review. Adopted by the owner before that review. Docs only.
 - `principal` field (#192, the principal part of Plugin Contract v0.2): every `audit.jsonl` line, grant and approval proposal records who acted, always `owner` today (`lfmap_core.config.PRINCIPAL`; `audit()` fills it in, `Proposal.principal` defaults to `owner` so older proposal files still load). Documented in `docs/approvals.md`. The contract text and compatibility fixture of #192 stay open. No new dependency.
