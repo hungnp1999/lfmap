@@ -42,6 +42,7 @@ class ChatMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
     content: str
 
+
 class ChatResult(BaseModel):
     text: str
     model: str
@@ -49,9 +50,17 @@ class ChatResult(BaseModel):
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
 
+
 class ModelClient(Protocol):
-    def chat(self, messages: list[ChatMessage], *, model: str | None = None, temperature: float = 0.0,
-             max_tokens: int = 1024, json_mode: bool = False) -> ChatResult: ...
+    def chat(
+        self,
+        messages: list[ChatMessage],
+        *,
+        model: str | None = None,
+        temperature: float = 0.0,
+        max_tokens: int = 1024,
+        json_mode: bool = False,
+    ) -> ChatResult: ...
     def embed(self, texts: list[str], *, model: str | None = None) -> list[list[float]]: ...
 ```
 
