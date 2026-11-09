@@ -322,6 +322,7 @@ Quy ước chung như file 02. Mọi card trong `packages/lfmap-knowledge/`.
 - Ngữ cảnh tối thiểu: mục 5.4 (`Embedder`, quy tắc loopback).
 - Việc: `OllamaEmbedder(url, model, perms)`; `check_loopback(url)`; `embed(texts)` theo lô 32; lỗi kết nối → `ToolError("backend_unavailable", ..., {"reason": "ollama_unreachable"})`; `ping() -> bool` (`GET /api/tags`).
 - Test: `http://10.0.0.5:11434` → `invalid_input`; server HTTP giả (stdlib `http.server` trong thread) trả embeddings → đúng số vector; server tắt → `backend_unavailable`.
+- Lỗ của thẻ (F7, quyết định 3 của Hùng 05/11, hạt `count`): thẻ nói "đúng số vector" nhưng không bắt `embed` kiểm số vector trả về bằng số text gửi đi; code thiếu kiểm này (`K7-clean-seed-count`) qua được test của thẻ và cả review. Không đổi yêu cầu của thẻ này (đã merge, PR #26). Kiểm tra xác định nằm ở probe `test_probe_vector_count_is_checked` (`docs/handoff/prep/2026-11-05-f7/probes/`); thẻ mới thì Planner thêm dòng này vào checklist (xem `docs/handoff/2026-11-06-lfmap-flows.md`).
 - Độ khó: S.
 
 ### TC-K8: vectors.py — LanceVectorStore

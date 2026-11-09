@@ -106,6 +106,12 @@ Hùng đồng ý quyết định 1 (Flows trước Agent Router). Spec chat UI: 
 - Kế hoạch RT (`commercial-replacements.md`): RT-04 "spec xong"; RT-09 làm ở FL-1..FL-4.
 - Checklist thẻ của Planner 2a.2 (quyết định F7 số 3, chờ handoff Router): "kiểm hình dạng và số lượng phản hồi từ ngoài".
 
+## Checklist thẻ của Planner 2a.2 (chờ handoff Router)
+
+Handoff Router chưa có nên Planner 2a.2 chưa có checklist riêng; mục này giữ chỗ cho đến khi có (đường dự phòng của #164). Khi viết thẻ, Planner phải:
+
+- [ ] Nếu thẻ gọi dịch vụ bên ngoài (Ollama, HTTP, tiến trình con): thẻ ghi rõ phải kiểm **hình dạng và số lượng phản hồi** (số phần tử trả về bằng số phần tử gửi đi, khóa bắt buộc có mặt, kiểu đúng) và báo `ToolError` khi sai, kèm một test hoặc probe dùng server giả trả thiếu phần tử. Nguồn: quyết định F7 số 3 (`count` là lỗ của thẻ TC-K7, `docs/specs/knowledge.md`; ghi chú thiết kế `docs/research/2026-11-05-f7-deterministic-checks.md`).
+
 ## Prompt khởi động cho Claude Code
 
 FL-1:

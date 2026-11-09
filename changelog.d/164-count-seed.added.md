@@ -1,0 +1,1 @@
+Docs for the `count` seed class (#164, F7 decision 3): the TC-K7 card in `docs/specs/knowledge.md` records the card gap (it never says to check the vector count), and `docs/handoff/2026-11-06-lfmap-flows.md` holds the Planner 2a.2 card-checklist item "check the shape and count of external replies" (Planner 2a.2 has no checklist yet, so it lives in the #155 handoff). Docs only.
