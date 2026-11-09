@@ -1357,7 +1357,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Plan 05/11–08/11: task order until the Sunday report",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-05",
       "due": "2026-11-08",
       "labels": [
@@ -1422,7 +1422,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "06/11 · CC: RT-06 license matrix for models that run on 16 GB VRAM",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-06",
       "due": "2026-11-06",
       "labels": [
@@ -1435,7 +1435,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "06/11 · CC: RT-05 spec for the Tauri chat UI",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-06",
       "due": "2026-11-06",
       "labels": [
@@ -1448,7 +1448,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "06/11 · CC: RT-10 SBOM (CycloneDX) and generated THIRD_PARTY_NOTICES, then ruff S110/S112/S608",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-06",
       "due": "2026-11-06",
       "labels": [
@@ -1460,7 +1460,7 @@
     {
       "number": 164,
       "repo": "hungnp1999/lfmap",
-      "title": "06/11 · CC: add the Planner 2a.2 checklist item for the K7-style count gap",
+      "title": "10/11 · CC: add the Planner 2a.2 checklist item for the K7-style count gap",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-06",
@@ -1475,7 +1475,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "06/11 · CC: RT-04 spec for LFMAP Flows (only if #155 picks Flows)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": "2026-11-06",
       "due": "2026-11-06",
       "labels": [
@@ -1486,7 +1486,7 @@
     {
       "number": 166,
       "repo": "hungnp1999/lfmap",
-      "title": "Next week · RT-07: inventory Hùng's n8n flows and map them to LFMAP Flows",
+      "title": "Backlog · RT-07: inventory Hùng's n8n flows and map them to LFMAP Flows",
       "type": "Issue",
       "status": "Backlog",
       "start": "2026-11-09",
@@ -1501,7 +1501,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Next week · RT-08: thin OpenAI-compatible client for the Embedder, try llama-server with bge-m3",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": "2026-11-09",
       "due": "2026-11-13",
       "labels": [
@@ -1767,7 +1767,7 @@
     {
       "number": 189,
       "repo": "hungnp1999/lfmap",
-      "title": "Core: ModelClient Protocol in lfmap-core and a thin llm plugin",
+      "title": "10/11 · CC: ModelClient Protocol in lfmap-core and a thin llm plugin (spec first)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1781,7 +1781,7 @@
     {
       "number": 190,
       "repo": "hungnp1999/lfmap",
-      "title": "Core: fold jobs into Flows (one runner, one proposal kind)",
+      "title": "09/11 · CC: fold jobs into Flows (spec first, then code)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1794,7 +1794,7 @@
     {
       "number": 191,
       "repo": "hungnp1999/lfmap",
-      "title": "Core acceptance suite from Hùng's business scenarios",
+      "title": "11/11 · CC: core acceptance suite, scenario template for Hùng",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1807,7 +1807,7 @@
     {
       "number": 192,
       "repo": "hungnp1999/lfmap",
-      "title": "Plugin Contract v0.2 and a compatibility fixture",
+      "title": "09/11 · CC: Plugin Contract v0.2 and a compatibility fixture",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1861,7 +1861,7 @@
     {
       "number": 196,
       "repo": "hungnp1999/lfmap",
-      "title": "Core: lfmap backup / restore of owner state (no backup exists today)",
+      "title": "10/11 gate · PO: lfmap backup / restore of owner state (choose the option)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1875,7 +1875,7 @@
     {
       "number": 197,
       "repo": "hungnp1999/lfmap",
-      "title": "Security core S1: data classes feed the approval tier (ADR-025, before organizer)",
+      "title": "10/11 gate · PO: ADR-025 data classes feed the approval tier (before organizer)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1918,9 +1918,9 @@
     {
       "number": 200,
       "repo": "hungnp1999/lfmap",
-      "title": "CONTRIBUTING.md and a contributor agreement (CLA or DCO) before outside code",
+      "title": "10/11 gate · PO: CONTRIBUTING.md and a contributor agreement (CLA or DCO)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "In Review",
       "start": null,
       "due": null,
       "labels": [
@@ -1945,7 +1945,7 @@
     {
       "number": 202,
       "repo": "hungnp1999/lfmap",
-      "title": "docs: draft CONTRIBUTING and bilingual CLA (#200)",
+      "title": "docs: CONTRIBUTING and bilingual CLA v1.0 (#200)",
       "type": "PullRequest",
       "status": "Backlog",
       "start": null,
@@ -1976,6 +1976,57 @@
       "due": null,
       "labels": [
         null
+      ]
+    },
+    {
+      "number": 205,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(status): record mistakes found while building the snapshot",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 206,
+      "repo": "hungnp1999/lfmap",
+      "title": "spikes: fix seed keywords and path rule, add output-cap override, note Leading real-code tally",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 207,
+      "repo": "hungnp1999/lfmap",
+      "title": "10/11 night · QW: next Leading shadow round on the real Flows cases",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:QW",
+        "P2",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 208,
+      "repo": "hungnp1999/lfmap",
+      "title": "Plan 09/11–11/11: task order until the Wednesday report",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1"
       ]
     },
     {
