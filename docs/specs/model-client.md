@@ -4,7 +4,7 @@
 - Issue: #189 (decision 1 of the architecture review, `docs/research/2026-11-08-architecture-review.md` C1 and K2). Folds RT-08 (#167).
 - Roadmap: Phase 2, "Agent Router" = the routing policy of this spec (Blueprint §4.4, `docs/reference/blueprint-section-4.md`).
 - Related: `docs/specs/knowledge.md` (embedder, Ollama), `docs/specs/chat-ui.md` §2 (planned model loop), `docs/specs/flows.md` (a flow calls `llm.*` like any operation), ADR-009/017/018 (tiers, gate), ADR-020 (`min_tier`), ADR-016 (own `data_dir` is not a side effect).
-- Status: draft for owner review. Docs only; code comes in a later PR that implements the frozen tests of section 10.
+- Status: owner decisions of 2026-11-09 recorded in section 12; the owner will adjust them as practice shows. Section 12 lists what is cheap and what is hard to change. Docs only; code comes in a later PR that implements the frozen tests of section 10.
 
 ## 1. Purpose
 
@@ -28,7 +28,7 @@ Non-goals (this spec): streaming, tool calling and function calling, multimodal 
 | `models.py` | `ChatMessage`, `ChatResult`, `ModelClient` Protocol, `ModelEndpoint`, `ModelsConfig` (pydantic, `extra="forbid"`), `load_models_config(config)` |
 | `models_http.py` | `OpenAICompatibleClient`: `POST {base_url}/chat/completions` and `/embeddings`, stdlib `urllib.request`, no proxy, no redirects |
 | `models_router.py` | `ModelRouter`: resolves a task to an endpoint, applies the data-class rules, calls the gate, writes the egress record, returns a `ModelClient` view bound to one call |
-| `models_egress.py` | `egress()` append-only writer for `egress.jsonl` (section 6) |
+| `models_egress.py` | `egress()` writes the model-call line through the existing `audit()` (section 6) |
 | `tool.py` | `ToolContext.models` property (like `events`): the router bound to this plugin, channel and approver |
 | `runtime.py` | `build_tool` and `context_for` attach the router when the manifest has `[adapters] models = true` |
 | `plugins/lfmap-llm` | `Tool` class with `summarise`, `extract`, `classify` |
@@ -106,8 +106,8 @@ Rules:
 2. A `kind = "cloud"` endpoint must use `https`. It is reachable only when a route names it. There is no fallback: an unreachable local endpoint is an error, never a silent switch to cloud.
 3. A route names an endpoint that exists, else `invalid_input`. A task without a route uses `routes.default`; with no `[models]` table at all, the built-in default is one local endpoint at `http://127.0.0.1:11434/v1` with the models `knowledge` uses today, so nothing changes for a user who does nothing.
 4. Data class decides what may be sent (Blueprint §4.4 row 1): `secret` never leaves, so a `secret` call to a cloud endpoint is `permission_denied` before the gate is asked. `private` and `normal` to a cloud endpoint go through the gate (section 5). Local endpoints accept any class.
-5. The caller states the data class of what it sends (`normal` default). A plugin cannot lower a class that the data itself carries (for example `knowledge` content from a `secret` root is `secret`); how the class travels with data is an open question (Q3).
-6. `embed` is always routed like any other task. The Blueprint says embeddings are local, so a config that routes `embed` to a cloud endpoint is refused unless `[models] allow_cloud_embed = true` (open question Q4).
+5. The caller states the data class of what it sends (`normal` default). A plugin cannot lower a class that the data itself carries (for example `knowledge` content from a `secret` root is `secret`); in v1 the caller states it (decision 3 in section 12). **Condition:** no `kind = "cloud"` endpoint or route is enabled until a class label travels with step outputs in flows and with `knowledge` content; until then the config loader refuses a cloud route unless `[models] allow_cloud_unlabelled = true`, which the owner sets knowingly.
+6. `embed` is always routed like any other task. The Blueprint says embeddings are local, so a config that routes `embed` to a cloud endpoint is refused with `invalid_input` (decision 4 in section 12; there is no switch, a later decision can add one).
 
 ## 5. The gate for cloud endpoints
 
@@ -124,18 +124,18 @@ Tier of an `llm` operation. Its manifest declares `side_effects = "external"` wi
 
 ## 6. Egress record
 
-Every call that reaches a cloud endpoint, whether it succeeds or fails after the request is sent, appends one JSON line to `%LOCALAPPDATA%\lfmap\egress.jsonl`:
+Every call that reaches a cloud endpoint, whether it succeeds or fails after the request is sent, writes one line to `audit.jsonl` through `audit()` (decision 5 in section 12: one log, not a second file). `AUDIT_FIELDS` gains `host`, `bytes_out`, `bytes_in`, `endpoint`, `model`, `data`; no free-text field is added:
 
 ```json
 {"time": "...", "principal": "owner", "channel": "cli", "plugin": "llm", "operation": "summarise",
- "task": "summarise", "endpoint": "cloud", "host": "api.example.com", "model": "...",
+ "event": "model_call", "endpoint": "cloud", "host": "api.example.com", "model": "...",
  "data": "normal", "bytes_out": 1234, "bytes_in": 567, "status": "ok"}
 ```
 
-- Only the listed fields are accepted (an allow-list like `AUDIT_FIELDS`); message content, prompts, vectors and API keys never appear.
-- Local calls are not logged here (nothing leaves the machine); the call is still visible in the plugin's own results.
+- Message content, prompts, vectors and API keys never appear; the allow-list in `approval.py` rejects unknown fields.
+- Local calls write no `model_call` line (nothing leaves the machine); the call is still visible in the plugin's own results.
 - The `knowledge` `egress_log` table (content returned to MCP/REST clients) is a different thing and stays as it is.
-- A failure to write the line fails the call before the request is sent (log first, then send; the final line with sizes is appended after). Whether this is one file for both lines or two is open question Q5.
+- Write order: a `model_call` line with `status = "sent"` is appended before the request is sent, and the line with sizes and final status after. If the first write fails, the call fails and nothing is sent.
 
 ## 7. The `llm` plugin
 
@@ -166,7 +166,7 @@ Equivalence check (this is also RT-08's acceptance):
 3. Repeat against `llama-server` serving the bge-m3 GGUF in a CPU container (the RT-08 target), as an information row, not a gate.
 4. Run the iso-vi bench (9 questions) on an index built with each path.
 
-Pass to switch: every vector has cosine ≥ 0.9999 with the old one (RT-08 asked for ≥ 0.99; the issue says "identical", so the stricter number is proposed, Q6), the dimension is equal, and the bench shows the same gold files in the same top-10 for all 9 questions with `precision` and token counts not lower than the recorded ones. If only the bench passes and cosine does not, the old vectors stay in use and a full reindex is a separate owner decision (existing vectors would be mixed with new ones).
+Pass to switch: every vector has cosine ≥ 0.9999 with the old one (RT-08 asked for ≥ 0.99; the issue says "identical"; decision 6 in section 12), the dimension is equal, and the bench shows the same gold files in the same top-10 for all 9 questions with `precision` and token counts not lower than the recorded ones. If only the bench passes and cosine does not, the old vectors stay in use and a full reindex is a separate owner decision (existing vectors would be mixed with new ones).
 
 After the switch: `knowledge` settings `ollama_url`, `embed_model`, `embed_batch`, `embed_concurrency` keep working (read as fallbacks for the `embed` route); `OllamaEmbedder` is removed in the same PR; `knowledge.status` keeps `ollama_ok`. The existing keyword fallback when the embedder is down (`mode_used = "keyword"`) is unchanged. `knowledge` declares `[adapters] models = true`.
 
@@ -193,7 +193,7 @@ The four required by Card A:
 | --- | --- |
 | `test_protocol_conformance_fake_server` | `OpenAICompatibleClient` against a stdlib `http.server` thread: `chat` sends the expected body (`model`, `messages`, `temperature`, `max_tokens`) and returns `ChatResult`; `embed` returns one vector per text in order; a response with the wrong vector count raises `backend_unavailable` with `reason: bad_response`; a closed server raises `backend_unavailable` (`unreachable`); the object satisfies `ModelClient` (`typing.runtime_checkable` or structural check) |
 | `test_non_loopback_refused_without_approval` | a `local` endpoint with host `10.0.0.5` or `api.example.com` is `invalid_input` at config load; a `cloud` route called through a `Gate` with no approval (`channel` `mcp`, `job`, `flow`) raises `permission_denied` and opens no socket (a socket guard fixture fails the test on any connect) |
-| `test_egress_line_per_cloud_call` | with an approved destination, one cloud `chat` and one cloud `embed` append exactly two lines to `egress.jsonl` with only allow-listed fields, correct `host`, `data`, `bytes_out > 0`; a local call appends none; the prompt text and the API key do not appear in the file |
+| `test_model_call_audit_line_per_cloud_call` | with an approved destination, one cloud `chat` and one cloud `embed` append exactly two `model_call` result lines (plus their `sent` lines) to `audit.jsonl` with only allow-listed fields, correct `host`, `data`, `bytes_out > 0`; a local call appends none; the prompt text and the API key do not appear in the file |
 | `test_routing_by_config` | tasks map to endpoints as configured; unrouted task uses `default`; no `[models]` table gives the built-in local endpoint; a route to an unknown endpoint is `invalid_input`; unreachable local endpoint does not fall back to cloud |
 
 Further tests of this spec:
@@ -227,16 +227,22 @@ CI stays offline: every test above except `test_embed_equivalence_bench` uses th
 
 MC-1 to MC-3 are Cloud work with `/security-review`; MC-4 needs Ollama on pc-01. Each task is one issue/PR on the board.
 
-## 12. Open questions for the owner
+## 12. Owner decisions (2026-11-09)
 
-1. **Config shape.** Are `[models.endpoints.*]` plus `[models.routes]` acceptable, or do you want routes keyed by data class as well (for example `private → local`, `normal → cloud` for `review`)? This spec routes by task and then checks the data class.
-2. **API keys.** The key is read from an environment variable named in config. Is that enough for a personal setup, or do you want it stored in Windows Credential Manager? (Credential Manager would add a dependency or a `ctypes` shim; I would not add it in v1.)
-3. **Data class provenance.** `knowledge` knows a root is `secret`, `private` or `normal`, but a flow only sees text. Should the class travel with a step output (a flow-level label), or does the caller state it per call as in this draft? The draft trusts the caller, which is weaker than you may want for cloud routes.
-4. **Cloud embeddings.** Blueprint §4.4 says embeddings are local only. Refuse a cloud `embed` route outright (no `allow_cloud_embed` switch), or keep the switch?
-5. **Egress file.** One new `egress.jsonl` for model calls (this draft) next to `audit.jsonl`, or extend `audit.jsonl` with `host`, `bytes_out`, `bytes_in` fields? Extending keeps one log but widens `AUDIT_FIELDS`.
-6. **Equivalence threshold.** Cosine ≥ 0.9999 and identical top-10 (stricter than RT-08's ≥ 0.99) as the condition to switch `knowledge`, or is ≥ 0.99 with the same gold files enough? A weaker threshold means a mixed index until a full reindex.
-7. **Streaming.** `chat-ui.md` will want token streaming. Leave it out of v1 and add `chat_stream` later, or include it now?
-8. **Operation set.** Are `summarise`, `extract`, `classify` the right three, and should `summarise` chunk long input (map-reduce) in v1 or stay a single call with `truncated`?
-9. **Model defaults.** Which local chat model should the built-in default name (the qwen card work used the Qwen family; the licence matrix is `docs/research/2026-11-06-model-licence-matrix.md`)? The draft leaves `chat_model` unset in the built-in default, so `llm` fails with a clear error until you set it.
-10. **Unattended cloud calls.** In jobs and flows a cloud route always becomes a proposal. Do you want a way to preapprove one named flow for one destination (like `[approval.destinations]` but for unattended runs), or keep "a person at a TTY every time"? The draft keeps the latter.
-11. **ADR wording.** The invariant "no network beyond loopback" gains an exception for gated cloud routes. Do you want a new ADR (or an amendment to the cloud/egress ADRs) before the code PR, since ADR text lives outside the repo?
+The owner accepted the proposals below "for now" and will adjust them with real use. Cost of changing each later:
+
+| # | Decision | Change later |
+| --- | --- | --- |
+| 1 | Route by task, then check the data class | Easy: add class-keyed routes to `config.toml`; old files keep working |
+| 2 | API key from an environment variable; no Credential Manager in v1 | Easy: add another key source |
+| 3 | The caller states the data class in v1. Condition: no cloud route is enabled until a class label travels with data (section 4 rule 5) | Medium: touches flows and `knowledge`; do it before the first cloud route |
+| 4 | Refuse a cloud `embed` route; no `allow_cloud_embed` switch | Easy to add a switch later |
+| 5 | Extend `audit.jsonl` (section 6); no `egress.jsonl` | Hard to move later; decided before code |
+| 6 | Switch `knowledge` only at cosine ≥ 0.9999 and the same top-10 | Easy (a threshold), but switching on a weak result is hard to undo (mixed index, full reindex) |
+| 7 | No streaming in v1 | Easy: add `chat_stream` |
+| 8 | Three operations; `summarise` is one call with `truncated` | Easy: add chunking or operations |
+| 9 | No default chat model; `llm` fails clearly until one is set | Easy |
+| 10 | Cloud in jobs and flows always waits for a person at a TTY | Easy to loosen, hard to tighten once flows depend on it |
+| 11 | An ADR note for "no network beyond loopback" gets a gated-cloud exception, drafted before the first code PR | Easy (text) |
+
+Follow-up for the Planner: the ADR note of decision 11 goes with MC-2, and the label-travels-with-data work (decision 3) must be scheduled before any cloud route is enabled.
