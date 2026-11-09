@@ -45,6 +45,7 @@ def test_t1_runs_and_is_audited(user_dirs, registry):
     (line,) = audit_path().read_text(encoding="utf-8").splitlines()
     assert json.loads(line) | {"time": None} == {
         "time": None,
+        "principal": "owner",
         "channel": "mcp",
         "plugin": "fake-plugin",
         "operation": "write",

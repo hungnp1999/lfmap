@@ -119,7 +119,9 @@ approvals reject ID                # move a proposal to approvals\rejected; inte
 | Proposals | `%LOCALAPPDATA%\lfmap\approvals\{pending,done,rejected,expired}\<id>.json` |
 | Audit log | `%LOCALAPPDATA%\lfmap\audit.jsonl`; `uv run lfmap audit tail -n 20 [--json]` |
 
-The audit log holds time, channel, plugin, operation, tier, decision (`allow`, `deny`, `queue`, `grant`, `revoke`, `approve`, `reject`), reason and target; never document content or output.
+The audit log holds time, principal, channel, plugin, operation, tier, decision (`allow`, `deny`, `queue`, `grant`, `revoke`, `approve`, `reject`), reason and target; never document content or output.
+
+`principal` says who acted. It is always `owner` today and is also stored in every grant and proposal; a record written before the field existed means `owner`. New code must not assume a single user: adding users later only adds values.
 
 ## Troubleshooting
 

@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from lfmap_core.config import app_dir
+from lfmap_core.config import PRINCIPAL, app_dir
 from lfmap_core.errors import ToolError
 
 MAX_DURATION = {"T1": timedelta(days=7), "T2": timedelta(days=7), "T3": timedelta(hours=24)}
@@ -81,7 +81,12 @@ def add(operation: str, tier: str, duration: timedelta, path: Path | None = None
     check(tier, duration)
     path = path or grants_path()
     now = datetime.now(UTC)
-    grant = {"operation": operation, "tier": tier, "expires_at": (now + duration).isoformat(timespec="seconds")}
+    grant = {
+        "principal": PRINCIPAL,
+        "operation": operation,
+        "tier": tier,
+        "expires_at": (now + duration).isoformat(timespec="seconds"),
+    }
     kept = [g for g in load(path) if g.get("operation") != operation and (_expires(g) or now) > now]
     _save([*kept, grant], path)
     return grant
