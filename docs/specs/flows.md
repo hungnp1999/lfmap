@@ -3,6 +3,7 @@
 - Package: `lfmap-core` (flat modules next to `jobs.py` and `events*.py`)
 - Roadmap: Phase 2 item "LFMAP Flows"; research plan RT-04 (this spec) and RT-09 (first working flow) in [`docs/research/2026-10-23-commercial-replacements.md`](../research/2026-10-23-commercial-replacements.md)
 - Decisions: ADR-021 (build in-house, clean room for n8n), ADR-024 (no agent framework; pause = file state + `resume` in a new process; the pause maps to an ADR-018 proposal `flows.resume`, T2), ADR-017/018 (tiers, non-interactive calls go to the approvals queue), ADR-006 as amended (no background service in Phase 2)
+- Folding jobs into flows (architecture review C3/K1, issue #190, ADR-018 note 2026-11-08): section 13 of this spec. **Status: accepted 2026-11-09 (owner approved the three decisions of 13.7); code follows in a separate PR.**
 - Handoff and task list: [`docs/handoff/2026-11-06-lfmap-flows.md`](../handoff/2026-11-06-lfmap-flows.md)
 
 ## 1. Purpose
@@ -22,6 +23,7 @@ Sources: behaviour only. Node-RED (Apache-2.0) and Activepieces (MIT, community 
 | `flows_run.py` | `FlowRun` state, `start(...)`, `resume(...)`, the step loop, the approval pause (cap 230 lines, section 9) | FL-2 |
 | `cli.py` | `lfmap flows list|check|start|status|runs`; `approvals approve` resumes a paused run | FL-2 |
 | `flows_triggers.py`, `events_adapter.py` / `jobs.py` | event trigger subscription; schedule trigger through `jobs register` | FL-3 |
+| `jobs_flow.py` (new, section 13) | `job_to_flow(job)`, `load_all_flows()`: translates `jobs.toml` entries into one-step flows | #190 |
 
 Standard library and pydantic only. No new dependency.
 
@@ -135,3 +137,63 @@ Flow 1 needs two plugins that do not exist yet (`email`, and an AI step after th
 - Section 9 size limit met (number in the FL-2 PR).
 - `ARCHITECTURE.md` gains the "Flow" main flow and the `flow` channel invariant; `docs/PROVENANCE.md` row; `CHANGELOG.md`.
 - FL-4 smoke on DIEP-ANH: event-triggered flow pauses, the process exits, `approvals approve` in a new terminal completes it.
+
+## 13. Jobs read as one-step flows (accepted 2026-11-09, issue #190)
+
+Goal: one runner and one proposal kind. A job in `jobs.toml` is translated on load into a flow; `jobs.toml` stays valid and is not rewritten. Task Scheduler, `scripts/Invoke-LfmapJob.ps1`, the approvals queue, the tier table of `docs/jobs.md` and `max_tier` semantics do not change.
+
+### 13.1 Translation (`jobs_flow.py`, outside `flows_run.py`)
+
+| `jobs.toml` | One-step flow |
+| --- | --- |
+| `id` | flow id (same value, so task `\LFMAP\<id>` and log lines keep their names); flagged `origin = "job"` in memory only |
+| `schedule` | `trigger.schedule` (same `Schedule` model) |
+| `plugin`, `operation`, `input` | one step `id = "run"`, `call = "<plugin>.<operation>"`, `input` as written (literal; no references) |
+| `max_tier` | flow `max_tier` |
+| `enabled` | `enabled` |
+| `via = "call"` | step runs as today (`run_operation`) |
+| `via = "event"` | step gets `via = "event"` (new optional `Step` field, default `"call"`): core publishes `<plugin>.<operation>.requested`, drains and returns the answer through the event adapter, as `jobs run` does now |
+
+- `load_all_flows()` returns declared flows plus translated jobs. A job id equal to a flow id, or to `flow-<id>` of another flow, is a load error naming both (today's `flow-<id>` rule of `docs/jobs.md` stays).
+- `check_flow` applies to translated jobs, so `jobs doctor` and `flows check` report the same findings. The rule "a step has `call` or `approve`" is met; the 20-step and reference rules are trivially met.
+- **Ceilings.** The effective ceiling of a `via = "event"` step is the lower of the flow's `max_tier` and `[events] max_tier`, unchanged: the flow gate checks the first, the event adapter the second. The request still carries the flow id (`job` field of the event body) so a call stopped by either ceiling is queued under that name.
+
+### 13.2 Runner and CLI
+
+- `lfmap jobs run <id>` becomes a thin alias of `lfmap flows start <id>` for a translated job, followed by the event drain it does today (`--max-events`). Exit codes stay: 0 ok, 1 `ToolError`, 2 other. A run that pauses prints the same `Error [permission_denied]: Queued for approval` and exits 1, so `Invoke-LfmapJob.ps1` logs and any script reading them see no change.
+- `lfmap jobs list|register|doctor` read `load_all_flows()`. `register` creates the scheduled task of a translated job under its old name (`\LFMAP\<id>`, command `jobs run <id>`), and of a real flow as `\LFMAP\flow-<id>` (section 6). No task is renamed, so a machine that registered jobs before this change needs no re-register.
+- `lfmap flows list` shows translated jobs with origin `job`. `flows start <id>` works on them too.
+
+### 13.3 Proposals and audit
+
+- A translated job that needs more than its ceiling pauses like any flow: one `flows.resume` proposal (T2 as section 5; the tier shown to the person is still the call's own tier). `approvals pending` shows the job id in the `job` column as today.
+- Run state: a translated job writes a run file **only when it pauses** (needed for resume); a run that completes or fails writes none, as jobs never had run files, so an hourly job does not create 24 files a day. Its result is the `jobs-YYYY-MM-DD.jsonl` line and `audit.jsonl`. (Open question 1.)
+- Audit channel: runs of translated jobs use channel `flow`. The channel `job` stays valid in `audit.jsonl` and in `approvals` for old lines and old proposals (section 13.4).
+- A `via = "event"` translated job still writes two audit lines for one T1 run (flow gate and event adapter), as `docs/jobs.md` explains.
+
+### 13.4 Transition release
+
+- Proposals already in `approvals/pending` written by old jobs (no `flows.resume`, a plain call) stay approvable: the legacy reader in `approvals.py` and `cli.py approvals approve` remains for **one transition release** after #190 merges, runs them once with the recorded tier as today, and audits them on channel `job`. New proposals use only the `flows.resume` kind.
+- After that release the legacy path is deleted in a follow-up issue (created by the #190 PR); proposals expire after 7 days (`approval_ttl_days` up to 30), so one release is enough unless the TTL is raised.
+- Rollback: the change is internal. Reverting the PR restores the old runner; run files of paused translated jobs would then be orphaned (`flows.resume` is still understood by the flows runner, so they can still be approved).
+
+### 13.5 Size and layout
+
+`flows_run.py` stays under the 230-line cap of section 9: translation, loading and the `jobs run` alias live in `jobs_flow.py` and `jobs.py`; the only change in `flows_run.py` is the "write state only when pausing" switch for translated jobs and routing `via = "event"` steps, and if that does not fit, stop and report (as section 9 says). `jobs.py` shrinks: `run_job` becomes a call into the flow runner; `JobApprover` use moves to the flow gate.
+
+### 13.6 Tests (written first)
+
+- Translation table: every field of 13.1, `via = "event"` including the lower-ceiling case, id collisions.
+- A translated job: T0 runs; T1 runs at `max_tier = 1` and queues at 0; T2/T3 always queue; `[approval]` deny/ask tighten (same cases as the current `jobs` tests, now through the flow runner).
+- Pause writes a `flows.resume` proposal named by the job id; approve in a new process completes it; completed run leaves no run file.
+- A legacy pending proposal fixture (old format) is still listed, approved once, audited on channel `job`.
+- `jobs register --dry-run` output is identical before and after for the same `jobs.toml` (golden test).
+- `jobs run` exit codes and the printed `Queued for approval` line unchanged.
+
+### 13.7 Decisions of the owner (2026-11-09)
+
+1. A translated job that completes or fails writes no run file; a run file exists only while it is paused for approval (13.3).
+2. Runs of translated jobs use audit channel `flow`; `job` stays valid for old lines and old proposals (13.3).
+3. The legacy proposal reader stays for exactly one transition release after #190 merges, then is deleted by a follow-up issue (13.4).
+
+DIEP-ANH smoke after the code PR: `jobs register --dry-run` unchanged, `jobs run echo-hello` exit 0, one T1 job at `max_tier = 0` queues, `approvals approve` in a new terminal finishes it, a pre-change pending proposal still approves.

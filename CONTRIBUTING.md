@@ -15,7 +15,7 @@ LFMAP (product name **Lan Hài**) is developed in a private repository. Contribu
 
 - Every task is a GitHub Issue on the "LFMAP work" board. Larger tasks have a spec in `docs/specs/` and frozen tests written before the code.
 - Branch from an up-to-date `main`, one task per branch, and open a pull request that says `Closes #N` and fills in the template.
-- Add a line to `CHANGELOG.md` under `[Unreleased]`. A change to the module map, a main flow or an invariant also updates `ARCHITECTURE.md`.
+- Add a changelog fragment `changelog.d/<slug>.<category>.md` (format in `changelog.d/README.md`); do not edit `CHANGELOG.md`. A change to the module map, a main flow or an invariant also updates `ARCHITECTURE.md`.
 
 ## Commits
 

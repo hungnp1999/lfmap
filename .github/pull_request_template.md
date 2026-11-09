@@ -16,4 +16,5 @@ Closes #<!-- issue number, or remove the line -->
 ## Checks
 
 - [ ] Tests pass
+- [ ] Changelog fragment added in `changelog.d/` (not `CHANGELOG.md`)
 - [ ] Every commit has a `Dev-Environment` trailer (checked by the Provenance workflow)
