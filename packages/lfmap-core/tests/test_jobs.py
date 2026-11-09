@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from lfmap_core import jobs
+from lfmap_core import jobs, jobs_flow
 from lfmap_core.approval import audit_path
 from lfmap_core.cli import build_app
 from lfmap_core.config import app_dir
@@ -238,11 +238,11 @@ def test_jobs_run_uses_the_job_channel(jobs_file, registry, monkeypatch):
         seen.update(plugin=entry.id, name=name, payload=payload, **kwargs)
         return jobs.JobsFile()
 
-    monkeypatch.setattr(jobs, "run_operation", fake_run_operation)
-    jobs.run_job(registry, "hello")
+    monkeypatch.setattr(jobs_flow, "run_operation", fake_run_operation)
+    jobs_flow.run_job(registry, "hello")
     assert seen["plugin"] == "fake-plugin" and seen["name"] == "greet"
     assert seen["payload"] == {"name": "Hùng"}
-    assert seen["channel"] == "job"
+    assert seen["channel"] == "flow"
     assert seen["approver"] is not None
 
 
@@ -271,7 +271,7 @@ def test_t1_job_with_max_tier_1_runs_and_is_audited(jobs_file, registry):
     result = run(registry, "jobs", "run", "weekly-write", "--json")
     assert result.exit_code == 0 and json.loads(result.output) == {"message": "a"}
     records = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
-    assert records[-1]["channel"] == "job" and records[-1]["decision"] == "allow" and records[-1]["tier"] == "T1"
+    assert records[-1]["channel"] == "flow" and records[-1]["decision"] == "allow" and records[-1]["tier"] == "T1"
 
 
 def test_register_dry_run_only_queries(jobs_file, registry, monkeypatch):

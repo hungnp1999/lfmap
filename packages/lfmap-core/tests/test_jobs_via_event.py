@@ -5,12 +5,12 @@ import pytest
 from pydantic import BaseModel
 from typer.testing import CliRunner
 
-from lfmap_core import Tool, jobs, jobs_doctor, operation
+from lfmap_core import Tool, jobs, jobs_doctor, jobs_flow, operation
 from lfmap_core.approval import audit_path
 from lfmap_core.approvals import approvals_dir
 from lfmap_core.cli import build_app
 from lfmap_core.errors import ToolError
-from lfmap_core.events_adapter import RequestResult, open_bus
+from lfmap_core.events_adapter import open_bus
 from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
 from lfmap_core.manifest import parse_manifest
 from lfmap_core.registry import PluginEntry
@@ -112,8 +112,8 @@ def test_via_defaults_to_call_and_rejects_other_values() -> None:
 
 def test_event_job_publishes_request_and_returns_completed(ev_registry, write_jobs) -> None:
     write_jobs(job_block("hello", PLUGIN, "greet", '{ name = "Hùng", times = 2 }'))
-    output = jobs.run_job(ev_registry, "hello")
-    assert output == Output(message="Hello Hùng Hello Hùng")
+    output = jobs_flow.run_job(ev_registry, "hello")
+    assert output.model_dump() == Output(message="Hello Hùng Hello Hùng").model_dump()
     [request] = events(".greet.requested")
     [done] = events(".greet.completed")
     assert request == {"input": {"name": "Hùng", "times": 2}, "job": "hello"}
@@ -131,7 +131,7 @@ def test_cli_prints_the_output_as_json(ev_registry, write_jobs) -> None:
 def test_failed_request_raises_its_tool_error(ev_registry, write_jobs) -> None:
     write_jobs(job_block("oops", PLUGIN, "greet", '{ name = "error" }'))
     with pytest.raises(ToolError) as error:
-        jobs.run_job(ev_registry, "oops")
+        jobs_flow.run_job(ev_registry, "oops")
     assert (error.value.code, error.value.message) == ("not_found", "No such person")
     [failed] = events(".greet.failed")
     assert error.value.details == {"name": "error", "request_id": failed["request_id"]}
@@ -140,7 +140,7 @@ def test_failed_request_raises_its_tool_error(ev_registry, write_jobs) -> None:
 def test_event_job_needs_an_events_plugin(ev_registry, write_jobs) -> None:
     path = write_jobs(job_block("plain", "fake-plugin", "greet", '{ name = "A" }'))
     with pytest.raises(ToolError) as error:
-        jobs.run_job(ev_registry, "plain")
+        jobs_flow.run_job(ev_registry, "plain")
     assert error.value.code == "invalid_input"
     assert "events = false" in error.value.message
     check, _ = jobs_doctor._load(ev_registry, path)
@@ -162,7 +162,7 @@ def test_the_lower_of_both_ceilings_applies(ev_registry, write_jobs, user_dirs, 
     write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"] }', max_tier=job_tier))
     write_config(user_dirs, f"[events]\nmax_tier = {events_tier}\n")
     with pytest.raises(ToolError) as error:
-        jobs.run_job(ev_registry, "write-job")
+        jobs_flow.run_job(ev_registry, "write-job")
     assert error.value.code == "permission_denied"
     [path] = (approvals_dir() / "pending").glob("*.json")
     assert json.loads(path.read_text(encoding="utf-8"))["job"] == "write-job"
@@ -173,7 +173,7 @@ def test_run_time_escalation_is_queued_under_the_job_id(ev_registry, write_jobs,
     write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"], escalate = "overwrite" }', max_tier=1))
     write_config(user_dirs, "[events]\nmax_tier = 1\n")
     with pytest.raises(ToolError) as error:
-        jobs.run_job(ev_registry, "write-job")
+        jobs_flow.run_job(ev_registry, "write-job")
     approval_id = error.value.details["approval_id"]
     [path] = (approvals_dir() / "pending").glob("*.json")
     proposal = json.loads(path.read_text(encoding="utf-8"))
@@ -184,10 +184,10 @@ def test_run_time_escalation_is_queued_under_the_job_id(ev_registry, write_jobs,
 def test_t1_event_job_writes_one_audit_line_per_channel(ev_registry, write_jobs, user_dirs) -> None:
     write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a"] }', max_tier=1))
     write_config(user_dirs, "[events]\nmax_tier = 1\n")
-    jobs.run_job(ev_registry, "write-job")
+    jobs_flow.run_job(ev_registry, "write-job")
     lines = [json.loads(line) for line in audit_path().read_text(encoding="utf-8").splitlines()]
     assert [(r["channel"], r["decision"], r["tier"]) for r in lines] == [
-        ("job", "allow", "T1"),
+        ("flow", "allow", "T1"),
         ("event", "allow", "T1"),
     ]
 
@@ -195,20 +195,20 @@ def test_t1_event_job_writes_one_audit_line_per_channel(ev_registry, write_jobs,
 def test_both_ceilings_at_one_run_t1(ev_registry, write_jobs, user_dirs) -> None:
     write_jobs(job_block("write-job", PLUGIN, "write", '{ names = ["a", "b"] }', max_tier=1))
     write_config(user_dirs, "[events]\nmax_tier = 1\n")
-    assert jobs.run_job(ev_registry, "write-job") == Output(message="a,b")
+    assert jobs_flow.run_job(ev_registry, "write-job").model_dump() == Output(message="a,b").model_dump()
     assert not (approvals_dir() / "pending").exists()
 
 
 def test_request_not_reached_within_max_events_times_out(ev_registry, write_jobs) -> None:
     write_jobs(job_block("hello", PLUGIN, "greet", '{ name = "A" }'))
-    jobs.run_job(ev_registry, "hello")  # attaches the adapter subscription
+    jobs_flow.run_job(ev_registry, "hello")  # attaches the adapter subscription
     bus = open_bus()
     try:
         bus.publish(f"{PLUGIN}.greet.requested", {"input": {"name": "older"}}, source="core")
     finally:
         bus.close()
     with pytest.raises(ToolError) as error:
-        jobs.run_job(ev_registry, "hello", max_events=1)
+        jobs_flow.run_job(ev_registry, "hello", max_events=1)
     assert error.value.code == "timeout"
     assert counts()[f"adapter-{PLUGIN}"]["ready"] == 1
     assert not any(name.startswith("request-") for name in counts())
@@ -217,20 +217,19 @@ def test_request_not_reached_within_max_events_times_out(ev_registry, write_jobs
 def test_large_output_returns_a_marker(ev_registry, write_jobs) -> None:
     times = MAX_PAYLOAD_BYTES // 1000 + 1
     write_jobs(job_block("big", PLUGIN, "greet", f'{{ name = "{"x" * 1000}", times = {times} }}'))
-    result = jobs.run_job(ev_registry, "big")
-    assert isinstance(result, RequestResult)
-    assert result.output_too_large
+    result = jobs_flow.run_job(ev_registry, "big")
+    assert result.model_dump()["output_too_large"] is True and "request_id" in result.model_dump()
 
 
 def test_watcher_subscription_is_removed(ev_registry, write_jobs) -> None:
     write_jobs(job_block("hello", PLUGIN, "greet", '{ name = "A" }'))
-    jobs.run_job(ev_registry, "hello")
+    jobs_flow.run_job(ev_registry, "hello")
     assert list(counts()) == [f"adapter-{PLUGIN}"]
 
 
 def test_call_jobs_are_unchanged(ev_registry, write_jobs) -> None:
     write_jobs(job_block("direct", PLUGIN, "greet", '{ name = "A" }', via="call"))
-    assert jobs.run_job(ev_registry, "direct") == Output(message="Hello A")
+    assert jobs_flow.run_job(ev_registry, "direct").model_dump() == Output(message="Hello A").model_dump()
     assert events(".greet.requested") == []
 
 

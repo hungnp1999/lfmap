@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from lfmap_core import approvals, flows_run
+from lfmap_core import approvals, flows_run, jobs_flow
 from lfmap_core.approval import audit_path
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
@@ -196,7 +196,7 @@ def test_an_unexpected_exception_fails_the_run_instead_of_leaving_it_running(reg
     def explode(*args, **kwargs):
         raise RuntimeError("backend crashed with secret text")
 
-    monkeypatch.setattr(flows_run, "run_operation", explode)
+    monkeypatch.setattr(jobs_flow, "run_operation", explode)
     run = flows_run.start(registry, "demo", {})
     assert run.status == "failed" and run.steps[0].error["code"] == "internal"
     assert "secret text" not in json.dumps(run.model_dump(mode="json"))
