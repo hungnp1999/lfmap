@@ -3,7 +3,7 @@
 - Package: `lfmap-core` (flat modules next to `jobs.py` and `events*.py`)
 - Roadmap: Phase 2 item "LFMAP Flows"; research plan RT-04 (this spec) and RT-09 (first working flow) in [`docs/research/2026-10-23-commercial-replacements.md`](../research/2026-10-23-commercial-replacements.md)
 - Decisions: ADR-021 (build in-house, clean room for n8n), ADR-024 (no agent framework; pause = file state + `resume` in a new process; the pause maps to an ADR-018 proposal `flows.resume`, T2), ADR-017/018 (tiers, non-interactive calls go to the approvals queue), ADR-006 as amended (no background service in Phase 2)
-- Folding jobs into flows (architecture review C3/K1, issue #190, ADR-018 note 2026-11-08): section 13 of this spec. **Status: proposed, code waits for the owner to read section 13.**
+- Folding jobs into flows (architecture review C3/K1, issue #190, ADR-018 note 2026-11-08): section 13 of this spec. **Status: accepted 2026-11-09 (owner approved the three decisions of 13.7); code follows in a separate PR.**
 - Handoff and task list: [`docs/handoff/2026-11-06-lfmap-flows.md`](../handoff/2026-11-06-lfmap-flows.md)
 
 ## 1. Purpose
@@ -138,7 +138,7 @@ Flow 1 needs two plugins that do not exist yet (`email`, and an AI step after th
 - `ARCHITECTURE.md` gains the "Flow" main flow and the `flow` channel invariant; `docs/PROVENANCE.md` row; `CHANGELOG.md`.
 - FL-4 smoke on DIEP-ANH: event-triggered flow pauses, the process exits, `approvals approve` in a new terminal completes it.
 
-## 13. Jobs read as one-step flows (proposed, issue #190)
+## 13. Jobs read as one-step flows (accepted 2026-11-09, issue #190)
 
 Goal: one runner and one proposal kind. A job in `jobs.toml` is translated on load into a flow; `jobs.toml` stays valid and is not rewritten. Task Scheduler, `scripts/Invoke-LfmapJob.ps1`, the approvals queue, the tier table of `docs/jobs.md` and `max_tier` semantics do not change.
 
@@ -190,10 +190,10 @@ Goal: one runner and one proposal kind. A job in `jobs.toml` is translated on lo
 - `jobs register --dry-run` output is identical before and after for the same `jobs.toml` (golden test).
 - `jobs run` exit codes and the printed `Queued for approval` line unchanged.
 
-### 13.7 Open questions for the owner
+### 13.7 Decisions of the owner (2026-11-09)
 
-1. No run file for completed translated jobs (13.3) is proposed. The alternative is a run file per execution (visible in `flows runs`, but needs pruning). Recommendation: no file.
-2. Audit channel for translated jobs: `flow` (recommended, one meaning per channel) or keep `job` (log queries unchanged).
-3. One transition release for the legacy reader (13.4) is proposed; say if you want it removed in the same PR instead (only safe if `approvals/pending` is empty on every machine).
+1. A translated job that completes or fails writes no run file; a run file exists only while it is paused for approval (13.3).
+2. Runs of translated jobs use audit channel `flow`; `job` stays valid for old lines and old proposals (13.3).
+3. The legacy proposal reader stays for exactly one transition release after #190 merges, then is deleted by a follow-up issue (13.4).
 
 DIEP-ANH smoke after the code PR: `jobs register --dry-run` unchanged, `jobs run echo-hello` exit 0, one T1 job at `max_tier = 0` queues, `approvals approve` in a new terminal finishes it, a pre-change pending proposal still approves.
