@@ -45,7 +45,7 @@ uv sync --no-dev ; uv run --no-sync python scripts/check_licenses.py ; uv sync
 
 ## Workflow
 
-1. Branch from up-to-date `main`; update `CHANGELOG.md` (`[Unreleased]`).
+1. Branch from up-to-date `main`; add a changelog fragment `changelog.d/<slug>.<category>.md` (see `changelog.d/README.md`). Do not edit `CHANGELOG.md`: two open PRs editing it conflict, and a conflicting PR gets no CI run.
 2. Open a PR. It may be merged without waiting for the maintainer only when every CodeQL check and the test suite pass and the PR is not a draft.
 3. A PR that changes the module map, a main flow or an invariant updates `ARCHITECTURE.md` in the same PR.
 4. Before merging a code PR that touches caller-supplied paths, adapters, network calls, subprocesses or `.claude/`, run `/security-review` and fix or answer its findings. Docs-only PRs skip it.
