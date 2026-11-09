@@ -1462,9 +1462,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 · CC: add the Planner 2a.2 checklist item for the K7-style count gap",
       "type": "Issue",
-      "status": "Ready",
-      "start": "2026-11-06",
-      "due": "2026-11-06",
+      "status": "In Review",
+      "start": "2026-11-10",
+      "due": "2026-11-10",
       "labels": [
         "exec:CC",
         "P3"
@@ -1769,9 +1769,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 · CC: ModelClient Protocol in lfmap-core and a thin llm plugin (spec first)",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "Ready",
+      "start": "2026-11-10",
+      "due": "2026-11-10",
       "labels": [
         "exec:CC",
         "P1",
@@ -1783,9 +1783,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "09/11 · CC: fold jobs into Flows (spec first, then code)",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "In Review",
+      "start": "2026-11-09",
+      "due": "2026-11-09",
       "labels": [
         "exec:CC",
         "P1"
@@ -1796,9 +1796,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "11/11 · CC: core acceptance suite, scenario template for Hùng",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "Ready",
+      "start": "2026-11-11",
+      "due": "2026-11-11",
       "labels": [
         "exec:CC",
         "P1"
@@ -1810,8 +1810,8 @@
       "title": "09/11 · CC: Plugin Contract v0.2 and a compatibility fixture",
       "type": "Issue",
       "status": "Backlog",
-      "start": null,
-      "due": null,
+      "start": "2026-11-09",
+      "due": "2026-11-09",
       "labels": [
         "exec:CC",
         "P1"
@@ -1863,9 +1863,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 gate · PO: lfmap backup / restore of owner state (choose the option)",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "Ready",
+      "start": "2026-11-10",
+      "due": "2026-11-10",
       "labels": [
         "exec:CC",
         "P1",
@@ -1877,9 +1877,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 gate · PO: ADR-025 data classes feed the approval tier (before organizer)",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "Ready",
+      "start": "2026-11-10",
+      "due": "2026-11-10",
       "labels": [
         "exec:CC",
         "P1",
@@ -1920,9 +1920,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 gate · PO: CONTRIBUTING.md and a contributor agreement (CLA or DCO)",
       "type": "Issue",
-      "status": "In Review",
-      "start": null,
-      "due": null,
+      "status": "Done",
+      "start": "2026-11-10",
+      "due": "2026-11-10",
       "labels": [
         "exec:CC",
         "P2",
@@ -1947,7 +1947,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs: CONTRIBUTING and bilingual CLA v1.0 (#200)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2007,9 +2007,9 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 night · QW: next Leading shadow round on the real Flows cases",
       "type": "Issue",
-      "status": "Backlog",
-      "start": null,
-      "due": null,
+      "status": "Ready",
+      "start": "2026-11-10",
+      "due": "2026-11-11",
       "labels": [
         "exec:QW",
         "P2",
@@ -2021,12 +2021,72 @@
       "repo": "hungnp1999/lfmap",
       "title": "Plan 09/11–11/11: task order until the Wednesday report",
       "type": "Issue",
+      "status": "Ready",
+      "start": "2026-11-09",
+      "due": "2026-11-11",
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 209,
+      "repo": "hungnp1999/lfmap",
+      "title": "Record a principal on audit lines, grants and proposals (#192)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 210,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: design for reading jobs as one-step flows (#190)",
+      "type": "PullRequest",
       "status": "Backlog",
       "start": null,
       "due": null,
       "labels": [
-        "exec:PO",
-        "P1"
+        null
+      ]
+    },
+    {
+      "number": 211,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: acceptance scenario template for the core suite (#191)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 212,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: count seed class gap on TC-K7 and Planner 2a.2 checklist item",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 213,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore: changelog fragments in changelog.d/ to avoid CHANGELOG conflicts",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
       ]
     },
     {
