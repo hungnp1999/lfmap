@@ -74,11 +74,14 @@ allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0"
 from typing import Any, ClassVar
 from pydantic import BaseModel
 
+
 class ToolContext(BaseModel):
     """Injected by the runtime: permissions, logger, config, cancellation."""
+
     plugin_id: str
     dry_run: bool = False
-    permissions: Any = None   # PermissionManager; logger, settings… later
+    permissions: Any = None  # PermissionManager; logger, settings… later
+
 
 class Tool:
     manifest_path: ClassVar[str] = "lfmap.toml"
@@ -98,6 +101,7 @@ Mỗi operation là một method nhận đúng một Pydantic Input và trả v�
 from lfmap_core import Tool, operation
 from .schemas import ConvertInput, ConvertOutput
 
+
 class MarkitdownTool(Tool):
     @operation("convert")
     def convert(self, inp: ConvertInput) -> ConvertOutput:
@@ -112,6 +116,7 @@ Hàm tiện lợi cho dùng như SDK thuần:
 from lfmap_core.runtime import default_context
 from .tool import MarkitdownTool
 from .schemas import ConvertInput, ConvertOutput
+
 
 def convert(inp: ConvertInput) -> ConvertOutput:
     return MarkitdownTool(default_context("markitdown")).convert(inp)

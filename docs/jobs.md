@@ -4,6 +4,11 @@ A job runs one plugin operation on a schedule, with nobody at the keyboard (ADR-
 does the scheduling: every job is a task in the `\LFMAP\` folder that runs `scripts\Invoke-LfmapJob.ps1`,
 which calls `lfmap jobs run <id>`. LFMAP has no scheduler loop of its own.
 
+> **Planned (issue #190, not implemented yet):** a job will be read as a one-step scheduled flow and run by the
+> Flows runner; `jobs.toml`, the task names, `lfmap jobs ...` and the tier table below stay as they are, and
+> proposals queued by jobs before the change remain approvable for one release. Design:
+> [docs/specs/flows.md](specs/flows.md) section 13.
+
 ## Declaring jobs
 
 Jobs live in `%LOCALAPPDATA%\lfmap\jobs.toml` (the `LFMAP_JOBS` environment variable overrides the path).
