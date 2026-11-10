@@ -1769,7 +1769,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 · CC: ModelClient Protocol in lfmap-core and a thin llm plugin (spec first)",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": "2026-11-10",
       "due": "2026-11-10",
       "labels": [
@@ -2228,11 +2228,242 @@
       "repo": "hungnp1999/lfmap",
       "title": "feat(core): ModelRouter, ctx.models, T3 gate and model_call egress lines (#189, MC-2)",
       "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 226,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(llm): plugin llm with summarise, extract and classify (#189, MC-3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 227,
+      "repo": "hungnp1999/lfmap",
+      "title": "Jobs into Flows: risk analysis after #190 and plan for the remaining merge",
+      "type": "Issue",
+      "status": "In Review",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision"
+      ]
+    },
+    {
+      "number": 228,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Lan Hài assistant architecture sketch (#157)",
+      "type": "PullRequest",
       "status": "Backlog",
       "start": null,
       "due": null,
       "labels": [
         null
+      ]
+    },
+    {
+      "number": 229,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(spec): ADR-025 implementation spec and handoff (data classes, TOTP) (#197)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 230,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: risk analysis of the jobs and Flows merge after stage 1 (#227)",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po"
+      ]
+    },
+    {
+      "number": 231,
+      "repo": "hungnp1999/lfmap",
+      "title": "JF-1: a job edited while it waits for approval must not block itself; doctor checks the runner's load",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 232,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-1: data_classes.py, the pure class map and tier adjustment (ADR-025)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 233,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-3: TOTP for self-granting commands (ADR-025 item 4)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "security-review"
+      ]
+    },
+    {
+      "number": 234,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-2: class guard in the approval gate, audit fields, markitdown.export paths (ADR-025)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "blocked",
+        "security-review"
+      ]
+    },
+    {
+      "number": 235,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-4: lfmap data classes|explain|classify|unclassify and doctor checks (ADR-025)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "blocked",
+        "security-review"
+      ]
+    },
+    {
+      "number": 236,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-5: knowledge reads the shared class map; ModelRouter uses the call label (ADR-025)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "blocked",
+        "security-review"
+      ]
+    },
+    {
+      "number": 237,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-6: data class label travels across flow steps (precondition of the first cloud route)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "blocked"
+      ]
+    },
+    {
+      "number": 238,
+      "repo": "hungnp1999/lfmap",
+      "title": "DC-7 · PO: set up data classes and TOTP on pc-01",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P2",
+        "blocked"
+      ]
+    },
+    {
+      "number": 239,
+      "repo": "hungnp1999/lfmap",
+      "title": "JF-2: stop producing operation requests over the bus (`via = \"event\"` runs as a call)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 240,
+      "repo": "hungnp1999/lfmap",
+      "title": "JF-3: runner housekeeping (run retention, interrupted runs, one behaviour for scheduled runs)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 241,
+      "repo": "hungnp1999/lfmap",
+      "title": "JF-4: remove the event adapter's request path and the plain-call proposal (Plugin Contract v0.3)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 242,
+      "repo": "hungnp1999/lfmap",
+      "title": "JF-5: retire `jobs.toml` (flows.toml is the only place for scheduled work)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "gate:po"
       ]
     },
     {
