@@ -14,7 +14,7 @@ Stage 1 did what was asked and did it safely: `jobs.toml` is unchanged, task nam
 3. **Jobs and flows now fail together**: a mistake in either config file stops both (R4).
 4. **The single runner has no housekeeping** (run files are never pruned, an interrupted run stays `running`), which matters more now that all scheduled work goes through it (R5, R6).
 
-None of these loses data or weakens the approval boundary. R1 to R3 can stop scheduled work without a clear signal, which is the failure a scheduler must not have. Hùng's runtime does not appear to be affected today: no shipped plugin has `[adapters] events = true`, so no job there can use `via = "event"` (the `jobs.toml` on pc-01 itself was not read for this file). The cheap moment to fix them is now, before `email` and the acceptance scenarios (#191) put real jobs on this path.
+None of these loses data or weakens the approval boundary. R1 to R3 can stop scheduled work without a clear signal, which is the failure a scheduler must not have. R1 needs a job with `via = "event"`, which only a plugin with `[adapters] events = true` accepts; since #226 that is the shipped plugin `llm`, so the path is reachable as soon as such a job is written (the `jobs.toml` on pc-01 was not read for this file). The cheap moment to fix them is now, before `email` and the acceptance scenarios (#191) put real jobs on this path.
 
 Recommendation in one line: finish the merge by **removing the request-over-bus path** (`via = "event"`), which is the root of R1 and R3 and of the second ceiling, then give the runner its housekeeping, and retire `jobs.toml` at the end of Phase 2. Three decisions are needed (section 6).
 
@@ -39,7 +39,7 @@ Severity: **H** = scheduled work stops with no clear signal, or the approval bou
 - Path: the flow gate allows the call (`max_tier = 1`), the event adapter stops it (`[events] max_tier = 0`, or a run-time escalation through `ctx.require_approval`) and queues a **plain-call** proposal (`events_adapter.py:167`, `JobApprover` without a proposer). The `.failed` answer carries that `approval_id`, so `flows_run.advance` marks the run `awaiting_approval` with the id of a proposal that is not a `flows.resume`.
 - Probe: after the proposal is approved (moved to `done`), the run file still says `awaiting_approval`; the next `jobs run` answers `Queued for approval` with the id of the finished proposal, with nothing pending. Rejecting or letting it expire gives the same result, because `approvals.sweep` and `approvals reject` close a run only for a `flows.resume` proposal (`approvals.py:153`).
 - Consequence: the job never runs again until someone deletes the run file by hand. The approved call itself ran once, outside the run.
-- Reach: jobs with `via = "event"` only, and `flows.toml` steps with `via = "event"` (R8). None on pc-01 today.
+- Reach: jobs with `via = "event"` only, and `flows.toml` steps with `via = "event"` (R8), on a plugin with `[adapters] events = true` (`llm` today).
 - Fix: decision D1. Removing `via = "event"` removes the path; keeping it needs the adapter to hand the stop back to the flow gate.
 
 ### R2 (M, probe). A job edited while it waits for approval blocks itself
@@ -154,7 +154,7 @@ Each stage is one issue and one PR, tests written first, `Closes #N`. Order: JF-
 | JF-4 | D1-B second half: remove the adapter's request handling, channel `event`, `[events] max_tier`, the plain-call approve path (#219 folded in); Plugin Contract v0.3 and fixture; `ARCHITECTURE.md` | JF-2, acceptance scenarios green (#191), no pending plain-call proposal on pc-01 | Frozen v0.2 fixture plugin still loads and publishes; a `.requested` event from an old queue ends as a dead letter with a clear reason | Revert; old proposals expire within 30 days either way | Cloud, pc-01 smoke | `gate:po` (Contract), `/security-review` (adapters) |
 | JF-5 | D2-B: `[runtime]` in `config.toml`, `jobs migrate`, task rename, shared pieces to a neutral module, renames of R10; ADR-018 note | D2, JF-3 | `register --dry-run` golden for the rename; `migrate` output loads and passes `flows check`; old `[runtime]` place still read | Keep `jobs.toml` on disk; a revert plus `register` restores the old tasks | Cloud, then one evening step on pc-01 (Hùng runs `register` at a TTY) | `gate:po` (ADR-018 note) |
 
-Scope warning: JF-1 to JF-3 are core hardening inside the Phase 2 item "Gộp jobs vào Flows" and add no Roadmap content. JF-4 changes the Plugin Contract one phase after v0.2 was frozen; that is the price of removing the path, and it is cheaper before a second plugin uses `[adapters] events`.
+Scope warning: JF-1 to JF-3 are core hardening inside the Phase 2 item "Gộp jobs vào Flows" and add no Roadmap content. JF-4 changes the Plugin Contract one phase after v0.2 was frozen; that is the price of removing the path, and it is cheaper while `llm` is the only plugin with `[adapters] events = true`.
 
 ## 6. Decisions for Hùng
 
