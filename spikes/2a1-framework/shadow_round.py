@@ -115,15 +115,22 @@ def http_json(path: str) -> dict:
         return json.load(reply)
 
 
-def check_gpu_idle() -> str | None:
-    try:
-        out = subprocess.run(
-            ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, check=True, timeout=30,
-        ).stdout.split()[0]  # fmt: skip
-    except (OSError, subprocess.SubprocessError, IndexError) as error:
-        return f"nvidia-smi failed: {error}"
-    return f"GPU busy ({out} %)" if int(out) > 10 else None
+def check_gpu_idle(samples: int = 5, limit: int = 30) -> str | None:
+    """Median GPU utilisation over `samples` readings 2 s apart; desktop noise (about 10 %) passes, a running job does not."""
+    readings: list[int] = []
+    for n in range(samples):
+        try:
+            out = subprocess.run(
+                ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, check=True, timeout=30,
+            ).stdout.split()[0]  # fmt: skip
+            readings.append(int(out))
+        except (OSError, subprocess.SubprocessError, IndexError, ValueError) as error:
+            return f"nvidia-smi failed: {error}"
+        if n < samples - 1:
+            time.sleep(2)
+    median = sorted(readings)[len(readings) // 2]
+    return f"GPU busy (median {median} % of {readings})" if median > limit else None
 
 
 def preflight(dev: Path = DEV) -> list[tuple[str, bool, str]]:
