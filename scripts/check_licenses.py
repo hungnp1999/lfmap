@@ -13,7 +13,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # Workspace packages are Apache-2.0 by ADR-010; listed here so a missing metadata field cannot hide them.
-WORKSPACE = {"lfmap-core", "lfmap-echo", "lfmap-knowledge", "lfmap-markitdown", "lfmap-powershell", "lfmap-workspace"}
+WORKSPACE = {
+    "lfmap-core",
+    "lfmap-echo",
+    "lfmap-knowledge",
+    "lfmap-llm",
+    "lfmap-markitdown",
+    "lfmap-powershell",
+    "lfmap-workspace",
+}
 # Reviewed exceptions: name -> reason. Keep in sync with 04_License_Register.md.
 EXCEPTIONS: dict[str, str] = {
     "fpdf2": (

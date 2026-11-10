@@ -1,0 +1,50 @@
+[plugin]
+id = "llm"
+name = "LLM"
+version = "0.1.0"
+description = "Summarise, extract fields from and classify text with the model the owner routed each task to."
+license = "Apache-2.0"
+authors = ["Hung Nguyen"]
+min_core_version = "0.1.0"
+
+[plugin.entrypoint]
+module = "lfmap_llm.tool"
+class = "LlmTool"
+
+[[operations]]
+name = "summarise"
+input = "lfmap_llm.schemas:SummariseInput"
+output = "lfmap_llm.schemas:SummariseOutput"
+side_effects = "external"
+min_tier = "T0"
+
+[[operations]]
+name = "extract"
+input = "lfmap_llm.schemas:ExtractInput"
+output = "lfmap_llm.schemas:ExtractOutput"
+side_effects = "external"
+min_tier = "T0"
+
+[[operations]]
+name = "classify"
+input = "lfmap_llm.schemas:ClassifyInput"
+output = "lfmap_llm.schemas:ClassifyOutput"
+side_effects = "external"
+min_tier = "T0"
+
+[permissions]
+fs_read = []
+fs_write = []
+network = true
+exec = []
+cloud_ai = true
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = true
+models = true
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0"]
