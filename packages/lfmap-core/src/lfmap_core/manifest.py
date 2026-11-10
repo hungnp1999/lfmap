@@ -61,6 +61,7 @@ class Adapters(_Strict):
     mcp: bool = True
     rest: bool = False
     events: bool = False
+    models: bool = False
 
 
 class LicensePolicy(_Strict):

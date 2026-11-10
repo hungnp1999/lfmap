@@ -31,7 +31,26 @@ TIERS: tuple[Tier, ...] = ("T0", "T1", "T2", "T3")
 DATA_LEVELS: tuple[DataLevel, ...] = ("normal", "private", "secret")
 MAX_DESTINATION_DAYS = 90
 AUDIT_FIELDS = frozenset(
-    {"time", "principal", "channel", "plugin", "operation", "tier", "decision", "reason", "target"}
+    {
+        "time",
+        "principal",
+        "channel",
+        "plugin",
+        "operation",
+        "tier",
+        "decision",
+        "reason",
+        "target",
+        # `model_call` lines (models_egress.py); never content, vectors or keys
+        "event",
+        "status",
+        "host",
+        "endpoint",
+        "model",
+        "data",
+        "bytes_out",
+        "bytes_in",
+    }
 )
 
 

@@ -17,7 +17,8 @@ Channel = Literal["sdk", "cli", "mcp", "rest", "job", "event", "flow"]
 
 class ToolContext(BaseModel):
     """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver
-    and, for plugins whose manifest has `[adapters] events = true`, the event publisher behind `events`."""
+    and, for plugins whose manifest has `[adapters] events = true`, the event publisher behind `events`;
+    likewise `[adapters] models = true` gives the `ModelRouter` behind `models`."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -30,6 +31,7 @@ class ToolContext(BaseModel):
     channel: Channel = "sdk"
     approver: Any = None
     event_publisher: Any = None
+    model_router: Any = None
 
     @property
     def events(self) -> Any:
@@ -41,6 +43,17 @@ class ToolContext(BaseModel):
                 {"plugin": self.plugin_id},
             )
         return self.event_publisher
+
+    @property
+    def models(self) -> Any:
+        """The plugin's `ModelRouter`; ToolError permission_denied unless the manifest opts in to models."""
+        if self.model_router is None:
+            raise ToolError(
+                "permission_denied",
+                "This plugin cannot use models; set [adapters] models = true in its manifest",
+                {"plugin": self.plugin_id},
+            )
+        return self.model_router
 
     def require_approval(self, reason: str, detail: str = "", *, destination: str = "", data: str = "normal") -> None:
         """Escalate this call before acting: T3 for reason "external", otherwise T2 (overwrite, rename, delete).
