@@ -188,4 +188,10 @@ Code-level security review of the stages (per PR), the design of the UI views ov
 
 ## 9. Decisions recorded
 
-None yet. To be filled in when Hùng answers section 6.
+Hùng, 2026-11-10 08:32Z (project thread):
+
+1. **D1 accepted, option B**: the request-over-bus path is retired in two stages (JF-2, then JF-4). #219 moves into JF-4, which replaces the timing of decision 13.7 (3) in `docs/specs/flows.md`; Plugin Contract v0.3 comes with JF-4.
+2. **D2 accepted, option B**: `jobs.toml` is frozen now (no new job feature) and retired at the end of Phase 2 (JF-5).
+3. **D3 accepted, option C**: the `flows_run.py` cap rises from 230 to 280 lines, reserved for retention, stale-run handling and the superseded waiting run; the ADR-024 note is updated outside the repository.
+
+Issues: JF-1 #231; JF-2 to JF-5 are filed from the table in section 5. This file fixes the design; the stages are implemented by later Claude Code sessions.
