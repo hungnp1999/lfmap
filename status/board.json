@@ -1809,7 +1809,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "09/11 · CC: Plugin Contract v0.2 and a compatibility fixture",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": "2026-11-09",
       "due": "2026-11-09",
       "labels": [
@@ -1863,7 +1863,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 gate · PO: lfmap backup / restore of owner state (choose the option)",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-10",
       "due": "2026-11-10",
       "labels": [
@@ -2148,6 +2148,67 @@
       "labels": [
         "exec:CC",
         "P1"
+      ]
+    },
+    {
+      "number": 219,
+      "repo": "hungnp1999/lfmap",
+      "title": "Remove the legacy job-proposal reader (one release after #190)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 220,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: Plugin Contract v0.2 and frozen v0.1.1 plugin fixture",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 221,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): ModelClient Protocol, [models] routing and OpenAI-compatible client (#189, MC-1)",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 222,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike: Leading shadow round script and preflight (#207)",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 223,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat: lfmap backup, backup list and backup restore (#196)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
       ]
     },
     {
