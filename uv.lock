@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.12, <3.15"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -15,6 +15,7 @@ members = [
     "lfmap-core",
     "lfmap-echo",
     "lfmap-knowledge",
+    "lfmap-llm",
     "lfmap-markitdown",
     "lfmap-powershell",
     "lfmap-workspace",
@@ -1031,6 +1032,17 @@ requires-dist = [
 ]
 
 [[package]]
+name = "lfmap-llm"
+version = "0.1.0"
+source = { editable = "plugins/lfmap-llm" }
+dependencies = [
+    { name = "lfmap-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "lfmap-core", editable = "packages/lfmap-core" }]
+
+[[package]]
 name = "lfmap-markitdown"
 version = "0.1.0"
 source = { editable = "plugins/lfmap-markitdown" }
@@ -1081,6 +1093,7 @@ dependencies = [
     { name = "lfmap-core" },
     { name = "lfmap-echo" },
     { name = "lfmap-knowledge" },
+    { name = "lfmap-llm" },
     { name = "lfmap-markitdown" },
     { name = "lfmap-powershell" },
 ]
@@ -1097,6 +1110,7 @@ requires-dist = [
     { name = "lfmap-core", editable = "packages/lfmap-core" },
     { name = "lfmap-echo", editable = "plugins/lfmap-echo" },
     { name = "lfmap-knowledge", editable = "packages/lfmap-knowledge" },
+    { name = "lfmap-llm", editable = "plugins/lfmap-llm" },
     { name = "lfmap-markitdown", editable = "plugins/lfmap-markitdown" },
     { name = "lfmap-powershell", editable = "plugins/lfmap-powershell" },
 ]
