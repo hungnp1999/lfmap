@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Run one LFMAP job (`lfmap jobs run <id>`) or one flow (`lfmap flows start <id>`) and append one JSON line to the
+Run one LFMAP job (`lfmap jobs run <id>`), one flow (`lfmap flows start <id>`) or the backup (`lfmap backup`) and append one JSON line to the
 daily job log.
 
 .DESCRIPTION
@@ -27,6 +27,9 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Flow')]
     [ValidatePattern('^[a-z][a-z0-9-]*$')]
     [string]$FlowId,
+
+    [Parameter(Mandatory, ParameterSetName = 'Backup')]
+    [switch]$Backup,
 
     [string]$RepoPath = (Split-Path -Parent $PSScriptRoot),
 
@@ -67,7 +70,11 @@ if ($RepoPath -ine $ownRoot) {
 $env:PYTHONUTF8 = '1'
 $env:PYTHONIOENCODING = 'utf-8'
 
-if ($PSCmdlet.ParameterSetName -eq 'Flow') {
+if ($PSCmdlet.ParameterSetName -eq 'Backup') {
+    $taskName = 'backup'
+    $lfmapArgs = @('backup')
+}
+elseif ($PSCmdlet.ParameterSetName -eq 'Flow') {
     $taskName = "flow-$FlowId"
     $lfmapArgs = @('flows', 'start', $FlowId)
 }
