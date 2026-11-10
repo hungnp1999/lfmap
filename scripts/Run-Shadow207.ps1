@@ -1,12 +1,13 @@
 # Leading shadow round on the real Flows cases (lfmap #207). Run signed in as lfmap-agent (ADR-023), Ollama tray app running:
-#   pwsh -NoProfile -File D:\Development\lfmap\scripts\Run-Shadow207.ps1 -DryRun    # fake runner, no Ollama, no git changes
-#   pwsh -NoProfile -File D:\Development\lfmap\scripts\Run-Shadow207.ps1 -Preflight  # checks only
-#   pwsh -NoProfile -File D:\Development\lfmap\scripts\Run-Shadow207.ps1             # the round (rerunnable: finished cases are skipped)
+#   pwsh -NoProfile -File D:\Development\lfmap-shadow207\scripts\Run-Shadow207.ps1 -DryRun    # fake runner, no Ollama, no git changes
+#   pwsh -NoProfile -File D:\Development\lfmap-shadow207\scripts\Run-Shadow207.ps1 -Preflight  # checks only
+#   pwsh -NoProfile -File D:\Development\lfmap-shadow207\scripts\Run-Shadow207.ps1             # the round (rerunnable: finished cases are skipped)
+# Runs in its own worktree of the agent clone (create it once, see PR #222); the agent clone itself is never touched.
 # Changes no Ollama setting. Writes only results\<date>-shadow207 and the branch ag/shadow-207-results.
-param([switch]$DryRun, [switch]$Preflight, [string]$Source = 'main')
+param([switch]$DryRun, [switch]$Preflight, [string]$Source = 'main', [string]$Repo = 'D:\Development\lfmap-shadow207')
 $ErrorActionPreference = 'Stop'
 if ($env:USERNAME -ne 'lfmap-agent' -and -not $DryRun) { throw "Run this as lfmap-agent (current user: $env:USERNAME)." }
-$repo = 'D:\Development\lfmap'; $branch = 'ag/shadow-207-results'; $spike = Join-Path $repo 'spikes\2a1-framework'
+$repo = $Repo; $branch = 'ag/shadow-207-results'; $spike = Join-Path $repo 'spikes\2a1-framework'
 $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
 if (-not $env:GH_TOKEN) { $env:GH_TOKEN = [Environment]::GetEnvironmentVariable('GH_TOKEN', 'User') }
 if (-not $env:DEV_ENVIRONMENT) { $env:DEV_ENVIRONMENT = 'pc-01' }
@@ -38,7 +39,6 @@ if ($changed) {
     Invoke-Git -C $repo commit -m 'spike: Leading shadow round on the real Flows cases results' -m 'Refs #207' --trailer 'Dev-Environment: pc-01' --trailer 'AI-Agent: lfmap-agent/spike-run'
     Invoke-Git -C $repo push -u origin $branch
 }
-Invoke-Git -C $repo checkout main
 Write-Host "`n===== SHADOW 207 SUMMARY (paste back) ====="
 Get-Content (Join-Path $repo "$res\score.txt") -TotalCount 25 -ErrorAction SilentlyContinue
 Write-Host "branch: $branch, commit made: $([bool]$changed). Next: open the PR for $branch (Refs #207)."
