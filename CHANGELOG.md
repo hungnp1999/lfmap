@@ -4,7 +4,6 @@
 
 ### Added
 
-- `docs/research/2026-11-08-leading-real-code-tally.md` section 4: re-run of six seeded cases with a larger output cap (2 of 5 seeds caught, median about 1275 s, `loop` timed out and is not re-run); local Leading stays in shadow mode. Docs only.
 - `docs/specs/flows.md` section 13 (#190, spec only): design for reading `jobs.toml` jobs as one-step scheduled flows run by the Flows runner (translation table, `via = "event"` ceilings, one `flows.resume` proposal kind, one transition release for the legacy proposal reader, tests, three open questions for the owner). `docs/jobs.md` links it. No code changed.
 - `docs/specs/acceptance-scenarios.md` (#191): fill-in template for the owner's real business workflows, with one worked synthetic example; the input of the core acceptance suite (architecture review C2). Docs only.
 - `CONTRIBUTING.md`, `CONTRIBUTORS.md` and `docs/legal/CLA.md` (CLA v1.0, #200): invitation-only contribution rules and a bilingual (English/Vietnamese) Individual Contributor License Agreement based on the Apache ICLA v2.2, with a relicensing right for the owner, an AI-use disclosure clause, an optional assignment of economic rights and questions for a later legal review. Adopted by the owner before that review. Docs only.
