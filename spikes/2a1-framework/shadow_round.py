@@ -116,7 +116,7 @@ def http_json(path: str) -> dict:
 
 
 def check_gpu_idle(samples: int = 5, limit: int = 30) -> str | None:
-    """Median GPU utilisation over `samples` readings 2 s apart; desktop noise (about 10 %) passes, a running job does not."""
+    """Median GPU use over `samples` readings 2 s apart: desktop noise (about 10 %) passes, a running job does not."""
     readings: list[int] = []
     for n in range(samples):
         try:
