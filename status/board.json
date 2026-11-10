@@ -1769,7 +1769,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 · CC: ModelClient Protocol in lfmap-core and a thin llm plugin (spec first)",
       "type": "Issue",
-      "status": "Ready",
+      "status": "In Review",
       "start": "2026-11-10",
       "due": "2026-11-10",
       "labels": [
@@ -2007,7 +2007,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 night · QW: next Leading shadow round on the real Flows cases",
       "type": "Issue",
-      "status": "Ready",
+      "status": "In Review",
       "start": "2026-11-10",
       "due": "2026-11-11",
       "labels": [
@@ -2180,7 +2180,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "feat(core): ModelClient Protocol, [models] routing and OpenAI-compatible client (#189, MC-1)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2205,6 +2205,30 @@
       "title": "feat: lfmap backup, backup list and backup restore (#196)",
       "type": "PullRequest",
       "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 224,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: record the larger-cap re-run of the Leading seed cases",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 225,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): ModelRouter, ctx.models, T3 gate and model_call egress lines (#189, MC-2)",
+      "type": "PullRequest",
+      "status": "Backlog",
       "start": null,
       "due": null,
       "labels": [
