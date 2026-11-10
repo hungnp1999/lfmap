@@ -1,0 +1,46 @@
+[plugin]
+id = "frozen-note"
+name = "FrozenNote"
+version = "0.1.0"
+description = "Frozen Plugin Contract v0.1.1 fixture."
+license = "Apache-2.0"
+authors = ["Hung"]
+min_core_version = "0.1.0"
+
+[plugin.entrypoint]
+module = "lfmap_frozen_note.tool"
+class = "FrozenNoteTool"
+
+[[operations]]
+name = "shout"
+input = "lfmap_frozen_note.schemas:ShoutInput"
+output = "lfmap_frozen_note.schemas:ShoutOutput"
+side_effects = "none"
+
+[[operations]]
+name = "save"
+input = "lfmap_frozen_note.schemas:SaveInput"
+output = "lfmap_frozen_note.schemas:SaveOutput"
+side_effects = "local_write"
+
+[[operations]]
+name = "missing"
+input = "lfmap_frozen_note.schemas:MissingInput"
+output = "lfmap_frozen_note.schemas:ShoutOutput"
+side_effects = "none"
+
+[permissions]
+fs_read = []
+fs_write = ["${output_dir}"]
+network = false
+exec = []
+cloud_ai = false
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = false
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0"]
