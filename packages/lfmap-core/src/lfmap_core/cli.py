@@ -15,7 +15,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor, jobs_flow
+from lfmap_core import approvals, backup, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor, jobs_flow
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -232,6 +232,7 @@ def build_app(registry: Registry) -> typer.Typer:
     jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
     events_app = typer.Typer(help="The event bus: run the event adapter, inspect and repair the queue.")
     flows_app = typer.Typer(help="Declared flows from flows.toml.")
+    backup_app = typer.Typer(help="Back up and restore the owner's state (restore: interactive terminal only).")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
@@ -240,6 +241,7 @@ def build_app(registry: Registry) -> typer.Typer:
     app.add_typer(jobs_app, name="jobs")
     app.add_typer(events_app, name="events")
     app.add_typer(flows_app, name="flows")
+    app.add_typer(backup_app, name="backup", invoke_without_command=True)
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
     def require_person(action: str, key: str) -> tuple[str, str]:
@@ -470,6 +472,43 @@ def build_app(registry: Registry) -> typer.Typer:
             ]
             typer.echo("  ".join(str(field) for field in fields if field is not None))
 
+    @backup_app.callback()
+    def backup_create(
+        ctx: typer.Context,
+        to: Annotated[str | None, typer.Option("--to", help="Folder inside the declared [backup] folder.")] = None,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Without a subcommand: write one dated zip into the [backup] folder of config.toml, then prune old ones."""
+        if ctx.invoked_subcommand is not None:
+            return
+        result = backup.create(to)
+        audit({"channel": "cli", "decision": "allow", "reason": "backup created", "target": Path(result["path"]).name})
+        typer.echo(json.dumps(result, ensure_ascii=False) if json_output else approvals.visible(result["path"]))
+
+    @backup_app.command("list")
+    def backup_list(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """List the backups in the declared folder, oldest first."""
+        names = [p.name for p in backup.list_backups(backup.settings()["folder"])]
+        typer.echo(json.dumps(names, indent=2) if json_output else "\n".join(names))
+
+    @backup_app.command("restore")
+    def backup_restore(
+        archive: Annotated[str, typer.Argument(metavar="ZIP")],
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Replace the owner's files with the ones in ZIP (interactive terminal and a typed code)."""
+        if not _interactive():
+            raise ToolError("permission_denied", "backup restore only works in an interactive terminal")
+        path = PermissionManager([], [], explicit_read=True).require_read(archive)
+        if not path.is_file():
+            raise ToolError("not_found", "Backup file not found", {"path": archive})
+        _require_code(f"restore {path.name}", {"target": path.name})
+        result = backup.restore(path)
+        audit({"channel": "cli", "decision": "grant", "reason": "backup restored", "target": path.name})
+        typer.echo(json.dumps(result, ensure_ascii=False) if json_output else f"Restored {result['restored']} files")
+        if result["reindex"]:
+            typer.echo("Run `lfmap knowledge reindex` to rebuild search (the backup holds no document text).", err=True)
+
     @jobs_app.command("list")
     def jobs_list(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
         """List the jobs in jobs.toml."""
@@ -529,6 +568,7 @@ def build_app(registry: Registry) -> typer.Typer:
         job_list = jobs_file.jobs
         script = repo / "scripts" / "Invoke-LfmapJob.ps1"
         flow_tasks = flows_triggers.task_commands(flows.load_flows(), repo, uv, script, pwsh)
+        flow_tasks |= backup.task_commands(load_config(), repo, uv, script, pwsh)
         try:
             existing = jobs.existing_tasks()
         except ToolError as error:
