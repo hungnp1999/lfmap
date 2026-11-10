@@ -22,6 +22,8 @@ Set-Location $spike
 uv sync --all-groups; if ($LASTEXITCODE) { throw 'uv sync failed' }
 
 if ($DryRun) { uv run python shadow_round.py run --dry-run; exit $LASTEXITCODE }
+# Gate worktrees lfmap-s207-* are created here, as this user, from the agent clone (idempotent; first run takes a few minutes).
+uv run python shadow_round.py prepare; if ($LASTEXITCODE) { throw 'prepare failed' }
 if ($Preflight) { uv run python shadow_round.py preflight; exit $LASTEXITCODE }
 
 # 2. The round (preflight runs again inside; a failure exits before any model call).

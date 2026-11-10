@@ -1,4 +1,4 @@
-"""Leading shadow round on the real Flows cases (#207): `preflight`, `run`, both with `--dry-run`.
+"""Leading shadow round on the real Flows cases (#207): `prepare`, `preflight`, `run` (also `run --dry-run`).
 
     uv run python shadow_round.py preflight          # checks only, changes nothing
     uv run python shadow_round.py run --dry-run      # whole loop with a fake runner, no Ollama, no git
@@ -6,8 +6,9 @@
 
 The round runs 15 cases one after another (4 real, 11 seeded copies), one Leading review each, and writes
 `results/<date>-shadow207/`. Rerunnable: a case with a `run_metrics.json` is skipped. Per-case state is the gate
-worktree: the target module must be absent before the case and is removed again afterwards (also on a crash).
-Anything else changed in a worktree stops the round (it is not ours to clean up).
+worktree (own copies `lfmap-s207-*` made by `prepare`): the target module is removed before each case and again
+afterwards, and checked out from the commit when the round ends (also on a crash). Any other change in a worktree
+stops the round (it is not ours to clean up).
 """
 
 import argparse
@@ -47,10 +48,10 @@ class Gate:
 
 
 GATES = {
-    "FL1": Gate("FL1", "lfmap-gate-fl1", "45a1039", "flows.py"),
-    "FL1b": Gate("FL1b", "lfmap-gate-fl1b", "45a1039", "flows_refs.py"),
-    "FL2": Gate("FL2", "lfmap-fl2real-gate", "ac7ef50", "flows_run.py"),
-    "FL3": Gate("FL3", "lfmap-gate-fl3", "a3fe9b7", "flows_triggers.py"),
+    "FL1": Gate("FL1", "lfmap-s207-fl1", "45a1039", "flows.py"),
+    "FL1b": Gate("FL1b", "lfmap-s207-fl1b", "45a1039", "flows_refs.py"),
+    "FL2": Gate("FL2", "lfmap-s207-fl2", "ac7ef50", "flows_run.py"),
+    "FL3": Gate("FL3", "lfmap-s207-fl3", "a3fe9b7", "flows_triggers.py"),
 }
 # Real cases first (compare with the 4/4 of 08/11), then the seeds nobody saw, then the rest.
 CASES = [
@@ -79,11 +80,33 @@ def git(folder: Path, *args: str) -> str:
     return done.stdout.strip() if done.returncode == 0 else f"ERROR {done.stderr.strip()}"
 
 
-def dirty_other_than_target(folder: Path, gate: Gate) -> list[str]:
-    """`git status` lines that are not the removed (or rewritten) target module."""
+def unexpected_changes(folder: Path, gate: Gate) -> list[str]:
+    """`git status` lines that are not ours: anything but the target module, which may be clean or deleted."""
     rel = (MODULE_DIR / gate.target).as_posix()
     lines = git(folder, "status", "--porcelain", "--untracked-files=no").splitlines()
-    return [x for x in lines if x.strip() and not x.endswith(rel)]
+    return [x for x in lines if x.strip() and not (x.endswith(rel) and x[:2].strip() in ("", "D"))]
+
+
+def prepare(dev: Path = DEV) -> None:
+    """Create the four gate worktrees as this user (idempotent): detached at the PR merge commit, `uv sync` once."""
+    clone = dev / "lfmap"
+    git(clone, "fetch", "origin")
+    for gate in GATES.values():
+        folder = worktree(gate, dev)
+        if not folder.is_dir():
+            print(f"worktree {gate.name}: creating {folder} at {gate.commit}")
+            subprocess.run(
+                ["git", "-C", str(clone), "worktree", "add", "--detach", str(folder), gate.commit], check=True
+            )
+        if not (folder / ".venv").is_dir():
+            print(f"worktree {gate.name}: uv sync")
+            subprocess.run(["uv", "sync"], cwd=folder, check=True)
+
+
+def restore_targets(dev: Path = DEV) -> None:
+    """Put each target module back to the commit's version (the round removes it before every case)."""
+    for gate in GATES.values():
+        git(worktree(gate, dev), "checkout", "--", (MODULE_DIR / gate.target).as_posix())
 
 
 def http_json(path: str) -> dict:
@@ -133,17 +156,15 @@ def preflight(dev: Path = DEV) -> list[tuple[str, bool, str]]:
         problems = []
         if not head.startswith(gate.commit):
             problems.append(f"HEAD {head[:9]}, expected {gate.commit}")
-        if target_path(gate, dev).exists():
-            problems.append(f"{gate.target} is present; the gate worktree must have it removed")
-        if other := dirty_other_than_target(folder, gate):
-            problems.append(f"other changes: {other}")
+        if other := unexpected_changes(folder, gate):
+            problems.append(f"changes that are not ours: {other}")
         ruff = subprocess.run(
             ["uv", "run", "--no-sync", "--directory", str(folder), "ruff", "--version"],
             capture_output=True, text=True, check=False,
         )  # fmt: skip
         if ruff.returncode:
             problems.append("`uv run --no-sync ruff --version` fails (uv sync in that worktree)")
-        add(f"worktree {gate.name}", "; ".join(problems) or None, f"{folder} @ {head[:9]}, {gate.target} absent")
+        add(f"worktree {gate.name}", "; ".join(problems) or None, f"{folder} @ {head[:9]}, clean")
     return rows
 
 
@@ -200,9 +221,9 @@ def run_round(
             print(f"[{n}/{len(cases)}] stop: after {stop_hour:g}:00, {case} and the rest left for a rerun")
             rows.extend({"case": c, "status": "not_started"} for c in cases[n - 1 :] if not finished(res, c))
             break
-        if target.exists() or (other := dirty_other_than_target(worktree(gate, dev), gate)):
-            reason = f"{target} present" if target.exists() else f"other changes {other}"
-            raise SystemExit(f"stop on surprise before {case}: {reason}")
+        if other := unexpected_changes(worktree(gate, dev), gate):
+            raise SystemExit(f"stop on surprise before {case}: {other}")
+        target.unlink(missing_ok=True)  # the harness adds it back with git apply; restored from the commit at the end
         print(f"[{n}/{len(cases)}] {case} {local:%H:%M}")
         started = time.monotonic()
         try:
@@ -256,8 +277,15 @@ def dry_run() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         dev = Path(tmp) / "dev"
         for gate in GATES.values():
-            (worktree(gate, dev) / MODULE_DIR).mkdir(parents=True)
-            subprocess.run(["git", "init", "-q", str(worktree(gate, dev))], check=True)
+            folder = worktree(gate, dev)
+            (folder / MODULE_DIR).mkdir(parents=True)
+            target_path(gate, dev).write_text("# committed module\n", encoding="utf-8")
+            for step in (
+                ["init", "-q"],
+                ["add", "."],
+                ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"],
+            ):
+                subprocess.run(["git", "-C", str(folder), *step], check=True)
         res = Path(tmp) / "res"
         noon_minus = dt.datetime(2026, 11, 10, 23, 30).timestamp()
         runner = fake_runner_factory(dev)
@@ -266,9 +294,11 @@ def dry_run() -> int:
             print(f"loop {loop}:", {r["status"] for r in rows})
             left = [t for g in GATES.values() if (t := target_path(g, dev)).exists()]
             assert not left, f"targets left behind: {left}"
+        restore_targets(dev)
+        assert all(target_path(g, dev).read_text(encoding="utf-8") == "# committed module\n" for g in GATES.values())
         late = run_round(Path(tmp) / "late", dev, runner, CASES, lambda: dt.datetime(2026, 11, 11, 5, 10).timestamp())
         assert all(r["status"] == "not_started" for r in late), late
-        target_path(GATES["FL3"], dev).write_text("x", encoding="utf-8")
+        target_path(GATES["FL3"], dev).write_text("edited by someone", encoding="utf-8")
         try:
             run_round(Path(tmp) / "dirty", dev, runner, ["FL3-real"], lambda: noon_minus)
         except SystemExit as stop:
@@ -283,6 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("preflight")
+    sub.add_parser("prepare", help="create the gate worktrees as this user (idempotent)")
     run = sub.add_parser("run")
     run.add_argument("--dry-run", action="store_true")
     run.add_argument("--date", default=dt.date.today().isoformat())
@@ -294,6 +325,9 @@ def main(argv: list[str] | None = None) -> int:
         bad = [r for r in rows if not r[1]]
         print("PREFLIGHT " + ("FAILED: skip tonight" if bad else "PASSED"))
         return 1 if bad else 0
+    if args.command == "prepare":
+        prepare()
+        return 0
     if args.dry_run:
         return dry_run()
     rows = preflight()
@@ -301,7 +335,10 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(f"FAIL {n}: {d}" for n, _, d in bad))
         return 1
     res = HERE / "results" / f"{args.date}-shadow207"
-    rows = run_round(res, DEV, real_runner, CASES, time.time)
+    try:
+        rows = run_round(res, DEV, real_runner, CASES, time.time)
+    finally:
+        restore_targets(DEV)
     ok, bad_resume = resume_and_score(res, real_runner)
     (res / "summary.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
     print(f"results: {res}\ncases: {len(rows)}, resumed ok: {ok}, resume failed: {bad_resume}")
