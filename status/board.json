@@ -1462,7 +1462,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 · CC: add the Planner 2a.2 checklist item for the K7-style count gap",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": "2026-11-10",
       "due": "2026-11-10",
       "labels": [
@@ -1783,7 +1783,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "09/11 · CC: fold jobs into Flows (spec first, then code)",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": "2026-11-09",
       "due": "2026-11-09",
       "labels": [
@@ -2046,7 +2046,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs: design for reading jobs as one-step flows (#190)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2070,7 +2070,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs: count seed class gap on TC-K7 and Planner 2a.2 checklist item",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2082,11 +2082,72 @@
       "repo": "hungnp1999/lfmap",
       "title": "chore: changelog fragments in changelog.d/ to avoid CHANGELOG conflicts",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
         null
+      ]
+    },
+    {
+      "number": 214,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: reference copies of Plugin Contract and Blueprint section 4",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 215,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(jobs): run jobs as one-step flows (#190)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 216,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(spec): ModelClient Module Spec (Card A)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 217,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: acceptance scenario S1, tender package search (#191)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 218,
+      "repo": "hungnp1999/lfmap",
+      "title": "Core gaps from acceptance scenarios: register and order (S1 tender search)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
       ]
     },
     {
