@@ -46,4 +46,22 @@
 | 0 invented quotes | 0 of 15 reviews | yes |
 | median at most 120 s | 261 s | no |
 
-Conclusion for ADR-022: local Leading stays in shadow mode. The false positives on clean real code (2 of 4) and the missed minor issues (0/8) argue against using it as a filter in front of the Cloud review. What to do next: re-run the 4 `invalid_json` cases with a larger cap, then decide whether a longer thinking budget or a different thinking level changes the picture.
+Conclusion for ADR-022: local Leading stays in shadow mode. The false positives on clean real code (2 of 4) and the missed minor issues (0/8) argue against using it as a filter in front of the Cloud review.
+
+## 4. Re-run with a larger cap (2026-11-09)
+
+Six seeded cases re-run with `LFMAP_NUM_CTX=20480` and `LFMAP_NUM_PREDICT=14000`.
+
+| Case | Seed caught | Seconds | Note |
+| --- | --- | --- | --- |
+| FL1-seed-boundary | yes | 1370 | `< MAX_TIER` against the "use 0 or 1" message |
+| FL2-seed-swallow | yes | 2014 | `except OSError: pass`; `ruff_extra` also failed |
+| FL1-seed-default | no | 816 | false `require_read` finding again; `ruff_check` failed |
+| FL2-seed-bytes | no | 1276 | false "over 230 lines" finding (hunk header read as file length) |
+| FL2-seed-wrongprop | no | 640 | same false "over 230 lines" finding |
+| FL3-seed-loop | no result | n/a | `TimeoutError` of the HTTP client in `common/ollama.py` (`TIMEOUT`) |
+
+- The larger cap removed `invalid_json` (0 of 5 replies hit it) but not the misses: 2 of 5 seeds caught, 0 invented quotes.
+- Median time rose from 261 s to about 1275 s; the bar is 120 s.
+- The `loop` case has no result. It is not re-run: one more sample cannot move either criterion, so measuring local Leading stops here. Re-measure from scratch on a new seed set if the model or runtime changes.
+- Two false-finding patterns repeat and should be fixed in the card or prompt before any later measurement: the diff hunk header read as the file length, and the path rule applied to configuration paths.

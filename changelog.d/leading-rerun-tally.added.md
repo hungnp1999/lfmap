@@ -1,0 +1,1 @@
+`docs/research/2026-11-08-leading-real-code-tally.md` section 4: re-run of six seeded cases with a larger output cap (2 of 5 seeds caught, median about 1275 s, `loop` timed out and is not re-run); local Leading stays in shadow mode. Docs only.
