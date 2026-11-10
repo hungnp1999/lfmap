@@ -1,0 +1,49 @@
+Traceback (most recent call last):
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\run.py", line 161, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\run.py", line 147, in main
+    result, metrics = command(args, state_dir)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\run.py", line 105, in command_run
+    result = module.run_flow(package, models=models, state_dir=state_dir, replay_cards=replay)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\variants\plain\flow.py", line 72, in run_flow
+    reports = review_batch(state, pending, models.leading)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\variants\plain\flow.py", line 130, in review_batch
+    report = check_quotes(parse_report(card.id, leading.chat(system, user, REPORT_SCHEMA)), attempt.diff)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\common\metrics.py", line 61, in chat
+    reply = self.inner.chat(system, user, schema)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Development\lfmap-shadow207\spikes\2a1-framework\common\ollama.py", line 73, in chat
+    with self._opener.open(request, timeout=TIMEOUT) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\urllib\request.py", line 515, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\urllib\request.py", line 532, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\urllib\request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\urllib\request.py", line 1386, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\urllib\request.py", line 1361, in do_open
+    r = h.getresponse()
+        ^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\http\client.py", line 1478, in getresponse
+    response.begin()
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\http\client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\http\client.py", line 304, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lfmap-agent\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out

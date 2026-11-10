@@ -1,0 +1,64 @@
+{
+  "run_id": "plain-FL1b-real-7b33ae9f",
+  "variant": "plain",
+  "package_id": "FL1b-real",
+  "cards": [
+    {
+      "id": "FL1b-real",
+      "title": "replay FL1b-real",
+      "target": "packages/lfmap-core/src/lfmap_core/flows_refs.py",
+      "scope": [
+        "packages/lfmap-core/src/lfmap_core/flows_refs.py"
+      ],
+      "tests": [],
+      "prompt": "You are a careful Python 3.12 developer. Write ONE new module in the `lfmap` monorepo: `packages/lfmap-core/src/lfmap_core/flows_refs.py` (task FL-1 of `docs/handoff/2026-11-06-lfmap-flows.md`, spec section 4 (references) of `docs/specs/flows.md`). Code, comments and docstrings in English. Standard library, pydantic and `lfmap_core` only. Small functions, type hints everywhere.\n\nRULES\n- Do NOT edit the tests; the frozen tests are `packages/lfmap-core/tests/test_flows_refs.py`.\n- Keep the module small; the Flows line stays plain Python (ADR-024), no framework.\n- Paths that an operation caller supplies go through the permission checks of `lfmap_core` before any file-system call. Paths the module derives from its own configuration (the flows.toml location) are not caller-supplied. The module reads no environment variable or clock outside what the spec names.\n\nThis case reviews the real module as merged in PR #173 (written by a Sonnet Working session, not by qwen); there is no Plan run. The card gives no API listing: the Leading review judges the module against the spec section and the rules above.\n",
+      "replay_diff": "diff --git a/packages/lfmap-core/src/lfmap_core/flows_refs.py b/packages/lfmap-core/src/lfmap_core/flows_refs.py\nnew file mode 100644\nindex 0000000..1111111\n--- /dev/null\n+++ b/packages/lfmap-core/src/lfmap_core/flows_refs.py\n@@ -0,0 +1,100 @@\n+\"\"\"References in a flow: `${trigger.payload.x}` and `${steps.<id>.output.x}` (docs/specs/flows.md section 4).\n+\n+Pure functions over plain JSON data: no files, environment variables or clock. Nothing but the grammar below\n+is accepted, and a resolved value is never scanned again.\n+\"\"\"\n+\n+import copy\n+import re\n+from typing import Any\n+\n+from lfmap_core.errors import ToolError\n+\n+_KEY = r\"(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+)\"\n+_REF = re.compile(rf\"\\$\\{{(?:trigger|steps\\.[a-z][a-z0-9-]*)(?:\\.{_KEY})*\\}}\", re.ASCII)\n+_MISSING = object()\n+_SCALARS = (str, int, float, bool)\n+\n+\n+def _parts(text: str) -> list[tuple[int, int]]:\n+    \"\"\"Spans of the references in `text`; any other `${` is a grammar error.\"\"\"\n+    spans, start = [], text.find(\"${\")\n+    while start != -1:\n+        found = _REF.match(text, start)\n+        if found is None:\n+            raise ToolError(\"invalid_input\", f\"Not a valid reference near {text[start : start + 40]!r}\", {\"text\": text})\n+        spans.append(found.span())\n+        start = text.find(\"${\", found.end())\n+    return spans\n+\n+\n+def _path(reference: str) -> tuple[str, ...]:\n+    return tuple(reference[2:-1].split(\".\"))\n+\n+\n+def find_refs(value: Any) -> list[tuple[str, ...]]:\n+    \"\"\"Paths of every reference in `value` (strings of dicts and lists, not dict keys), in order.\"\"\"\n+    if isinstance(value, str):\n+        return [_path(value[a:b]) for a, b in _parts(value)]\n+    if isinstance(value, dict):\n+        return [path for item in value.values() for path in find_refs(item)]\n+    if isinstance(value, list):\n+        return [path for item in value for path in find_refs(item)]\n+    return []\n+\n+\n+def _lookup(scope: Any, path: tuple[str, ...]) -> Any:\n+    for key in path:\n+        if isinstance(scope, dict) and key in scope:\n+            scope = scope[key]\n+        elif isinstance(scope, list) and key.isdigit() and int(key) < len(scope):\n+            scope = scope[int(key)]\n+        else:\n+            return _MISSING\n+    return scope\n+\n+\n+def _fail(step: str, reference: str, why: str) -> ToolError:\n+    message = f\"Step {step!r}: reference {reference} {why}\"\n+    return ToolError(\"invalid_input\", message, {\"step\": step, \"reference\": reference})\n+\n+\n+def _resolve_string(text: str, scope: Any, step: str, strict: bool) -> Any:\n+    spans = _parts(text)\n+    if not spans:\n+        return text\n+    exact = spans[0] == (0, len(text))\n+    pieces, last = [], 0\n+    for a, b in spans:\n+        found = _lookup(scope, _path(text[a:b]))\n+        if exact:\n+            if found is _MISSING and strict:\n+                raise _fail(step, text, \"has no value\")\n+            return None if found is _MISSING else copy.deepcopy(found)\n+        if found is _MISSING or not isinstance(found, _SCALARS):\n+            raise _fail(step, text[a:b], \"has no text, number or boolean value to insert\")\n+        pieces += [text[last:a], str(found)]\n+        last = b\n+    return \"\".join(pieces) + text[last:]\n+\n+\n+def resolve(value: Any, scope: dict[str, Any], *, step: str = \"\", strict: bool = False) -> Any:\n+    \"\"\"Replace the references in `value`; `scope` is `{\"trigger\": ..., \"steps\": {id: {\"output\": ...}}}`.\n+\n+    A string that is exactly one reference becomes the referenced value (a copy, keeping its JSON type); inside a\n+    longer string only str, int, float and bool are inserted (with `str()`), anything else raises `invalid_input`.\n+    A missing key gives `None` for an exact reference, or `invalid_input` naming `step` when `strict` (use it for\n+    `input`; leave it off for `when`).\n+    \"\"\"\n+    if isinstance(value, str):\n+        return _resolve_string(value, scope, step, strict)\n+    if isinstance(value, dict):\n+        return {key: resolve(item, scope, step=step, strict=strict) for key, item in value.items()}\n+    if isinstance(value, list):\n+        return [resolve(item, scope, step=step, strict=strict) for item in value]\n+    return value\n+\n+\n+def truthy(value: Any) -> bool:\n+    \"\"\"For `when`: not None, False, 0, \"\", an empty list or an empty dict.\"\"\"\n+    return bool(value)\n",
+      "replay_log": null
+    }
+  ],
+  "attempts": [
+    {
+      "card_id": "FL1b-real",
+      "round": 1,
+      "source": "replay",
+      "diff": "diff --git a/packages/lfmap-core/src/lfmap_core/flows_refs.py b/packages/lfmap-core/src/lfmap_core/flows_refs.py\nnew file mode 100644\nindex 0000000..1111111\n--- /dev/null\n+++ b/packages/lfmap-core/src/lfmap_core/flows_refs.py\n@@ -0,0 +1,100 @@\n+\"\"\"References in a flow: `${trigger.payload.x}` and `${steps.<id>.output.x}` (docs/specs/flows.md section 4).\n+\n+Pure functions over plain JSON data: no files, environment variables or clock. Nothing but the grammar below\n+is accepted, and a resolved value is never scanned again.\n+\"\"\"\n+\n+import copy\n+import re\n+from typing import Any\n+\n+from lfmap_core.errors import ToolError\n+\n+_KEY = r\"(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+)\"\n+_REF = re.compile(rf\"\\$\\{{(?:trigger|steps\\.[a-z][a-z0-9-]*)(?:\\.{_KEY})*\\}}\", re.ASCII)\n+_MISSING = object()\n+_SCALARS = (str, int, float, bool)\n+\n+\n+def _parts(text: str) -> list[tuple[int, int]]:\n+    \"\"\"Spans of the references in `text`; any other `${` is a grammar error.\"\"\"\n+    spans, start = [], text.find(\"${\")\n+    while start != -1:\n+        found = _REF.match(text, start)\n+        if found is None:\n+            raise ToolError(\"invalid_input\", f\"Not a valid reference near {text[start : start + 40]!r}\", {\"text\": text})\n+        spans.append(found.span())\n+        start = text.find(\"${\", found.end())\n+    return spans\n+\n+\n+def _path(reference: str) -> tuple[str, ...]:\n+    return tuple(reference[2:-1].split(\".\"))\n+\n+\n+def find_refs(value: Any) -> list[tuple[str, ...]]:\n+    \"\"\"Paths of every reference in `value` (strings of dicts and lists, not dict keys), in order.\"\"\"\n+    if isinstance(value, str):\n+        return [_path(value[a:b]) for a, b in _parts(value)]\n+    if isinstance(value, dict):\n+        return [path for item in value.values() for path in find_refs(item)]\n+    if isinstance(value, list):\n+        return [path for item in value for path in find_refs(item)]\n+    return []\n+\n+\n+def _lookup(scope: Any, path: tuple[str, ...]) -> Any:\n+    for key in path:\n+        if isinstance(scope, dict) and key in scope:\n+            scope = scope[key]\n+        elif isinstance(scope, list) and key.isdigit() and int(key) < len(scope):\n+            scope = scope[int(key)]\n+        else:\n+            return _MISSING\n+    return scope\n+\n+\n+def _fail(step: str, reference: str, why: str) -> ToolError:\n+    message = f\"Step {step!r}: reference {reference} {why}\"\n+    return ToolError(\"invalid_input\", message, {\"step\": step, \"reference\": reference})\n+\n+\n+def _resolve_string(text: str, scope: Any, step: str, strict: bool) -> Any:\n+    spans = _parts(text)\n+    if not spans:\n+        return text\n+    exact = spans[0] == (0, len(text))\n+    pieces, last = [], 0\n+    for a, b in spans:\n+        found = _lookup(scope, _path(text[a:b]))\n+        if exact:\n+            if found is _MISSING and strict:\n+                raise _fail(step, text, \"has no value\")\n+            return None if found is _MISSING else copy.deepcopy(found)\n+        if found is _MISSING or not isinstance(found, _SCALARS):\n+            raise _fail(step, text[a:b], \"has no text, number or boolean value to insert\")\n+        pieces += [text[last:a], str(found)]\n+        last = b\n+    return \"\".join(pieces) + text[last:]\n+\n+\n+def resolve(value: Any, scope: dict[str, Any], *, step: str = \"\", strict: bool = False) -> Any:\n+    \"\"\"Replace the references in `value`; `scope` is `{\"trigger\": ..., \"steps\": {id: {\"output\": ...}}}`.\n+\n+    A string that is exactly one reference becomes the referenced value (a copy, keeping its JSON type); inside a\n+    longer string only str, int, float and bool are inserted (with `str()`), anything else raises `invalid_input`.\n+    A missing key gives `None` for an exact reference, or `invalid_input` naming `step` when `strict` (use it for\n+    `input`; leave it off for `when`).\n+    \"\"\"\n+    if isinstance(value, str):\n+        return _resolve_string(value, scope, step, strict)\n+    if isinstance(value, dict):\n+        return {key: resolve(item, scope, step=step, strict=strict) for key, item in value.items()}\n+    if isinstance(value, list):\n+        return [resolve(item, scope, step=step, strict=strict) for item in value]\n+    return value\n+\n+\n+def truthy(value: Any) -> bool:\n+    \"\"\"For `when`: not None, False, 0, \"\", an empty list or an empty dict.\"\"\"\n+    return bool(value)\n",
+      "gates": [
+        {
+          "name": "scope",
+          "ok": true,
+          "output": ""
+        },
+        {
+          "name": "tests_unchanged",
+          "ok": true,
+          "output": ""
+        },
+        {
+          "name": "ruff_check",
+          "ok": true,
+          "output": "All checks passed!\nwarning: `VIRTUAL_ENV=D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n"
+        },
+        {
+          "name": "ruff_format",
+          "ok": true,
+          "output": "1 file already formatted\nwarning: `VIRTUAL_ENV=D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n"
+        },
+        {
+          "name": "ruff_extra",
+          "ok": true,
+          "output": "All checks passed!\nwarning: `VIRTUAL_ENV=D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n"
+        }
+      ]
+    }
+  ],
+  "reports": [
+    {
+      "card_id": "FL1b-real",
+      "verdict": "ready",
+      "model_verdict": "ready",
+      "findings": [],
+      "dropped": [],
+      "notes": "The module is a pure in-memory reference resolver over JSON-like data. It performs no file-system I/O, no network calls, no SQL, no environment or clock reads, and has no mutable defaults or unclosed resources. All S1–S6 checks are inapplicable or satisfied. The import `from lfmap_core.errors import ToolError` is consistent with the contracts (ToolError is an exported name of lfmap_core) and the gates confirm it resolves correctly."
+    }
+  ]
+}

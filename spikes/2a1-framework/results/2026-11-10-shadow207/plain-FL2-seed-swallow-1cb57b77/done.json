@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-FL2-seed-swallow-1cb57b77",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "FL2-seed-swallow": "escalate"
+  }
+}
