@@ -2252,7 +2252,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Jobs into Flows: risk analysis after #190 and plan for the remaining merge",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2290,7 +2290,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs: risk analysis of the jobs and Flows merge after stage 1 (#227)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
