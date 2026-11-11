@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-FL2-seed-exists-d81d68c8",
+  "variant": "plain",
+  "cards": [
+    "FL2-seed-exists"
+  ],
+  "verdicts": {
+    "FL2-seed-exists": "ready"
+  },
+  "advice": {
+    "FL2-seed-exists": 1
+  },
+  "report_path": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL2-seed-exists-d81d68c8\\reports.json"
+}

@@ -16,11 +16,7 @@ Non-goals for Phase 2a: Flows definitions (RT-09, next handoff), a daemon or Win
 
 | Module | Content | Task |
 | --- | --- | --- |
-| `topics.py` | `validate_topic`, `validate_pattern`, `topic_matches` (grammar below) | TC-N1 (tests from bench W0, commit `790748b`) |
-| `events_retry.py` | `PERMANENT_CODES`, `backoff_seconds`, `after_failure`, `describe_error` | TC-E1 |
-| `events_payload.py` | `MAX_PAYLOAD_BYTES`, `encode_payload`, `decode_payload` | TC-E2 |
-| `events_names.py` | `PHASES`, `operation_topic`, `parse_operation_topic`, `plugin_may_publish` | TC-E3 |
-| `events.py` | `Event`, `DeadLetter`, `Handler`, `EventBus` Protocol, `InProcessBus`, shared checks | EB-1 |
+| `events.py` | `Event`, `DeadLetter`, `Handler`, `EventBus` Protocol, `InProcessBus`, shared checks; topics (`validate_topic`, `validate_pattern`, `topic_matches`, grammar below; TC-N1), payloads (`MAX_PAYLOAD_BYTES`, `encode_payload`, `decode_payload`; TC-E2) and retry policy (`PERMANENT_CODES`, `backoff_seconds`, `after_failure`, `describe_error`; TC-E1), folded in from `topics.py`, `events_payload.py`, `events_retry.py` (#195) | EB-1 |
 | `events_sqlite.py` | `SqliteBus` (+ `prune`) | EB-1 |
 | `events_adapter.py` | `PluginEvents` (the plugin's view), `open_bus()`, event adapter for `events = true` plugins | EB-2 |
 | `cli.py` | `lfmap events status|dead|retry|prune|run`; `lfmap jobs run` drains after the job | EB-3 |
@@ -29,7 +25,7 @@ Standard library and pydantic only. No new dependency (`sqlite3` is stdlib).
 
 ## 3. Model
 
-### Topics and patterns (`topics.py`)
+### Topics and patterns (`events.py`)
 
 - A topic is 1 to 8 tokens joined by single dots, at most 200 characters; a token is one or more of ASCII `a-z 0-9 _ -`.
 - A pattern follows the same rules, but a token may be exactly `*` (one token) or, as the last token only, `>` (one or more tokens). `jobs.>` does not match `jobs`.
@@ -56,7 +52,7 @@ class DeadLetter(BaseModel):
     error: str  # events_retry.describe_error, one line, <= 500 chars
 ```
 
-- Payload: a JSON object with string keys at every depth, no NaN/Infinity, at most 65,536 UTF-8 bytes once encoded compact and key-sorted (`events_payload`). Events carry references (paths, ids, counts), not document content. The stored form is JSON text; never pickle.
+- Payload: a JSON object with string keys at every depth, no NaN/Infinity, at most 65,536 UTF-8 bytes once encoded compact and key-sorted (`events.py`). Events carry references (paths, ids, counts), not document content. The stored form is JSON text; never pickle.
 - `publish(..., causation=parent)` sets `causation_id = parent.id` and `correlation_id = parent.correlation_id`; without a parent `correlation_id = id`.
 
 ### Protocol
@@ -72,6 +68,7 @@ class EventBus(Protocol):
     ) -> Event: ...
     def subscribe(self, name: str, pattern: str, handler: Handler) -> None: ...
     def unsubscribe(self, name: str) -> None: ...
+    def subscriptions(self) -> dict[str, str]: ...
     def drain(self, *, max_events: int = 1000) -> int: ...
     def dead_letters(self, subscription: str | None = None) -> list[DeadLetter]: ...
     def retry(self, event_id: str, subscription: str) -> None: ...
@@ -89,7 +86,7 @@ Constructors: `InProcessBus(*, clock=time.time, max_attempts=5)`, `SqliteBus(pat
 5. **Ordering.** First deliveries of one subscription follow publish order. A delivery waiting for a retry does not block later events (no head-of-line blocking), so order is not kept after a failure.
 6. **Failure.** Any exception from a handler is caught (never escapes `drain`). `after_failure` decides: `ToolError` with code `invalid_input`, `permission_denied` or `not_found` is dead at once; otherwise retry after `backoff_seconds(attempt)` = 2, 4, 8 … capped at 300 s, until `max_attempts` (default 5), then dead.
 7. **Dead letters** stay until `retry(event_id, subscription)` (back to ready, attempt count reset) or `unsubscribe`. Unknown dead letter: `not_found`.
-8. **Subscriptions are named.** Subscribing again with the same name and pattern replaces the handler; with another pattern it raises `invalid_input` (no silent rerouting). `unsubscribe` drops the subscription and its pending deliveries; unknown name: `not_found`.
+8. **Subscriptions are named.** Subscribing again with the same name and pattern replaces the handler; with another pattern it raises `invalid_input` (no silent rerouting). `unsubscribe` drops the subscription and its pending deliveries; unknown name: `not_found`. `subscriptions()` returns name to pattern for every subscription the bus holds (for `SqliteBus` every durable one, handler or not), so a caller can remove subscriptions it no longer has an id for.
 9. **Closed bus**: `publish` and `drain` raise `ToolError("backend_unavailable")`; `close` is idempotent.
 
 ## 5. SqliteBus specifics (`test_events_sqlite.py`)

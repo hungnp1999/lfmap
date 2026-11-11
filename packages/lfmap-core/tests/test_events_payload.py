@@ -3,7 +3,7 @@ import json
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES, decode_payload, encode_payload
+from lfmap_core.events import MAX_PAYLOAD_BYTES, decode_payload, encode_payload
 
 
 def test_limit():

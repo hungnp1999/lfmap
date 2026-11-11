@@ -1,0 +1,13 @@
+next: python run.py resume plain-FL1b-seed-truthy-e70e9e9d --approve|--reject --state-dir D:\Development\lfmap-shadow207\spikes\2a1-framework\results\2026-11-10-shadow207
+{
+  "run_id": "plain-FL1b-seed-truthy-e70e9e9d",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "FL1b-seed-truthy": "ready"
+  },
+  "attempts": {
+    "FL1b-seed-truthy": 1
+  },
+  "run_dir": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL1b-seed-truthy-e70e9e9d"
+}

@@ -1,0 +1,14 @@
+| Variant | E2 blocked | E7 swap violations | S1 lines | S3 glue | S4 overhead s | import s |
+| --- | --- | --- | --- | --- | --- | --- |
+| plain | 0 | 0 | 150 | 69 | 22.7 | 0.04 |
+| pydanticai | 0 | 0 | 162 | 69 | 0.0 | n/a |
+| langgraph | 0 | 0 | 187 | 69 | 0.0 | n/a |
+
+Manual: E1 (licences), E3 (Windows real run), E4/E5 (contract test), E6 (code review), E8/S2 (venv diff),
+S5 (NOTES.md), S6 (changelogs), S7 (sketch).
+
+| Variant | runs | reviews | seeds caught | hallucinated / 10 reviews | model verdict = expected | acted verdict = expected | ready where not expected | seeds caught by checks | seeds caught by checks or review | check alarms on ready cases |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| plain | 11 | 13 | 57 % (4/7) | 0.0 | 82 % (9/11) | 55 % (6/11) | 5 | 14 % (1/7) | 57 % (4/7) | 0 |
+| pydanticai | 0 | 0 | n/a | n/a | n/a | n/a | 0 | n/a | n/a | 0 |
+| langgraph | 0 | 0 | n/a | n/a | n/a | n/a | 0 | n/a | n/a | 0 |

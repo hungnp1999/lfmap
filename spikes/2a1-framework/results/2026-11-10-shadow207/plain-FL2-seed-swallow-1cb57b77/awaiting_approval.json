@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-FL2-seed-swallow-1cb57b77",
+  "variant": "plain",
+  "cards": [
+    "FL2-seed-swallow"
+  ],
+  "verdicts": {
+    "FL2-seed-swallow": "escalate"
+  },
+  "advice": {
+    "FL2-seed-swallow": 3
+  },
+  "report_path": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL2-seed-swallow-1cb57b77\\reports.json"
+}

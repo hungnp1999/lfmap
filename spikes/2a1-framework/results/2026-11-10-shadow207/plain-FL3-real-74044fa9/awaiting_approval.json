@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-FL3-real-74044fa9",
+  "variant": "plain",
+  "cards": [
+    "FL3-real"
+  ],
+  "verdicts": {
+    "FL3-real": "ready"
+  },
+  "advice": {
+    "FL3-real": 0
+  },
+  "report_path": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL3-real-74044fa9\\reports.json"
+}

@@ -32,8 +32,8 @@ from lfmap_core import (
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
+from lfmap_core.events import MAX_PAYLOAD_BYTES
 from lfmap_core.events_adapter import bus_path, drain_after_job, open_bus, run_adapter
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
 from lfmap_core.permissions import PermissionManager
 from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import build_tool, call_tier, run_operation

@@ -8,8 +8,7 @@ from datetime import UTC, datetime
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.events import Event, EventBus, InProcessBus
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
+from lfmap_core.events import MAX_PAYLOAD_BYTES, Event, EventBus, InProcessBus
 from lfmap_core.events_sqlite import SqliteBus
 
 
@@ -374,6 +373,15 @@ def test_unsubscribe_drops_pending_deliveries(bus):
     bus.publish("jobs.done", {}, source="core")
     assert bus.drain() == 0
     assert got == []
+
+
+def test_subscriptions_lists_names_and_patterns(bus):
+    assert bus.subscriptions() == {}
+    bus.subscribe("a", "x.y", lambda e: None)
+    bus.subscribe("b", "x.*", lambda e: None)
+    assert bus.subscriptions() == {"a": "x.y", "b": "x.*"}
+    bus.unsubscribe("a")
+    assert bus.subscriptions() == {"b": "x.*"}
 
 
 def test_unsubscribe_unknown(bus):

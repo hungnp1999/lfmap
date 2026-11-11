@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-FL1b-real-7b33ae9f",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "FL1b-real": "ready"
+  }
+}
