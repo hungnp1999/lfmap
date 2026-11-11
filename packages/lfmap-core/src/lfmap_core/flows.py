@@ -15,10 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
+from lfmap_core.events import validate_pattern
 from lfmap_core.flows_refs import find_refs
 from lfmap_core.jobs import Schedule, check_input
 from lfmap_core.registry import Registry
-from lfmap_core.topics import validate_pattern
 
 MAX_STEPS = 20
 MAX_TIER = 1
