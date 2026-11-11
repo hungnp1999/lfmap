@@ -99,6 +99,7 @@ uv run lfmap jobs run echo-hello    # run one job, then drain events (--max-even
 uv run lfmap jobs register --dry-run
 uv run lfmap jobs register
 uv run lfmap jobs doctor           # read-only machine check; exit 1 when a check is FAIL
+uv run lfmap doctor                # jobs doctor + flows check + events status in one report (--json)
 ```
 
 `register` creates or updates (`/F`) a task for every enabled job and deletes the tasks of jobs that are disabled
