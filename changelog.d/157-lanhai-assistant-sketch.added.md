@@ -1,0 +1,1 @@
+Research note `docs/research/2026-11-10-lanhai-assistant-architecture.md` (#157): architecture sketch for Lan Hài as a JARVIS-style assistant built from plugins on the existing core (conversation loop, memory, voice, proactivity, multi-device, security), with phase placement and solution choices. Docs only; no new dependency.
