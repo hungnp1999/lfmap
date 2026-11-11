@@ -1,7 +1,8 @@
 """Flow triggers (docs/specs/flows.md section 6) and the `flows.run.<status>` events (section 5).
 
-- Event: one durable subscription `flows` on the user's bus; its handler starts every enabled flow whose pattern
-  matches, once per flow per event (`run_id = "ev-" + event.id + "-" + flow id`, so a redelivery finds its run).
+- Event: one durable subscription `flows-<id>` per enabled event flow on the user's bus, with the flow's own
+  pattern; its handler starts that flow once per event (`run_id = "ev-" + event.id + "-" + flow id`, so a
+  redelivery finds its run).
   Handlers run only while a process drains the bus (`lfmap events run`, the end of `lfmap jobs run`).
 - Schedule: `lfmap jobs register` creates task `\\LFMAP\\flow-<id>` for each enabled scheduled flow; it runs
   `lfmap flows start <id>` through `scripts/Invoke-LfmapJob.ps1`, like a job.
@@ -9,6 +10,7 @@
 """
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,25 +19,18 @@ from lfmap_core.errors import ToolError
 from lfmap_core.events import Event, EventBus
 from lfmap_core.events_adapter import bus_path, open_bus
 from lfmap_core.registry import Registry
-from lfmap_core.topics import topic_matches
 
 if TYPE_CHECKING:
     from lfmap_core.flows_run import FlowRun
 
-SUBSCRIPTION = "flows"
+PREFIX = "flows-"
+LEGACY = "flows"  # the single FL-3 subscription, removed once by `attach`
 ENDED = ("completed", "failed", "rejected", "expired")
 log = logging.getLogger(__name__)
 
 
-def covering_pattern(patterns: list[str]) -> str:
-    """One subscription pattern that matches everything `patterns` match, as narrow as the topic grammar allows
-    (a bus subscription has one pattern). The handler still checks each flow's own pattern."""
-    tokens = [p.split(".") for p in patterns]
-    if len({len(t) for t in tokens}) == 1 and all(t[-1] != ">" for t in tokens):
-        return ".".join(col[0] if len(set(col)) == 1 else "*" for col in zip(*tokens, strict=True))
-    head = min(len(t) for t in tokens) - 1  # the tokens every pattern fixes before it needs a ">"
-    merged = [col[0] if len(set(col)) == 1 else "*" for col in zip(*(t[:head] for t in tokens), strict=True)]
-    return ".".join([*merged, ">"])
+def subscription_name(flow_id: str) -> str:
+    return PREFIX + flow_id
 
 
 def _declared() -> list[flows.Flow] | None:
@@ -64,55 +59,54 @@ def event_flows(registry: Registry) -> list[flows.Flow]:
     return _sound(registry, _declared() or [])
 
 
-def attach(registry: Registry, bus: EventBus) -> str | None:
-    """Subscribe `flows` with the union of the patterns of the enabled event flows; return that pattern.
+def attach(registry: Registry, bus: EventBus) -> dict[str, str]:
+    """Give every enabled event flow its own durable subscription `flows-<id>`; return flow id -> pattern.
 
-    No event flow removes the subscription. An unusable flows.toml leaves it alone, so queued events wait.
-    A changed union replaces the subscription; deliveries still queued for the old one are dropped.
+    An unusable flows.toml leaves every subscription (and its queued events) alone. A flow whose pattern changed
+    is unsubscribed and subscribed again, which drops only its own queued deliveries. Subscriptions of flows that
+    are gone, disabled, no longer sound or not event flows, and the legacy `flows` one, are removed.
     """
     declared = _declared()
     if declared is None:
-        return None
-    found = _sound(registry, declared)
-    if not found:
+        return _attached(bus)
+    wanted = {f.id: str(f.trigger.event) for f in _sound(registry, declared)}
+    current = bus.subscriptions()
+    if LEGACY in current:
+        log.warning("Removed the legacy `%s` flow subscription; its queued deliveries are dropped", LEGACY)
+        bus.unsubscribe(LEGACY)
+    for name in current:
+        if name.startswith(PREFIX) and name[len(PREFIX) :] not in wanted:
+            bus.unsubscribe(name)
+    for flow_id, pattern in wanted.items():
+        name = subscription_name(flow_id)
+        if name in current and current[name] != pattern:
+            log.warning("Flow %s changed its event pattern; its queued deliveries are dropped", flow_id)
+            bus.unsubscribe(name)
         try:
-            bus.unsubscribe(SUBSCRIPTION)
-        except ToolError:  # noqa: S110 - there was no subscription
-            pass
-        return None
-    pattern = covering_pattern([str(f.trigger.event) for f in found])
-
-    def handler(event: Event) -> None:
-        handle(registry, event)
-
-    try:
-        bus.subscribe(SUBSCRIPTION, pattern, handler)
-    except ToolError as error:
-        if error.code != "invalid_input":
-            raise
-        log.warning("Flow trigger pattern changed to %s; queued deliveries of the old one are dropped", pattern)
-        bus.unsubscribe(SUBSCRIPTION)
-        bus.subscribe(SUBSCRIPTION, pattern, handler)
-    return pattern
+            bus.subscribe(name, pattern, _handler(registry, flow_id))
+        except ToolError as error:
+            if error.code != "invalid_input":
+                raise
+            log.warning("Flow %s is not triggered by events: %s", flow_id, error.message)
+    return _attached(bus)
 
 
-def handle(registry: Registry, event: Event) -> None:
-    """Start each matching flow with the event payload as trigger payload; a flow that cannot start does not
-    stop the others, and the first such error is raised at the end so the bus retries (then dead-letters)."""
+def _attached(bus: EventBus) -> dict[str, str]:
+    return {n[len(PREFIX) :]: p for n, p in bus.subscriptions().items() if n.startswith(PREFIX)}
+
+
+def _handler(registry: Registry, flow_id: str) -> Callable[[Event], None]:
+    return lambda event: handle(registry, flow_id, event)
+
+
+def handle(registry: Registry, flow_id: str, event: Event) -> None:
+    """Start flow `flow_id` with the event payload as trigger payload (`run_id = ev-<event id>-<flow id>`, so a
+    redelivery finds its run). The subscription already matched the topic; flows.* and *.requested are ignored."""
     from lfmap_core import flows_run  # flows_run imports this module
 
     if event.topic.startswith("flows.") or event.topic.endswith(".requested"):
         return
-    failure: ToolError | None = None
-    for flow in event_flows(registry):
-        if not topic_matches(str(flow.trigger.event), event.topic):
-            continue
-        try:
-            flows_run.start(registry, flow.id, event.payload, run_id=f"ev-{event.id}-{flow.id}")
-        except ToolError as error:
-            failure = failure or error
-    if failure is not None:
-        raise failure
+    flows_run.start(registry, flow_id, event.payload, run_id=f"ev-{event.id}-{flow_id}")
 
 
 def task_commands(
