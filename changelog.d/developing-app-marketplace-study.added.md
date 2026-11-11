@@ -1,0 +1,1 @@
+Research note `docs/research/2026-11-11-developing-app-marketplace.md`: expands the owner's "Developing App Marketplace" business blueprint (differentiation, first customers, role of Lan Hài, timing and SWOT, company formation), with a short note on the later "AI Compute Marketplace" idea. Docs only, in Vietnamese; no decision taken, no Roadmap or ADR change, no new dependency.
