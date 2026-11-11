@@ -54,6 +54,8 @@ class EventBus(Protocol):
 
     def unsubscribe(self, name: str) -> None: ...
 
+    def subscriptions(self) -> dict[str, str]: ...
+
     def drain(self, *, max_events: int = 1000) -> int: ...
 
     def dead_letters(self, subscription: str | None = None) -> list[DeadLetter]: ...
@@ -149,6 +151,10 @@ class InProcessBus:
         if self._subscriptions.pop(name, None) is None:
             raise ToolError("not_found", "Unknown subscription", {"name": name})
         self._deliveries = [d for d in self._deliveries if d.subscription != name]
+
+    def subscriptions(self) -> dict[str, str]:
+        self._open()
+        return {name: pattern for name, (pattern, _handler) in self._subscriptions.items()}
 
     def _next(self) -> _Delivery | None:
         now = self._clock()
