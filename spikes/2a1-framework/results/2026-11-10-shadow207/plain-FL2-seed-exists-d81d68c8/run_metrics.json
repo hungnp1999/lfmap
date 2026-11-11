@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "FL2-seed-exists",
+  "package": null,
+  "import_s": 0.007,
+  "wall_s": 1411.94,
+  "model_s": 1411.097,
+  "overhead_s": 0.843,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 394199.0725889,
+      "seconds": 1411.0972019000328,
+      "prompt_chars": 18270,
+      "reply_chars": 751
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

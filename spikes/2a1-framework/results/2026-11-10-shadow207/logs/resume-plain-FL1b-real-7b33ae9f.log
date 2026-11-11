@@ -1,0 +1,12 @@
+{
+  "run_id": "plain-FL1b-real-7b33ae9f",
+  "variant": "plain",
+  "status": "approved",
+  "verdicts": {
+    "FL1b-real": "ready"
+  },
+  "attempts": {
+    "FL1b-real": 1
+  },
+  "run_dir": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL1b-real-7b33ae9f"
+}

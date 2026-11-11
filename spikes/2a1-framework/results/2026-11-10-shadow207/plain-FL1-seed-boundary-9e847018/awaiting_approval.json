@@ -1,0 +1,14 @@
+{
+  "run_id": "plain-FL1-seed-boundary-9e847018",
+  "variant": "plain",
+  "cards": [
+    "FL1-seed-boundary"
+  ],
+  "verdicts": {
+    "FL1-seed-boundary": "ready"
+  },
+  "advice": {
+    "FL1-seed-boundary": 1
+  },
+  "report_path": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL1-seed-boundary-9e847018\\reports.json"
+}
