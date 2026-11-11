@@ -1,0 +1,13 @@
+next: python run.py resume plain-FL2-seed-wrongprop-1748472b --approve|--reject --state-dir D:\Development\lfmap-shadow207\spikes\2a1-framework\results\2026-11-10-shadow207
+{
+  "run_id": "plain-FL2-seed-wrongprop-1748472b",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "FL2-seed-wrongprop": "ready"
+  },
+  "attempts": {
+    "FL2-seed-wrongprop": 1
+  },
+  "run_dir": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL2-seed-wrongprop-1748472b"
+}

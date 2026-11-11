@@ -5,6 +5,7 @@ batch for the cards sent back. The approval pause saves the state and returns; `
 process and only reads that file.
 """
 
+import os
 import re
 from pathlib import Path
 
@@ -43,7 +44,7 @@ from common.quote import check_quotes
 
 VARIANT = "plain"
 GATE_ROUNDS = 2
-REVIEW_ROUNDS = 2
+REVIEW_ROUNDS = int(os.environ.get("LFMAP_REVIEW_ROUNDS", 2))  # 1: one Leading review per card, no rework batch
 
 
 class State(BaseModel):

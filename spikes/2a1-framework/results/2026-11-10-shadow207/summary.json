@@ -1,0 +1,74 @@
+[
+  {
+    "case": "FL1-real",
+    "status": "ok",
+    "seconds": 1897
+  },
+  {
+    "case": "FL1b-real",
+    "status": "ok",
+    "seconds": 804
+  },
+  {
+    "case": "FL2-real",
+    "status": "ok",
+    "seconds": 1655
+  },
+  {
+    "case": "FL3-real",
+    "status": "ok",
+    "seconds": 1046
+  },
+  {
+    "case": "FL2-seed-wrongprop",
+    "status": "ok",
+    "seconds": 1544
+  },
+  {
+    "case": "FL2-seed-bytes",
+    "status": "ok",
+    "seconds": 2891
+  },
+  {
+    "case": "FL1-seed-boundary",
+    "status": "ok",
+    "seconds": 1391
+  },
+  {
+    "case": "FL3-seed-loop",
+    "status": "exit 1",
+    "seconds": 3601
+  },
+  {
+    "case": "FL2-seed-exists",
+    "status": "ok",
+    "seconds": 1412
+  },
+  {
+    "case": "FL2-seed-swallow",
+    "status": "exit 124",
+    "seconds": 4200
+  },
+  {
+    "case": "FL1-seed-default",
+    "status": "ok",
+    "seconds": 2270
+  },
+  {
+    "case": "FL1b-seed-truthy",
+    "status": "ok",
+    "seconds": 351
+  },
+  {
+    "case": "FL1b-seed-embed",
+    "status": "not_started"
+  },
+  {
+    "case": "FL3-seed-idem",
+    "status": "not_started"
+  },
+  {
+    "case": "FL3-seed-swallow",
+    "status": "not_started"
+  }
+]

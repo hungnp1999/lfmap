@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-FL1-seed-default-ca923c44",
+  "variant": "plain",
+  "approved": true,
+  "verdicts": {
+    "FL1-seed-default": "escalate"
+  }
+}
