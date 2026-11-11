@@ -1,0 +1,1 @@
+`lfmap_core.data_classes` (DC-1 of #197, ADR-025): the four data classes `scratch < normal < private < secret`, `[data.classes]` loading with remote-path refusal before any file-system call, most-specific and nested-highest path lookup, and the pure tier adjustment `adjust`. Leaf module, not yet wired into the approval gate.
