@@ -324,7 +324,7 @@ class MarkitdownTool(Tool):
         plan = [(path, output_dir / (str(path.relative_to(base)) + ".md")) for path in files]
         existing = {target for path, target in plan if path.suffix.lower() in known and target.exists()}
         if inp.overwrite and existing:
-            self.ctx.require_approval("overwrite", detail=str(output_dir))
+            self.ctx.require_approval("overwrite", detail=str(output_dir), paths=[output_dir])
         results = []
         for path, target in plan:
             if target in existing and not inp.overwrite:

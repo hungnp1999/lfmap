@@ -90,6 +90,31 @@ A wrong code, an empty answer or end of input cancels the command with `permissi
 
 "Interactive terminal" means a person at a console. On Windows stdin must be a real console (`GetConsoleMode` succeeds; `<NUL` does not count) and the console must have a visible window, so hidden consoles of agent shells are refused; elsewhere stdin must be a TTY. This stops scripts and accidents, not an agent of the same Windows user that drives a visible console (#108); a separate Windows user for agents is a pending ADR.
 
+## Data classes: `[data.classes]`
+
+You can say how much a folder matters, once, in `config.toml` (ADR-025, [docs/specs/data-classes.md](specs/data-classes.md)):
+
+```toml
+[data.classes]
+'D:\Tmp'                 = "scratch"
+'D:\Work'                = "normal"
+'D:\Work\Contracts'      = "secret"
+```
+
+Classes are `scratch < normal < private < secret`. Once the table has an entry, a path in no entry is `private`; a folder counts as the highest class at or below it. **Without the table nothing changes.** An invalid table makes gated calls fail until you fix it. A class only changes whether you are asked and what is audited; it never lets a plugin read or write a folder it could not before.
+
+| Path class | Read | Create a file | Overwrite, rename, delete |
+|---|---|---|---|
+| `scratch` | as before | as before (T1) | T1 (audited, not asked) when the plugin names the paths and everything the call wrote is `scratch` too; otherwise T2 |
+| `normal`, `private` | as before | as before | as before (T2) |
+| `secret` | T1, always audited (once per call per entry, even with `T1 = "allow"`) | T2: asked at a terminal; on `mcp` elicitation, `--approve` or a grant; a proposal on `job`, `event`, `flow` | T2 |
+
+T3 is never lowered by a class. A scheduled job that reads a `secret` folder (for example `knowledge.reindex`) needs `max_tier = 1`, or each run queues a proposal. Lines about a classified path carry two more fields: `data_class` and `action_tier` (the tier before the class was applied; `tier` is the tier decided on):
+
+```json
+{"tier": "T1", "action_tier": "T2", "data_class": "scratch", "decision": "allow", "reason": "overwrite", "target": "D:\\Tmp\\out"}
+```
+
 ## The job approval queue
 
 A job (or an event call) never asks anyone. A call it may not run becomes a **proposal** and the job exits 1 with `permission_denied`, `Queued for approval`, and the proposal id in the error details. Proposals live in `%LOCALAPPDATA%\lfmap\approvals\` and are only moved, never deleted. The full flow is in [docs/jobs.md](jobs.md#approving-queued-calls).

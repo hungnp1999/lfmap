@@ -49,14 +49,18 @@ class PermissionManager:
         network: bool = False,
         explicit_read: bool = False,
         on_outside_read: Callable[[str], None] | None = None,
+        on_path: Callable[[str, str], None] | None = None,
     ) -> None:
         """`explicit_read`: a person typed the paths at an interactive terminal, so local reads outside
-        the roots are allowed (never network paths, never writes); `on_outside_read` audits each one."""
+        the roots are allowed (never network paths, never writes); `on_outside_read` audits each one.
+        `on_path(access, resolved)` sees every path that passed the checks ("read" or "write", ADR-025);
+        it may raise to refuse the path."""
         self.write_roots = list(write_roots)
         self.read_roots = list(read_roots) + self.write_roots
         self.network = network
         self.explicit_read = explicit_read
         self.on_outside_read = on_outside_read
+        self.on_path = on_path
 
     @classmethod
     def from_manifest(
@@ -66,6 +70,7 @@ class PermissionManager:
         *,
         explicit_read: bool = False,
         on_outside_read: Callable[[str], None] | None = None,
+        on_path: Callable[[str, str], None] | None = None,
     ) -> "PermissionManager":
         values = {name: [v] if isinstance(v, str) else list(v) for name, v in variables.items()}
         return cls(
@@ -74,18 +79,25 @@ class PermissionManager:
             perms.network,
             explicit_read=explicit_read,
             on_outside_read=on_outside_read,
+            on_path=on_path,
         )
 
     def require_read(self, value: str | os.PathLike[str]) -> Path:
         try:
-            return self._require(value, self.read_roots, "read")
+            path = self._require(value, self.read_roots, "read")
         except ToolError:
             if not self.explicit_read:
                 raise
-            return self._typed_read(value)
+            path = self._typed_read(value)
+        return self._report("read", path)
 
     def require_write(self, value: str | os.PathLike[str]) -> Path:
-        return self._require(value, self.write_roots, "write")
+        return self._report("write", self._require(value, self.write_roots, "write"))
+
+    def _report(self, access: str, path: Path) -> Path:
+        if self.on_path:
+            self.on_path(access, str(path))
+        return path
 
     def require_network(self) -> None:
         if not self.network:
