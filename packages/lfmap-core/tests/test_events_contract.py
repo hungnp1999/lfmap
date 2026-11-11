@@ -375,6 +375,15 @@ def test_unsubscribe_drops_pending_deliveries(bus):
     assert got == []
 
 
+def test_subscriptions_lists_names_and_patterns(bus):
+    assert bus.subscriptions() == {}
+    bus.subscribe("a", "x.y", lambda e: None)
+    bus.subscribe("b", "x.*", lambda e: None)
+    assert bus.subscriptions() == {"a": "x.y", "b": "x.*"}
+    bus.unsubscribe("a")
+    assert bus.subscriptions() == {"b": "x.*"}
+
+
 def test_unsubscribe_unknown(bus):
     with pytest.raises(ToolError) as caught:
         bus.unsubscribe("nobody")

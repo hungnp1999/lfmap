@@ -87,7 +87,7 @@ Rules checked by `check_flow` (and by `lfmap flows check`, which exits 1 on any 
 
 - `manual`: only `lfmap flows start <id> [--input-json FILE]`.
 - `schedule`: `lfmap jobs register` also registers each enabled scheduled flow as task `\LFMAP\flow-<id>` running `lfmap flows start <id>` through `scripts/Invoke-LfmapJob.ps1` (same runtime root, logs and exit codes as jobs). No new scheduler.
-- `event`: one durable subscription `flows` on the bus with the union of the enabled flows' patterns (a bus subscription has one pattern, so the union is the narrowest single pattern that covers them, such as `markitdown.*.completed`, and the handler checks each flow's own pattern); its handler starts the matching flows (one run per flow per event). Only flows that pass `check_flow` are subscribed; an unusable `flows.toml` leaves the subscription as it is. Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
+- `event`: each enabled event flow has its own durable subscription `flows-<id>` with the flow's own pattern; its handler starts only that flow (one run per flow per event, `run_id = ev-<event id>-<flow id>`). Only flows that pass `check_flow` are subscribed. Every attach reconciles through `EventBus.subscriptions()`: it unsubscribes each `flows-*` that is not in the sound set (flow removed, disabled or no longer an event flow), and the legacy FL-3 `flows` subscription once (its queued deliveries are dropped); a flow whose pattern changed is unsubscribed and subscribed again, which drops only its own queued deliveries (logged). An unusable `flows.toml` leaves every subscription and queued event as it is. Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
 
 ## 7. CLI
 

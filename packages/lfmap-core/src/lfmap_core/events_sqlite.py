@@ -168,6 +168,11 @@ class SqliteBus:
         if not deleted:
             raise ToolError("not_found", "Unknown subscription", {"name": name})
 
+    def subscriptions(self) -> dict[str, str]:
+        """Every durable subscription, name to pattern, whether or not this process has a handler for it."""
+        rows = self._conn().execute("SELECT name, pattern FROM subscriptions ORDER BY name").fetchall()
+        return {name: pattern for name, pattern in rows}
+
     def _claim(self) -> tuple[int, str, str, Event] | None:
         db = self._conn()
         if not self._handlers:
