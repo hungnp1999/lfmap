@@ -1,5 +1,6 @@
 """`lfmap` command line: plugin listing, generated operation commands, `serve mcp`, scheduled jobs and events."""
 
+import base64
 import dataclasses
 import inspect
 import json
@@ -15,7 +16,19 @@ import typer
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from lfmap_core import approvals, backup, flows, flows_run, flows_triggers, grants, jobs, jobs_doctor, jobs_flow
+from lfmap_core import (
+    approvals,
+    auth,
+    backup,
+    flows,
+    flows_run,
+    flows_triggers,
+    grants,
+    jobs,
+    jobs_doctor,
+    jobs_flow,
+    totp,
+)
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
@@ -81,10 +94,12 @@ def _confirm_code() -> str:
     return "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
 
 
-def _require_code(action: str, record: dict[str, Any]) -> None:
+def _deny(action: str, record: dict[str, Any], reason: str) -> None:
+    audit({"channel": "cli", **record, "decision": "deny", "reason": f"{action}: {reason}"})
+
+
+def _typed_code(action: str, record: dict[str, Any]) -> None:
     """The person types back a fresh random code; a mismatch or end of input refuses and is audited."""
-    if not _interactive():
-        raise ToolError("permission_denied", f"{action} only works in an interactive terminal")
     code = _confirm_code()
     typer.echo(approvals.visible(f"To {action}, type this code: {code}"))
     try:
@@ -92,8 +107,32 @@ def _require_code(action: str, record: dict[str, Any]) -> None:
     except (EOFError, typer.Abort):
         typed = ""
     if typed.strip().upper() != code:
-        audit({"channel": "cli", **record, "decision": "deny", "reason": f"{action}: confirmation code not typed"})
+        _deny(action, record, "confirmation code not typed")
         raise ToolError("permission_denied", f"{action} cancelled: the confirmation code did not match")
+
+
+def _totp_code(action: str, record: dict[str, Any]) -> None:
+    typer.echo(approvals.visible(f"To {action}, enter the code from your authenticator app:"))
+    try:
+        typed = typer.prompt("Code", default="", show_default=False, hide_input=True)
+    except (EOFError, typer.Abort):
+        typed = ""
+    try:
+        auth.check(typed)
+    except ToolError as error:
+        _deny(action, record, "authenticator code not accepted")
+        raise ToolError("permission_denied", f"{action} cancelled: {error.message}") from None
+
+
+def _require_code(action: str, record: dict[str, Any]) -> None:
+    """The single owner-code prompt: the authenticator code once enrolled (an invalid auth.json refuses), else the
+    typed random code. A terminal is checked first."""
+    if not _interactive():
+        raise ToolError("permission_denied", f"{action} only works in an interactive terminal")
+    if auth.enrolled():
+        _totp_code(action, record)
+    else:
+        _typed_code(action, record)
 
 
 def _print_output(output: BaseModel, as_json: bool) -> None:
@@ -232,6 +271,7 @@ def build_app(registry: Registry) -> typer.Typer:
     jobs_app = typer.Typer(help="Scheduled jobs from jobs.toml (Windows Task Scheduler).")
     events_app = typer.Typer(help="The event bus: run the event adapter, inspect and repair the queue.")
     flows_app = typer.Typer(help="Declared flows from flows.toml.")
+    auth_app = typer.Typer(help="Authenticator (TOTP) for the owner code (interactive terminal only).")
     backup_app = typer.Typer(help="Back up and restore the owner's state (restore: interactive terminal only).")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
@@ -241,6 +281,7 @@ def build_app(registry: Registry) -> typer.Typer:
     app.add_typer(jobs_app, name="jobs")
     app.add_typer(events_app, name="events")
     app.add_typer(flows_app, name="flows")
+    app.add_typer(auth_app, name="auth")
     app.add_typer(backup_app, name="backup", invoke_without_command=True)
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
@@ -319,6 +360,50 @@ def build_app(registry: Registry) -> typer.Typer:
         proposal_audit(proposal, "approve")
         _print_run(flows_run.resume(registry, proposal, typer.confirm), json_output)
 
+    @auth_app.command("enroll")
+    def auth_enroll() -> None:
+        """Enrol an authenticator app. The secret is printed once here and stored only after one code verifies."""
+        if not _interactive():
+            raise ToolError("permission_denied", "auth enroll only works in an interactive terminal")
+        protector = auth.default_protector()
+        if auth.enrolled():
+            _require_code("replace the authenticator enrolment", {})
+        secret = totp.new_secret()
+        typer.echo("Add this account in your authenticator app (manual entry), then enter one code.")
+        typer.echo(f"URI:    {totp.provisioning_uri(secret)}")
+        typer.echo(f"Secret: {base64.b32encode(secret).decode('ascii')}")
+        try:
+            typed = typer.prompt("Code", default="", show_default=False, hide_input=True)
+        except (EOFError, typer.Abort):
+            typed = ""
+        try:
+            auth.enroll(secret, typed, protector)
+        except ToolError:
+            _deny("auth enroll", {}, "authenticator code not accepted")
+            raise
+        audit({"channel": "cli", "decision": "allow", "reason": "auth enrolled"})
+        typer.echo("Enrolled. Commands that ask for the owner code now ask for the app code.")
+
+    @auth_app.command("status")
+    def auth_status() -> None:
+        """Show whether an authenticator is enrolled (never the secret)."""
+        info = auth.status()
+        if not info["enrolled"]:
+            typer.echo("enrolled: no (the typed code is used)")
+            return
+        typer.echo(f"enrolled: yes, since {info['enrolled_at']}")
+        typer.echo(f"locked: {'yes' if info['locked'] else 'no'}")
+
+    @auth_app.command("reset")
+    def auth_reset() -> None:
+        """Remove the enrolment after a typed code; use it when the phone is lost (interactive terminal only)."""
+        if not _interactive():
+            raise ToolError("permission_denied", "auth reset only works in an interactive terminal")
+        _typed_code("reset the authenticator enrolment", {})
+        removed = auth.reset()
+        audit({"channel": "cli", "decision": "allow", "reason": "auth reset" if removed else "auth reset: none"})
+        typer.echo("Authenticator removed; the typed code is used again." if removed else "Nothing was enrolled.")
+
     @approvals_app.command("pending")
     def pending(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
         """Show job proposals waiting for approval; expired ones move to approvals\\expired."""
@@ -355,7 +440,12 @@ def build_app(registry: Registry) -> typer.Typer:
         on = f" on {proposal.detail}" if proposal.detail else ""
         typer.echo(approvals.visible(f"{key} ({proposal.tier}, {proposal.reason}){on}"))
         typer.echo("input: " + approvals.visible(json.dumps(proposal.input, ensure_ascii=False)))
-        if not typer.confirm(f"Run {key} now with this input?"):
+        if proposal.tier == "T3":
+            _require_code(
+                f"run {key} (T3) now with this input",
+                {"plugin": proposal.plugin, "operation": proposal.operation, "tier": proposal.tier},
+            )
+        elif not typer.confirm(f"Run {key} now with this input?"):
             typer.echo("Not approved; the proposal stays pending")
             return
         approvals.move(proposal.id, "done")
