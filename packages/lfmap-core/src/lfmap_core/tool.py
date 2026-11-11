@@ -2,7 +2,7 @@
 
 import inspect
 import typing
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
@@ -32,6 +32,7 @@ class ToolContext(BaseModel):
     approver: Any = None
     event_publisher: Any = None
     model_router: Any = None
+    data_guard: Any = None
 
     @property
     def events(self) -> Any:
@@ -55,14 +56,39 @@ class ToolContext(BaseModel):
             )
         return self.model_router
 
-    def require_approval(self, reason: str, detail: str = "", *, destination: str = "", data: str = "normal") -> None:
+    @property
+    def data_label(self) -> str | None:
+        """Highest data class this call has read (ADR-025); None without `[data.classes]` or before any read."""
+        return self.data_guard.label if self.data_guard is not None else None
+
+    def mark_data(self, path: str | Path) -> None:
+        """Raise the call label for content that came from `path` (an index, a cache); it can never lower it."""
+        if self.data_guard is not None:
+            self.data_guard.mark(path)
+
+    def require_approval(
+        self,
+        reason: str,
+        detail: str = "",
+        *,
+        destination: str = "",
+        data: str = "normal",
+        paths: Iterable[str | Path] = (),
+    ) -> None:
         """Escalate this call before acting: T3 for reason "external", otherwise T2 (overwrite, rename, delete).
 
         For data sent out, `destination` (host or service) and `data` (normal, private, secret) let a
-        preapproved destination in config.toml cover the call. Raises ToolError permission_denied when refused.
+        preapproved destination in config.toml cover the call. `paths`: what an overwrite, rename or delete
+        is about to change; when every one of them, and every path written in this call, is `scratch` in
+        `[data.classes]`, the T2 becomes T1. Omitting them keeps T2.
+        Raises ToolError permission_denied when refused.
         Without an approver (plain SDK use) the call is the user's own code and runs.
         """
         if self.approver is None:
+            return
+        paths = list(paths)
+        if reason != "external" and paths and self.data_guard is not None:
+            self.data_guard.destructive(reason, detail, paths)
             return
         tier = "T3" if reason == "external" else "T2"
         if destination:

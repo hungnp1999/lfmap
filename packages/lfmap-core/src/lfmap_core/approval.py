@@ -41,6 +41,9 @@ AUDIT_FIELDS = frozenset(
         "decision",
         "reason",
         "target",
+        # ADR-025: on decision lines about a classified path; `tier` stays the tier decided on
+        "action_tier",
+        "data_class",
         # `model_call` lines (models_egress.py); never content, vectors or keys
         "event",
         "status",
@@ -187,6 +190,11 @@ def audit(record: dict[str, Any], path: Path | None = None) -> None:
 Asker = Callable[[str], bool]
 
 
+def class_fields(data_class: str, action_tier: str) -> dict[str, str]:
+    """Audit fields of a decision on a classified path (ADR-025); none for lines without a class."""
+    return {"action_tier": action_tier, "data_class": data_class} if data_class else {}
+
+
 def _hint(key: str, tier: Tier, channel: Channel) -> str:
     grant = f"run `lfmap approvals grant {key} --tier {tier} --for 1h` in an interactive terminal"
     if tier == "T3":
@@ -214,7 +222,15 @@ class Gate:
     ask: Asker | None = None
 
     def __call__(
-        self, tier: Tier, reason: str, target: str = "", destination: str = "", data: DataLevel = "normal"
+        self,
+        tier: Tier,
+        reason: str,
+        target: str = "",
+        destination: str = "",
+        data: DataLevel = "normal",
+        *,
+        data_class: str = "",
+        action_tier: str = "",
     ) -> None:
         if tier == "T0":
             return
@@ -238,8 +254,10 @@ class Gate:
         if decision == "ask":
             question = f"Allow {key} ({tier}, {reason})" + (f" on {target}" if target else "") + "?"
             decision = "allow" if self.ask and self.ask(question) else "deny"
-        if decision == "deny" or self.policy.action(self.plugin, self.operation, tier) != "allow":
+        audited = self.policy.action(self.plugin, self.operation, tier) != "allow" or data_class == "secret"
+        if decision == "deny" or audited:
             record = {"channel": self.channel, "plugin": self.plugin, "operation": self.operation, "tier": tier}
+            record |= class_fields(data_class, action_tier)
             audit({**record, "decision": decision, "reason": reason, **({"target": target} if target else {})})
         if decision == "deny":
             details = {"operation": key, "tier": tier, "reason": reason, "hint": _hint(key, tier, self.channel)}
