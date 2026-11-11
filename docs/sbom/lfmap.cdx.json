@@ -625,6 +625,21 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:pypi/lfmap-llm@0.1.0",
+      "name": "lfmap-llm",
+      "version": "0.1.0",
+      "purl": "pkg:pypi/lfmap-llm@0.1.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:pypi/lfmap-markitdown@0.1.0",
       "name": "lfmap-markitdown",
       "version": "0.1.0",
@@ -1766,6 +1781,7 @@
         "pkg:pypi/lfmap-core@0.2.0",
         "pkg:pypi/lfmap-echo@0.1.0",
         "pkg:pypi/lfmap-knowledge@0.1.0",
+        "pkg:pypi/lfmap-llm@0.1.0",
         "pkg:pypi/lfmap-markitdown@0.1.0",
         "pkg:pypi/lfmap-powershell@0.1.0"
       ]
@@ -1945,6 +1961,12 @@
         "pkg:pypi/lancedb@0.40.0",
         "pkg:pypi/lfmap-core@0.2.0",
         "pkg:pypi/lfmap-markitdown@0.1.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/lfmap-llm@0.1.0",
+      "dependsOn": [
+        "pkg:pypi/lfmap-core@0.2.0"
       ]
     },
     {
@@ -2289,5 +2311,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:d2257ab7-16a0-567e-b3e8-1530f5c5c457"
+  "serialNumber": "urn:uuid:2b0eb84b-46c2-5d69-9b28-541f012ae9d8"
 }

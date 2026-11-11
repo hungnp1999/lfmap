@@ -57,6 +57,26 @@ uv run lfmap approvals revoke powershell.run
 
 `lfmap serve mcp --approve <plugin>.<op>` (repeatable) is the lighter alternative for one MCP session: it pre-approves up to T2 for 8 hours from server start and refuses T3 operations at start-up.
 
+## The owner code: authenticator app or typed code
+
+With an authenticator enrolled (`lfmap auth enroll`), every command below asks for the 6-digit code from the app instead of the typed code:
+
+```text
+To grant powershell.run up to T3 for 2h, enter the code from your authenticator app:
+Code:
+```
+
+Each code works once, the current and the previous 30-second step are accepted, and five wrong codes lock the check for 5 minutes (an `auth locked` line goes to the audit log). Without an enrolment the typed code below works exactly as before. An unreadable `auth.json` refuses the command (`permission_denied`, fix with `lfmap auth reset`); it is never treated as "not enrolled".
+
+```text
+lfmap auth enroll   # Windows only: prints the otpauth URI and the secret once, stores them (DPAPI) after one code verifies;
+                    # replacing an enrolment asks the current app code
+lfmap auth status   # enrolled or not, since when, locked or not; never the secret
+lfmap auth reset    # lost phone: typed code, removes auth.json, audited; the typed code is used again
+```
+
+`auth.json` lives in `%LOCALAPPDATA%\lfmap\`, is encrypted for the current Windows user and is left out of `lfmap backup`: enrol again after a restore on a new machine. TOTP stops what can type into your console but cannot read your profile; a process running as you can still read it (ADR-023: agents run as a separate account).
+
 ## The typed confirmation code
 
 `approvals grant`, `approvals revoke` and `config add-folder` print a random 6-character code (letters and digits without `0`, `O`, `1`, `I`) and run only when you type it back:
@@ -80,7 +100,7 @@ uv run lfmap approvals approve <id>       # shows the proposal, asks, runs it on
 uv run lfmap approvals reject <id>        # moves it to approvals\rejected
 ```
 
-- `approve` asks `Run <plugin>.<op> now with this input?` (a yes/no prompt, not the code), moves the proposal to `approvals\done` before running, and runs it with the channel `cli`. Calls up to the proposal's recorded tier run and are audited; a higher tier, or a `deny` in the policy, goes through the normal CLI approval again.
+- `approve` asks `Run <plugin>.<op> now with this input?` (a yes/no prompt) for T1 and T2 proposals; a proposal whose recorded tier is T3 asks the owner code instead (authenticator code when enrolled, else the typed code). It moves the proposal to `approvals\done` before running, and runs it with the channel `cli`. Calls up to the proposal's recorded tier run and are audited; a higher tier, or a `deny` in the policy, goes through the normal CLI approval again.
 - A proposal expires after 7 days (`[jobs] approval_ttl_days` in `config.toml`, whole number 1 to 30).
 - An identical pending call reuses its proposal.
 - Proposal text is escaped before it is printed, and a proposal file is validated on every read.
@@ -109,6 +129,7 @@ approvals list [--json]            # show grants, including expired ones
 approvals pending [--json]         # job proposals waiting; expired ones move to approvals\expired
 approvals approve ID [--json]      # show a proposal and, once confirmed, run it one time; interactive
 approvals reject ID                # move a proposal to approvals\rejected; interactive
+auth enroll | status | reset       # authenticator for the owner code; enroll and reset are interactive
 ```
 
 ## Where things live
@@ -116,6 +137,7 @@ approvals reject ID                # move a proposal to approvals\rejected; inte
 | What | Where |
 |---|---|
 | Grants | `%LOCALAPPDATA%\lfmap\grants.json` |
+| Authenticator | `%LOCALAPPDATA%\lfmap\auth.json` (DPAPI-encrypted secret; not backed up) |
 | Proposals | `%LOCALAPPDATA%\lfmap\approvals\{pending,done,rejected,expired}\<id>.json` |
 | Audit log | `%LOCALAPPDATA%\lfmap\audit.jsonl`; `uv run lfmap audit tail -n 20 [--json]` |
 

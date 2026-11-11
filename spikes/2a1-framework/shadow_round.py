@@ -32,7 +32,11 @@ MODULE_DIR = Path("packages/lfmap-core/src/lfmap_core")
 OLLAMA = "http://127.0.0.1:11434"
 LEADING = "qwen3.8:27b"
 AGENT_USER = "lfmap-agent"
-ENV = {"LFMAP_NUM_CTX": "20480", "LFMAP_NUM_PREDICT": "14000"}  # as the 09-10/11 re-run
+ENV = {
+    "LFMAP_NUM_CTX": "20480",
+    "LFMAP_NUM_PREDICT": "14000",
+    "LFMAP_REVIEW_ROUNDS": "1",
+}  # re-run settings, one review
 CASE_TIMEOUT = 4200  # seconds; the longest earlier review was 2014 s
 STOP_HOUR = 5.0  # no new case after 05:00 local time (round ends before 06:00)
 

@@ -70,6 +70,23 @@ def _outside_read_audit(plugin_id: str, channel: Channel) -> Callable[[str], Non
     return audit_func
 
 
+def _attach_models(ctx: ToolContext, entry: PluginEntry, config: dict) -> None:
+    """Give `ctx.models` to a plugin whose manifest has `[adapters] models = true`; the config is read lazily."""
+    if not entry.manifest.adapters.models:
+        return
+    from lfmap_core.models_router import ModelRouter  # keeps the models modules out of plain imports
+
+    ctx.model_router = ModelRouter(
+        config,
+        plugin_id=entry.id,
+        channel=ctx.channel,
+        operation=getattr(ctx.approver, "operation", ""),
+        permissions=ctx.permissions,
+        cloud_ai=entry.manifest.permissions.cloud_ai,
+        approve=ctx.require_approval,
+    )
+
+
 def build_tool(
     entry: PluginEntry,
     variables: Variables | None = None,
@@ -105,6 +122,7 @@ def build_tool(
         event_publisher=(events or PluginEvents(entry.id)) if entry.manifest.adapters.events else None,
         **_plugin_dirs(variables),
     )
+    _attach_models(ctx, entry, config)
     return entry.tool_class(ctx)
 
 
@@ -123,10 +141,14 @@ def run_operation(
     return invoke(tool, name, payload)
 
 
-def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None) -> ToolContext:
-    """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings."""
+def context_for(
+    plugin_id: str, parent: ToolContext, config: dict | None = None, entry: PluginEntry | None = None
+) -> ToolContext:
+    """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings.
+
+    Pass the callee's `entry` so a callee with `[adapters] models = true` gets its own `ctx.models`."""
     config = load_config() if config is None else config
-    return ToolContext(
+    ctx = ToolContext(
         plugin_id=plugin_id,
         permissions=parent.permissions,
         dry_run=parent.dry_run,
@@ -135,3 +157,6 @@ def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None)
         approver=parent.approver,
         **_plugin_dirs(plugin_variables(config, plugin_id)),
     )
+    if entry is not None:
+        _attach_models(ctx, entry, config)
+    return ctx
