@@ -14,10 +14,9 @@ from typing import TYPE_CHECKING
 
 from lfmap_core import flows, jobs
 from lfmap_core.errors import ToolError
-from lfmap_core.events import Event, EventBus
+from lfmap_core.events import Event, EventBus, topic_matches
 from lfmap_core.events_adapter import bus_path, open_bus
 from lfmap_core.registry import Registry
-from lfmap_core.topics import topic_matches
 
 if TYPE_CHECKING:
     from lfmap_core.flows_run import FlowRun

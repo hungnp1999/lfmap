@@ -12,7 +12,7 @@ from lfmap_core import approvals, flows_run, jobs_flow
 from lfmap_core.approval import audit_path
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
+from lfmap_core.events import MAX_PAYLOAD_BYTES
 
 THREE = """
 [[flows]]

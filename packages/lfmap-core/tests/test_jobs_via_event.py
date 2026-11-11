@@ -10,8 +10,8 @@ from lfmap_core.approval import audit_path
 from lfmap_core.approvals import approvals_dir
 from lfmap_core.cli import build_app
 from lfmap_core.errors import ToolError
+from lfmap_core.events import MAX_PAYLOAD_BYTES
 from lfmap_core.events_adapter import open_bus
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
 from lfmap_core.manifest import parse_manifest
 from lfmap_core.registry import PluginEntry
 
