@@ -16,11 +16,7 @@ Non-goals for Phase 2a: Flows definitions (RT-09, next handoff), a daemon or Win
 
 | Module | Content | Task |
 | --- | --- | --- |
-| `topics.py` | `validate_topic`, `validate_pattern`, `topic_matches` (grammar below) | TC-N1 (tests from bench W0, commit `790748b`) |
-| `events_retry.py` | `PERMANENT_CODES`, `backoff_seconds`, `after_failure`, `describe_error` | TC-E1 |
-| `events_payload.py` | `MAX_PAYLOAD_BYTES`, `encode_payload`, `decode_payload` | TC-E2 |
-| `events_names.py` | `PHASES`, `operation_topic`, `parse_operation_topic`, `plugin_may_publish` | TC-E3 |
-| `events.py` | `Event`, `DeadLetter`, `Handler`, `EventBus` Protocol, `InProcessBus`, shared checks | EB-1 |
+| `events.py` | `Event`, `DeadLetter`, `Handler`, `EventBus` Protocol, `InProcessBus`, shared checks; topics (`validate_topic`, `validate_pattern`, `topic_matches`, grammar below; TC-N1), payloads (`MAX_PAYLOAD_BYTES`, `encode_payload`, `decode_payload`; TC-E2) and retry policy (`PERMANENT_CODES`, `backoff_seconds`, `after_failure`, `describe_error`; TC-E1), folded in from `topics.py`, `events_payload.py`, `events_retry.py` (#195) | EB-1 |
 | `events_sqlite.py` | `SqliteBus` (+ `prune`) | EB-1 |
 | `events_adapter.py` | `PluginEvents` (the plugin's view), `open_bus()`, event adapter for `events = true` plugins | EB-2 |
 | `cli.py` | `lfmap events status|dead|retry|prune|run`; `lfmap jobs run` drains after the job | EB-3 |
@@ -29,7 +25,7 @@ Standard library and pydantic only. No new dependency (`sqlite3` is stdlib).
 
 ## 3. Model
 
-### Topics and patterns (`topics.py`)
+### Topics and patterns (`events.py`)
 
 - A topic is 1 to 8 tokens joined by single dots, at most 200 characters; a token is one or more of ASCII `a-z 0-9 _ -`.
 - A pattern follows the same rules, but a token may be exactly `*` (one token) or, as the last token only, `>` (one or more tokens). `jobs.>` does not match `jobs`.
@@ -56,7 +52,7 @@ class DeadLetter(BaseModel):
     error: str  # events_retry.describe_error, one line, <= 500 chars
 ```
 
-- Payload: a JSON object with string keys at every depth, no NaN/Infinity, at most 65,536 UTF-8 bytes once encoded compact and key-sorted (`events_payload`). Events carry references (paths, ids, counts), not document content. The stored form is JSON text; never pickle.
+- Payload: a JSON object with string keys at every depth, no NaN/Infinity, at most 65,536 UTF-8 bytes once encoded compact and key-sorted (`events.py`). Events carry references (paths, ids, counts), not document content. The stored form is JSON text; never pickle.
 - `publish(..., causation=parent)` sets `causation_id = parent.id` and `correlation_id = parent.correlation_id`; without a parent `correlation_id = id`.
 
 ### Protocol

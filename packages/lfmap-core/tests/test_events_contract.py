@@ -8,8 +8,7 @@ from datetime import UTC, datetime
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.events import Event, EventBus, InProcessBus
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
+from lfmap_core.events import MAX_PAYLOAD_BYTES, Event, EventBus, InProcessBus
 from lfmap_core.events_sqlite import SqliteBus
 
 

@@ -1,7 +1,7 @@
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.topics import topic_matches, validate_pattern, validate_topic
+from lfmap_core.events import topic_matches, validate_pattern, validate_topic
 
 
 @pytest.mark.parametrize(

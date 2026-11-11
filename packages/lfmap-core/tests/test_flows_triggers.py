@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 from lfmap_core import approvals, flows, flows_run, flows_triggers, jobs
 from lfmap_core.cli import build_app
 from lfmap_core.errors import ToolError
-from lfmap_core.events import Event, InProcessBus
+from lfmap_core.events import Event, InProcessBus, validate_pattern
 from lfmap_core.events_adapter import bus_path, drain_after_job, open_bus, run_adapter
 from lfmap_core.events_sqlite import SqliteBus
 

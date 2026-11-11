@@ -1,7 +1,7 @@
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.events_names import PHASES, operation_topic, parse_operation_topic, plugin_may_publish
+from lfmap_core.events_adapter import PHASES, operation_topic, parse_operation_topic, plugin_may_publish
 
 
 def test_phases():

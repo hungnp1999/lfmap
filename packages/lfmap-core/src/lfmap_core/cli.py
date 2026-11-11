@@ -32,8 +32,8 @@ from lfmap_core import (
 from lfmap_core.approval import Gate, Policy, audit, audit_path
 from lfmap_core.config import add_folder, config_path, load_config
 from lfmap_core.errors import ToolError
-from lfmap_core.events_adapter import drain_after_job, open_bus, run_adapter
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
+from lfmap_core.events import MAX_PAYLOAD_BYTES
+from lfmap_core.events_adapter import bus_path, drain_after_job, open_bus, run_adapter
 from lfmap_core.permissions import PermissionManager
 from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import build_tool, call_tier, run_operation
@@ -209,6 +209,20 @@ def _operation_command(entry: PluginEntry, spec: OperationSpec):
     command.__signature__ = inspect.Signature(params)
     command.__doc__ = spec.description
     return command
+
+
+def _events_counts() -> tuple[dict[str, dict[str, int]], str]:
+    """Delivery counts of the user's bus and a note; never creates `events.db`."""
+    if not bus_path().exists():
+        return {}, "no events.db yet"
+    try:
+        bus = open_bus()
+        try:
+            return bus.counts(), ""
+        finally:
+            bus.close()
+    except ToolError as error:
+        return {}, f"cannot read the bus: {error.message}"
 
 
 def _print_run(run: flows_run.FlowRun, as_json: bool) -> None:
@@ -684,6 +698,48 @@ def build_app(registry: Registry) -> typer.Typer:
                 fix = f"  -> {check.fix}" if check.fix else ""
                 typer.echo(f"{check.name:<{width}}  {status:<4}  {check.detail}{fix}")
         if any(check.ok is False for check in checks):
+            raise typer.Exit(1)
+
+    @app.command("doctor")
+    def doctor_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Run `jobs doctor`, `flows check` and `events status` together, read-only; exit 1 when a check fails."""
+        checks = jobs_doctor.run_checks(registry)
+        try:
+            findings = [text for flow in jobs_flow.load_all() for text in flows.check_flow(registry, flow)]
+        except ToolError as error:
+            findings = [error.message]
+        counts, events_note = _events_counts()
+        dead = [name for name, states in counts.items() if states.get("dead")]
+        failed = any(check.ok is False for check in checks) or bool(findings)
+        if json_output:
+            report = {
+                "ok": not failed,
+                "jobs": [dataclasses.asdict(check) for check in checks],
+                "flows": [{"finding": text} for text in findings],
+                "events": {"note": events_note, "subscriptions": counts, "warn": dead},
+            }
+            typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            typer.echo("jobs")
+            width = max(len(check.name) for check in checks)
+            for check in checks:
+                status = {True: "ok", None: "warn", False: "FAIL"}[check.ok]
+                fix = f"  -> {check.fix}" if check.fix else ""
+                typer.echo(f"  {check.name:<{width}}  {status:<4}  {check.detail}{fix}")
+            typer.echo("flows")
+            for text in findings:
+                typer.echo(approvals.visible(f"  FAIL  {text}"))
+            if not findings:
+                typer.echo("  ok    All flows ok")
+            typer.echo("events")
+            if events_note:
+                typer.echo(f"  warn  {events_note}" if events_note.startswith("cannot") else f"  ok    {events_note}")
+            for name, states in counts.items():
+                status = "warn" if name in dead else "ok  "
+                typer.echo(
+                    approvals.visible(f"  {status}  {name}  " + "  ".join(f"{s}={n}" for s, n in states.items()))
+                )
+        if failed:
             raise typer.Exit(1)
 
     @flows_app.command("list")
