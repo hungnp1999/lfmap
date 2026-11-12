@@ -29,7 +29,7 @@ May create:
 
 - `docs/research/2026-11-xx-web-fetch-real-check.md` (report, English)
 - `tests/samples/web/` is NOT used. Saved pages go to the plugin `data_dir/pages/` on pc-01 and, only after the owner agrees, a trimmed copy under `docs/specs/acceptance-samples/s1/` (see step 7).
-- `changelog.d/218-web-real-check.docs.md`
+- `changelog.d/218-web-real-check.added.md`
 
 Must not touch: any file under `packages/`, `plugins/`, `config.toml` of the repo, ADRs. The owner edits the real `config.toml` on pc-01 by hand.
 
@@ -66,7 +66,7 @@ Public pages only, `normal` class. What leaves the machine: two HTTPS GETs (URL,
 
 ```
 Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\lfmap-runtime updated; if not, stop and say so.
-Scope: only docs/research/2026-11-xx-web-fetch-real-check.md and changelog.d/218-web-real-check.docs.md. No code under packages/ or plugins/, no ADR edit, no config.toml change by you (the owner added the two hosts).
+Scope: only docs/research/2026-11-xx-web-fetch-real-check.md and changelog.d/218-web-real-check.added.md. No code under packages/ or plugins/, no ADR edit, no config.toml change by you (the owner added the two hosts).
 Do the steps of the card in order: dry checks, ONE real `lfmap web fetch <url> --save` per site from the interactive terminal, compare with the browser view, check audit.jsonl, replay offline, write the report with a verdict (a)/(b)/(c) per site. Do not retry on 403/429 and do not change headers. Stop on any condition in the card.
 Commit trailers: Dev-Environment: pc-01. Draft PR with "Refs #218" (never Closes). Report the PR link.
 ```
