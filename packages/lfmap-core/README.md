@@ -21,6 +21,7 @@ For the system-wide design, main execution flows, and architecture invariants, s
 | `grants.py` | Handles time-limited approval grants stored in `%LOCALAPPDATA%\lfmap\grants.json`. |
 | `jobs.py` | Parses scheduled job configs (`jobs.toml`) and interfaces with Windows Task Scheduler (`\LFMAP\`). |
 | `jobs_doctor.py` | Runs diagnostic health checks on scheduler status, sleep settings, and backend availability. |
+| `security_doctor.py` | Read-only Windows Security checks (Defender real-time protection, Controlled Folder Access and its coverage of your folders) for the `security` group of `lfmap doctor`; warnings only, skipped off Windows. |
 | `manifest.py` | Defines the Pydantic schema and parser for `lfmap.toml` plugin manifests. |
 | `mcp_adapter.py` | Implements an MCP stdio server that exposes plugin operations as tools. |
 | `naming.py` | Pure helper functions for generating safe, unique, and collision-free Windows file names. |

@@ -3,7 +3,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from lfmap_core import jobs_doctor
+from lfmap_core import jobs_doctor, security_doctor
 from lfmap_core.cli import build_app
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
@@ -35,6 +35,12 @@ def jobs_checks(monkeypatch):
     ]
     monkeypatch.setattr(jobs_doctor, "run_checks", lambda registry, path=None: checks)
     return checks
+
+
+@pytest.fixture(autouse=True)
+def no_security(monkeypatch):
+    """The security group runs PowerShell on Windows; it is tested in test_security_doctor.py."""
+    monkeypatch.setattr(security_doctor, "run_checks", lambda: None)
 
 
 @pytest.fixture
@@ -70,7 +76,7 @@ def test_exit_0_without_failures(registry, jobs_checks, put_flows) -> None:
     result = doctor(registry)
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    assert [line for line in lines if not line.startswith(" ")] == ["jobs", "flows", "events"]
+    assert [line for line in lines if not line.startswith(" ")] == ["jobs", "flows", "events", "security"]
     assert "All flows ok" in result.output
 
 
@@ -97,7 +103,7 @@ def test_json_groups(registry, jobs_checks, put_flows) -> None:
     result = doctor(registry, "--json")
     assert result.exit_code == 1
     report = json.loads(result.output)
-    assert set(report) == {"ok", "jobs", "flows", "events"}
+    assert set(report) == {"ok", "jobs", "flows", "events", "security"}
     assert report["ok"] is False
     assert [row["name"] for row in report["jobs"]] == ["uv", "wake"]
     assert report["flows"] and "finding" in report["flows"][0]
