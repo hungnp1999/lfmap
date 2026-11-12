@@ -4,6 +4,7 @@ import base64
 import dataclasses
 import inspect
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -31,7 +32,16 @@ from lfmap_core import (
     totp,
 )
 from lfmap_core.approval import Gate, Policy, audit, audit_path
-from lfmap_core.config import add_folder, config_path, load_config
+from lfmap_core.config import (
+    add_folder,
+    commit_edit,
+    config_path,
+    data_class_key,
+    edit_data_class,
+    load_config,
+    parse_config_text,
+)
+from lfmap_core.data_classes import CLASSES, load_class_map
 from lfmap_core.errors import ToolError
 from lfmap_core.events import MAX_PAYLOAD_BYTES
 from lfmap_core.events_adapter import bus_path, drain_after_job, open_bus, run_adapter
@@ -271,6 +281,54 @@ def _input_json(file: str | None) -> dict[str, Any]:
     return payload
 
 
+_EFFECTS = {
+    "scratch": "Overwrites here will be audited instead of asked.",
+    "normal": "Tiers here stay as each action sets them.",
+    "private": "Tiers here stay as each action sets them.",
+    "secret": "Reads here will be audited and writes asked.",
+}
+
+
+def _edit_class(verb: str, raw: str, data_class: str | None) -> None:
+    """`data classify` and `data unclassify`: edit one line of [data.classes] after the person has agreed.
+
+    Lowering is decided by comparing `class_of` before and after; raising asks yes/no, lowering asks the owner code."""
+    if not _interactive():
+        _deny(f"data {verb}", {"target": raw}, "not an interactive terminal")
+        raise ToolError("permission_denied", f"data {verb} only works in an interactive terminal")
+    if data_class is not None and data_class not in CLASSES:
+        raise ToolError("invalid_input", f"Class must be one of {', '.join(CLASSES)}", {"class": data_class})
+    key = data_class_key(raw)
+    edit = edit_data_class(key, data_class)
+    if edit.previous == data_class and data_class is not None:
+        typer.echo(approvals.visible(f"{key} is already {data_class}; nothing to change."))
+        return
+    if edit.previous is None and data_class is None:
+        raise ToolError("invalid_input", "No [data.classes] entry for this path", {"path": key})
+    before_map = load_class_map(parse_config_text(edit.old_text))
+    after_map = load_class_map(parse_config_text(edit.new_text))  # an invalid result is refused here, nothing written
+    before, after = before_map.class_of(key), after_map.class_of(key)
+    lowering = CLASSES.index(after) < CLASSES.index(before)
+    word = "lower" if lowering else "higher" if after != before else "same"
+    typer.echo(approvals.visible(f"{key}: {before} -> {after} ({word}). {_EFFECTS[after]}"))
+    if not after_map:
+        typer.echo("[data.classes] will have no entry left: the feature is off and every path behaves as before.")
+    action = f"data {verb} {before} -> {after}"
+    if lowering:
+        _require_code(action, {"target": key})
+    else:
+        try:
+            agreed = typer.confirm("Apply this change?", default=False)
+        except typer.Abort:
+            agreed = False
+        if not agreed:
+            _deny(action, {"target": key}, "not confirmed")
+            raise ToolError("permission_denied", f"{action} cancelled")
+    commit_edit(edit)
+    audit({"channel": "cli", "decision": "grant", "reason": action, "target": key})
+    typer.echo(approvals.visible(f"{key}: {after}"))
+
+
 def build_app(registry: Registry) -> typer.Typer:
     app = typer.Typer(
         name="lfmap",
@@ -288,6 +346,7 @@ def build_app(registry: Registry) -> typer.Typer:
     flows_app = typer.Typer(help="Declared flows from flows.toml.")
     auth_app = typer.Typer(help="Authenticator (TOTP) for the owner code (interactive terminal only).")
     backup_app = typer.Typer(help="Back up and restore the owner's state (restore: interactive terminal only).")
+    data_app = typer.Typer(help="Data classes of folders, [data.classes] (classify and unclassify: interactive only).")
     app.add_typer(plugins_app, name="plugins")
     app.add_typer(serve_app, name="serve")
     app.add_typer(approvals_app, name="approvals")
@@ -297,6 +356,7 @@ def build_app(registry: Registry) -> typer.Typer:
     app.add_typer(events_app, name="events")
     app.add_typer(flows_app, name="flows")
     app.add_typer(auth_app, name="auth")
+    app.add_typer(data_app, name="data")
     app.add_typer(backup_app, name="backup", invoke_without_command=True)
     known = {f"{e.id}.{op.name}" for e in registry.all() for op in e.manifest.operations}
 
@@ -549,6 +609,57 @@ def build_app(registry: Registry) -> typer.Typer:
         root = add_folder(name, folder)
         audit({"channel": "cli", "decision": "grant", "reason": f"add-folder {name}", "target": root})
         typer.echo(root)
+
+    @data_app.command("classes")
+    def data_classes_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+        """Show the [data.classes] table as loaded, and warn about folders that do not exist."""
+        rows = [
+            {"path": e.path, "class": e.data_class, "exists": os.path.isdir(e.path)}
+            for e in sorted(load_class_map(load_config()).entries, key=lambda e: e.path)
+        ]
+        if json_output:
+            typer.echo(json.dumps(rows, indent=2))
+        elif not rows:
+            typer.echo("no table (class model off)")
+        for row in [] if json_output else rows:
+            typer.echo(approvals.visible(f"{row['class']:<8} {row['path']}{'' if row['exists'] else '  (missing)'}"))
+
+    @data_app.command("explain")
+    def data_explain(
+        path: Annotated[str, typer.Argument(metavar="PATH")],
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Show which entry decides the class of PATH. Reads only the configuration."""
+        class_map = load_class_map(load_config())
+        data_class, entry = class_map.lookup(path)  # refuses network and device paths before any realpath
+        report = {
+            "path": os.path.realpath(path),
+            "active": bool(class_map),
+            "class_of": data_class,
+            "entry": entry,
+            "class_under": class_map.class_under(path),
+        }
+        if json_output:
+            typer.echo(json.dumps(report, indent=2))
+            return
+        typer.echo(approvals.visible(report["path"]))
+        typer.echo(approvals.visible(f"  class_of:    {data_class} ({'entry ' + entry if entry else 'no entry'})"))
+        typer.echo(f"  class_under: {report['class_under']}")
+        if not class_map:
+            typer.echo("  [data.classes] is empty: the class model is off and nothing here changes")
+
+    @data_app.command("classify")
+    def data_classify(
+        path: Annotated[str, typer.Argument(metavar="PATH")],
+        data_class: Annotated[str, typer.Argument(metavar="CLASS", help=" | ".join(CLASSES))],
+    ) -> None:
+        """Add or change the class of a folder. Lowering it also needs the owner code."""
+        _edit_class("classify", path, data_class)
+
+    @data_app.command("unclassify")
+    def data_unclassify(path: Annotated[str, typer.Argument(metavar="PATH")]) -> None:
+        """Remove the entry of a folder. Lowering its class also needs the owner code."""
+        _edit_class("unclassify", path, None)
 
     @audit_app.command("tail")
     def audit_tail(

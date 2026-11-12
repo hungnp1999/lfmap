@@ -115,6 +115,21 @@ T3 is never lowered by a class. A scheduled job that reads a `secret` folder (fo
 {"tier": "T1", "action_tier": "T2", "data_class": "scratch", "decision": "allow", "reason": "overwrite", "target": "D:\\Tmp\\out"}
 ```
 
+### Changing the table: `lfmap data`
+
+```text
+data classes [--json]       # the table as loaded: resolved path, class; marks folders that do not exist
+data explain PATH [--json]  # class_of, the entry that decided, class_under; reads only config.toml
+data classify PATH CLASS    # add or change one entry; interactive terminal only
+data unclassify PATH        # remove one entry; interactive terminal only
+```
+
+`classify` and `unclassify` edit only the one line inside `[data.classes]` (the table is created when absent), keep your comments and other tables as they are, and check that the result still loads before replacing the file. They print the effect first, for example `D:\Tmp: private -> scratch (lower). Overwrites here will be audited instead of asked.`
+
+**The lowering rule.** The command compares the class of the path before and after the edit (a path in no entry counts as `private`). If the class goes **down** (`secret` to anything lower, `private` to `normal`, removing an entry that was more protective than what is left), the owner code is required: the authenticator code once enrolled, else the typed code, and nothing is written before it is accepted. If the class stays or goes **up**, a yes/no confirmation is enough. Removing the last entry turns the feature off, and the command says so. A path with a single quote cannot be written as a TOML literal key: the command refuses and you edit `config.toml` by hand. Every change is audited with `reason` `data classify <old> -> <new>` or `data unclassify <old> -> <new>` and `target` the path; a refusal (no terminal, wrong code, answer no) is audited as a `deny`.
+
+`lfmap jobs doctor` has two matching checks: `data_classes` (lists every `scratch` entry; warns about missing folders, a `scratch` entry that contains or lies inside a `[paths] knowledge` root, and the old `[plugins.knowledge.settings.sensitivity]`) and `auth` (warns when no authenticator is enrolled or when `auth.json` can be changed by another account).
+
 ## The job approval queue
 
 A job (or an event call) never asks anyone. A call it may not run becomes a **proposal** and the job exits 1 with `permission_denied`, `Queued for approval`, and the proposal id in the error details. Proposals live in `%LOCALAPPDATA%\lfmap\approvals\` and are only moved, never deleted. The full flow is in [docs/jobs.md](jobs.md#approving-queued-calls).
@@ -155,6 +170,9 @@ approvals pending [--json]         # job proposals waiting; expired ones move to
 approvals approve ID [--json]      # show a proposal and, once confirmed, run it one time; interactive
 approvals reject ID                # move a proposal to approvals\rejected; interactive
 auth enroll | status | reset       # authenticator for the owner code; enroll and reset are interactive
+data classes | explain PATH        # read-only view of [data.classes]
+data classify PATH CLASS           # interactive; the owner code when the class is lowered
+data unclassify PATH               # interactive; the owner code when the class is lowered
 ```
 
 ## Where things live
