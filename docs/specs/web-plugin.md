@@ -4,7 +4,7 @@
 - Issue: #218 group G1 (core gap of scenario S1, `docs/specs/acceptance-scenarios.md`). Part of #191. Tracking issue: do not close it from the spec PR.
 - Handoff: `docs/handoff/2026-11-11-web-plugin-spec-g1.md`.
 - Related: `docs/specs/model-client.md` (loopback and egress pattern this spec reuses), `docs/specs/flows.md` (a flow calls `web.fetch` like any operation), ADR-009/017/018 (tiers, gate, jobs), ADR-020 (`min_tier`, `call_tier`), ADR-016 (own `data_dir` is not a side effect), ADR-025 (data classes).
-- Status: draft for the owner. Decisions below are proposals with a conclusion each; section 14 lists the three questions that stay open and section 13 what is cheap or hard to change. Docs only; code comes in later PRs that implement the frozen tests of section 11.
+- Status: draft for the owner. Decisions below are proposals with a conclusion each; section 15 lists the three questions (answered by the owner on 2026-11-12, section 16) and section 13 what is cheap or hard to change. Docs only; code comes in later PRs that implement the frozen tests of section 11.
 
 ## 1. Purpose
 
@@ -324,3 +324,11 @@ WEB-1 and WEB-2 are Cloud work and run one after the other (WEB-2 needs `ctx.web
 1. **Plain `http` for any site?** Proposal and what the spec does: no. The spec has no `http` option; both S1 sites are served on `https`. If a site is `http` only, the answer stays "do not read it" until you decide to add a per-host switch.
 2. **Save a copy of every page by default?** Proposal and what the spec does: no, `save` is a parameter that defaults to `false` and the copy goes to `data_dir/pages/`. Say if the daily job should keep the last copy of each page for audit or replay (then a retention rule is needed, for example the last 7 days).
 3. **Is T0 acceptable given that the URL can carry text?** Proposal and what the spec does: yes, T0 everywhere, with the bounds of section 7 (2048 characters, allow-list, rate limit, `bytes_out` audited). If you prefer less risk, the options are T3 for URLs with a long query (flows pause for `flows.resume` on those only) or a flow static check on `${...}` inside `url`. Decide before the S1 job is switched on; the ADR note text in section 7 follows your answer.
+
+## 16. Owner decisions (2026-11-12)
+
+1. **Tier.** Keep T0, and `Tool.call_tier` returns T3 when the URL has a query string longer than 200 characters (the exact bound is a constant in `web.py`, tested at 200 and 201). A T3 call is queued or refused on `job`, `event` and `flow` like any T3 (ADR-018), so a long query never runs unattended. The audit line still records `bytes_out`.
+2. **ADR note.** The exception text of section 7 is accepted as it stands; it will be revised when the core security work and the defence drill are done. The ADR file is edited in a separate gate:po step, not by this spec.
+3. **`http` and saved copies.** As specced: no `http`, `save` defaults to `false`.
+4. **Fixes for WEB-1.** (a) Put the DNS step under the same wall-clock deadline as the fetch (resolve in a worker thread and abandon it at the deadline, or give the resolver its own bound); add `test_dns_hang_respects_timeout`. (b) The security review of WEB-1 confirms that `allow_non_global` and the test port are not reachable from config, a manifest or a plugin. (c) Add `test_long_query_is_t3`: 200 characters stay T0, 201 are T3 on a `job` channel and nothing is sent.
+
