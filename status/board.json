@@ -1636,7 +1636,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Flows: one bus subscription per flow instead of a covering pattern",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -1850,7 +1850,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Core tidy-up: one lfmap doctor, fold event helper modules",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2007,7 +2007,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "10/11 night · QW: next Leading shadow round on the real Flows cases",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": "2026-11-10",
       "due": "2026-11-11",
       "labels": [
@@ -2192,7 +2192,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "spike: Leading shadow round script and preflight (#207)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2266,7 +2266,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs(research): Lan Hài assistant architecture sketch (#157)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2316,7 +2316,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "DC-1: data_classes.py, the pure class map and tier adjustment (ADR-025)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2329,7 +2329,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "DC-3: TOTP for self-granting commands (ADR-025 item 4)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2343,13 +2343,12 @@
       "repo": "hungnp1999/lfmap",
       "title": "DC-2: class guard in the approval gate, audit fields, markitdown.export paths (ADR-025)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
         "exec:CC",
         "P1",
-        "blocked",
         "security-review"
       ]
     },
@@ -2464,6 +2463,215 @@
         "exec:CC",
         "P3",
         "gate:po"
+      ]
+    },
+    {
+      "number": 243,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): data classes module for ADR-025 (DC-1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 244,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): one bus subscription per flow (#178)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 245,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: handoff card for web plugin spec (#218 G1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 246,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): core tidy-up K3 + K4 (#195)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 247,
+      "repo": "hungnp1999/lfmap",
+      "title": "spike: Leading shadow round results 2026-11-10 (#207)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 248,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): optional TOTP for the owner code (DC-3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 249,
+      "repo": "hungnp1999/lfmap",
+      "title": "MC-4: embedding equivalence run on DIEP-ANH (Ollama native vs OpenAI-compatible), report",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 250,
+      "repo": "hungnp1999/lfmap",
+      "title": "MC-5: move knowledge embeddings onto ModelClient, remove OllamaEmbedder (only if MC-4 passes)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "blocked",
+        "security-review"
+      ]
+    },
+    {
+      "number": 251,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): one bus subscription per event flow (#178)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 252,
+      "repo": "hungnp1999/lfmap",
+      "title": "refactor(core): fold topics, payload, retry and name helpers into events modules (#195 K4)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 253,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): lfmap doctor combines jobs doctor, flows check and events status (#195 K3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 254,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): start card for DC-2 class guard (#234)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 255,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(spec): web plugin Module Spec (#218 G1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 256,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(core): data-class guard in the approval gate (#197, DC-2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 257,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): Windows Security checks in lfmap doctor (#198)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 258,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Developing App Marketplace study",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 259,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): start card for DC-4 data commands and doctor checks (#235)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
       ]
     },
     {
