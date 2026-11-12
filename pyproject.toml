@@ -24,4 +24,5 @@ members = ["packages/*", "plugins/*"]
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
+markers = ["local: needs a local service such as Ollama; skipped in CI"]
 testpaths = ["packages", "plugins", "scripts"]
