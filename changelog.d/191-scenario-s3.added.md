@@ -1,0 +1,1 @@
+Scenario S3 (#191, family meal planning) recorded in `docs/specs/acceptance-scenarios.md` with the core gaps it exposes (pantry input, non-owner confirmation, shared recipient list, preference memory, nutrition data licence). Docs only.

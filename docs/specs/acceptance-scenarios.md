@@ -122,3 +122,36 @@ Source: the owner's real workflow, recorded 2026-11-12. Public data only.
 5. Step 5 (hands-on trial) and NotebookLM are outside LFMAP; the scenario covers only collect, translate, summarise and write up.
 6. Document formatter: no plugin yet for Markdown to DOCX/PDF with figures.
 7. Duplicates across days (as in S1): remember what was already read.
+
+## S3: Family meal planning
+
+Source: the owner's real workflow, recorded 2026-11-12. No personal data of family members is recorded here; only the kind of data.
+
+- Why it matters: 15 to 30 minutes a day; hard to choose dishes and keep the nutrition balanced for a multi-generation family.
+- Frequency: daily.
+- Trigger: a schedule (time of day to be set); the shopping list must go out one day ahead.
+- Input: what food is left at home (today only in memory or phone notes), family preferences, recipes from the web.
+- Steps today:
+  1. Check the food left at home.
+  2. Ask the relatives for their wishes.
+  3. Pick the main ingredients so dishes do not repeat and nutrition stays balanced.
+  4. Look up recipes online when needed.
+  5. Write the list of ingredients to buy in a phone note.
+- Expected output: a menu note on phone or computer, and a combined, sensible shopping list sent automatically one day ahead.
+- Your approval: the menu is confirmed with the relatives (a person other than the owner is in the loop).
+- Data class: normal. Dietary restrictions or health conditions of a named member would be `private` (`?`, to be decided).
+- Leaves the machine?: yes: the menu and shopping list go to the family members by message.
+- Success check: balanced nutrition, matches everyone's taste, easy to cook, fewer shopping trips.
+- Failure to avoid: wasted food; dishes unsuitable for some members' portions or needs.
+- Plugins you expect: `web` (recipe search), a nutrition analyzer, a note app, `email` or chat (shared with S1), `file`.
+- Test data available?: Claude generates; no sample data exists yet.
+
+### Core gaps this scenario exposes (to become issues before any plugin is built)
+
+1. The pantry has no digital source today (memory, phone notes). A flow cannot read it; the owner types or dictates it, or a small structured pantry file is kept. Decide the input channel before any plugin.
+2. Human-in-the-loop with people other than the owner: the Gate has one approver (the owner). "Relatives confirm the menu" is either the owner relaying their answers, or a new feature. Recommended for now: the owner is the only approver; relatives only receive.
+3. Send step needs the same declared recipient list as S1 (a family list, owner-edited in `config.toml`).
+4. Preference and history memory (what was cooked recently, who dislikes what): a store with a data class; health-related entries must be `private`.
+5. Nutrition analysis needs a food composition dataset; check its licence first. An LLM alone is not a reliable source for a nutrition claim.
+6. Schedule offset: the list goes out one day ahead of the cooking day, so the trigger and the target date differ.
+7. Phone notes: no connector exists; plain files in a synced folder are the likely route.
