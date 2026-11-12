@@ -7,7 +7,7 @@ Issue: [#270](https://github.com/hungnp1999/lfmap/issues/270). Parent handoff: [
 - Task: WEB-3, real check of `web.fetch` on the two S1 sites. Roadmap: Phase 2, #218 G1 / G4.
 - Labels: `exec:CC`, `P1`, `res:Local`, `blocked`.
 - Executor: Claude Code session on DIEP-ANH (pc-01) started by the owner. Model: Sonnet. Cloud sessions never fetch the real sites (spec section 12).
-- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and WEB-2 (plugin `lfmap-web`), both merged, and `D:\lfmap-runtime` updated from main. Order: WEB-1, then WEB-2, then this.
+- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged, and `D:\lfmap-runtime` updated from main. Order: WEB-1, then WEB-2, then this.
 - Start when: WEB-2 is merged and the owner has one evening slot with internet. Preflight one day before (below).
 - Size: about 1 hour at the machine, no GPU.
 
