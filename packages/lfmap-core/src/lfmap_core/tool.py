@@ -18,7 +18,8 @@ Channel = Literal["sdk", "cli", "mcp", "rest", "job", "event", "flow"]
 class ToolContext(BaseModel):
     """Injected by the runtime: plugin_id, dry_run, permissions, data_dir, temp_dir, settings, channel, approver
     and, for plugins whose manifest has `[adapters] events = true`, the event publisher behind `events`;
-    likewise `[adapters] models = true` gives the `ModelRouter` behind `models`."""
+    likewise `[adapters] models = true` gives the `ModelRouter` behind `models`, and `[adapters] web = true`
+    the page fetcher behind `web`."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -32,6 +33,7 @@ class ToolContext(BaseModel):
     approver: Any = None
     event_publisher: Any = None
     model_router: Any = None
+    web_fetcher: Any = None
     data_guard: Any = None
 
     @property
@@ -55,6 +57,17 @@ class ToolContext(BaseModel):
                 {"plugin": self.plugin_id},
             )
         return self.model_router
+
+    @property
+    def web(self) -> Any:
+        """The plugin's `WebAccess` (`fetch` only); ToolError permission_denied unless the manifest opts in to web."""
+        if self.web_fetcher is None:
+            raise ToolError(
+                "permission_denied",
+                "This plugin cannot fetch web pages; set [adapters] web = true in its manifest",
+                {"plugin": self.plugin_id},
+            )
+        return self.web_fetcher
 
     @property
     def data_label(self) -> str | None:
