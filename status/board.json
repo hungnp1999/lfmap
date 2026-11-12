@@ -1794,7 +1794,7 @@
     {
       "number": 191,
       "repo": "hungnp1999/lfmap",
-      "title": "11/11 · CC: core acceptance suite, scenario template for Hùng",
+      "title": "Umbrella · core acceptance suite from Hùng's business scenarios (S1 template done)",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-11",
@@ -1820,7 +1820,7 @@
     {
       "number": 193,
       "repo": "hungnp1999/lfmap",
-      "title": "Knowledge: weekly retrieval regression bench",
+      "title": "14/11 · CC: weekly retrieval regression bench (grow to about 50 questions)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1834,7 +1834,7 @@
     {
       "number": 194,
       "repo": "hungnp1999/lfmap",
-      "title": "Chat UI spec: web-first, Tauri later as a shell",
+      "title": "14/11 · CC: Chat UI spec, web-first with Tauri later as a shell",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -1875,7 +1875,7 @@
     {
       "number": 197,
       "repo": "hungnp1999/lfmap",
-      "title": "10/11 gate · PO: ADR-025 data classes feed the approval tier (before organizer)",
+      "title": "Umbrella · Security core S1: data classes feed the approval tier (ADR-025); open until DC-5",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-10",
@@ -1890,7 +1890,7 @@
     {
       "number": 198,
       "repo": "hungnp1999/lfmap",
-      "title": "Security core S3: read-only Windows Security checks in lfmap doctor",
+      "title": "13/11 · CC: Security core S3, read-only Windows Security checks in lfmap doctor",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2021,7 +2021,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Plan 09/11–11/11: task order until the Wednesday report",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-09",
       "due": "2026-11-11",
       "labels": [
@@ -2300,7 +2300,7 @@
     {
       "number": 231,
       "repo": "hungnp1999/lfmap",
-      "title": "JF-1: a job edited while it waits for approval must not block itself; doctor checks the runner's load",
+      "title": "12/11 · CC: JF-1 a job edited while it waits for approval must not block itself; doctor check",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2355,7 +2355,7 @@
     {
       "number": 235,
       "repo": "hungnp1999/lfmap",
-      "title": "DC-4: lfmap data classes|explain|classify|unclassify and doctor checks (ADR-025)",
+      "title": "12/11 · CC: DC-4 lfmap data classes commands and doctor checks (ADR-025)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2363,7 +2363,6 @@
       "labels": [
         "exec:CC",
         "P2",
-        "blocked",
         "security-review"
       ]
     },
@@ -2413,7 +2412,7 @@
     {
       "number": 239,
       "repo": "hungnp1999/lfmap",
-      "title": "JF-2: stop producing operation requests over the bus (`via = \"event\"` runs as a call)",
+      "title": "13/11 · CC: JF-2 stop producing operation requests over the bus",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2540,7 +2539,7 @@
     {
       "number": 249,
       "repo": "hungnp1999/lfmap",
-      "title": "MC-4: embedding equivalence run on DIEP-ANH (Ollama native vs OpenAI-compatible), report",
+      "title": "13/11 evening · PO: MC-4 embedding equivalence run on DIEP-ANH (Ollama native vs OpenAI-compatible)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2554,7 +2553,7 @@
     {
       "number": 250,
       "repo": "hungnp1999/lfmap",
-      "title": "MC-5: move knowledge embeddings onto ModelClient, remove OllamaEmbedder (only if MC-4 passes)",
+      "title": "14/11 · CC: MC-5 move knowledge embeddings onto ModelClient (only if MC-4 passes)",
       "type": "Issue",
       "status": "Backlog",
       "start": null,
@@ -2655,7 +2654,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs(research): Developing App Marketplace study",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2668,6 +2667,85 @@
       "title": "docs(handoff): start card for DC-4 data commands and doctor checks (#235)",
       "type": "PullRequest",
       "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 260,
+      "repo": "hungnp1999/lfmap",
+      "title": "12/11 · PO: review Operating Model B and the five commitments of 04/11",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P2"
+      ]
+    },
+    {
+      "number": 261,
+      "repo": "hungnp1999/lfmap",
+      "title": "13/11 · CC: threat model for LFMAP (assets, entry points, abuse cases) after ADR-025",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 262,
+      "repo": "hungnp1999/lfmap",
+      "title": "14/11 · CC: Phase 3 outline (productization) with entry criteria and risks",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 263,
+      "repo": "hungnp1999/lfmap",
+      "title": "15/11 · CC: post-merge review of ModelClient (PR #221, #225, #226)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 264,
+      "repo": "hungnp1999/lfmap",
+      "title": "Plan 12/11–15/11: task order until the Sunday report",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 265,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs: acceptance scenario S2, technology research (#191)",
+      "type": "PullRequest",
+      "status": "Backlog",
       "start": null,
       "due": null,
       "labels": [
