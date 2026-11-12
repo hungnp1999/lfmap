@@ -27,6 +27,7 @@ from lfmap_core import (
     jobs,
     jobs_doctor,
     jobs_flow,
+    security_doctor,
     totp,
 )
 from lfmap_core.approval import Gate, Policy, audit, audit_path
@@ -702,13 +703,16 @@ def build_app(registry: Registry) -> typer.Typer:
 
     @app.command("doctor")
     def doctor_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
-        """Run `jobs doctor`, `flows check` and `events status` together, read-only; exit 1 when a check fails."""
+        """Run `jobs doctor`, `flows check`, `events status` and the Windows Security checks together, read-only.
+
+        Exit 1 when a job check or a flow fails; the security group only warns."""
         checks = jobs_doctor.run_checks(registry)
         try:
             findings = [text for flow in jobs_flow.load_all() for text in flows.check_flow(registry, flow)]
         except ToolError as error:
             findings = [error.message]
         counts, events_note = _events_counts()
+        security = security_doctor.run_checks()
         dead = [name for name, states in counts.items() if states.get("dead")]
         failed = any(check.ok is False for check in checks) or bool(findings)
         if json_output:
@@ -717,6 +721,9 @@ def build_app(registry: Registry) -> typer.Typer:
                 "jobs": [dataclasses.asdict(check) for check in checks],
                 "flows": [{"finding": text} for text in findings],
                 "events": {"note": events_note, "subscriptions": counts, "warn": dead},
+                "security": {"skipped": "Windows only"}
+                if security is None
+                else [dataclasses.asdict(check) for check in security],
             }
             typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
         else:
@@ -739,6 +746,12 @@ def build_app(registry: Registry) -> typer.Typer:
                 typer.echo(
                     approvals.visible(f"  {status}  {name}  " + "  ".join(f"{s}={n}" for s, n in states.items()))
                 )
+            typer.echo("security")
+            if security is None:
+                typer.echo("  skipped (Windows only)")
+            for check in security or []:
+                fix = f"  -> {check.fix}" if check.fix else ""
+                typer.echo(f"  {'ok  ' if check.ok else 'warn'}  {check.name}  {check.detail}{fix}")
         if failed:
             raise typer.Exit(1)
 
