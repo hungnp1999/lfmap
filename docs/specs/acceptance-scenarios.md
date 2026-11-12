@@ -101,13 +101,13 @@ Source: the owner's real workflow, recorded 2026-11-12. Public data only.
   1. Open GitHub, blogs and social networks.
   2. Skim statistics tables and top posts to see the trends.
   3. Pick a few standout trends to study in depth.
-  4. Find the related docs and study them, with NotebookLM as an aid.
+  4. Find the related docs and study them, with NotebookLM as an aid (today; to be replaced by the `knowledge` and `llm` plugins).
   5. Try it for real, when possible.
   6. Write up the lessons as a research document.
 - Expected output: a Markdown file (or DOCX/PDF when it has figures) saved to the owner's personal drive (PC or cloud storage).
 - Your approval: none for saving to the personal drive; approval only when the document is shared with other people.
 - Data class: normal.
-- Leaves the machine?: no for the output. Fetching public pages is outbound traffic. Whether NotebookLM stays in the loop is open: using it uploads public documents to Google (`?`, to be decided with the data-class rules).
+- Leaves the machine?: no for the output. Fetching public pages is outbound traffic. NotebookLM is dropped from the flow (owner decision 2026-11-12): the `knowledge` and `llm` plugins do the deep reading locally, so no document is uploaded to a third party.
 - Success check: scientific structure, complete and accurate citations, new or applicable content, clear layout without font errors, sensible figures and tables. Checkable part: every citation points to a source the flow actually fetched and stored.
 - Failure to avoid: the model invents facts (hallucination) and the document states something false.
 - Plugins you expect: `web` (page fetch from allowed hosts), a GitHub reader, `llm` (translate, summarise), a document formatter (Markdown to Word/PDF), `file`.
@@ -119,7 +119,7 @@ Source: the owner's real workflow, recorded 2026-11-12. Public data only.
 2. GitHub is better read through its API than as HTML; it needs a read-only token handled as a secret and an allow-list entry.
 3. Citation check: the core needs a way to verify that each cited URL is in the set of pages the flow fetched, so a made-up source fails the run instead of reaching the document.
 4. Long, multi-stage work (trend pick, deep read, write-up) with an open-ended choice of topics: decide which part is a flow and which stays interactive with the owner.
-5. Step 5 (hands-on trial) and NotebookLM are outside LFMAP; the scenario covers only collect, translate, summarise and write up.
+5. Step 5 (hands-on trial) is outside LFMAP; the scenario covers collect, translate, deep reading through `knowledge`, summarise and write up. Check that `knowledge` handles the long, multi-source reading NotebookLM does today.
 6. Document formatter: no plugin yet for Markdown to DOCX/PDF with figures.
 7. Duplicates across days (as in S1): remember what was already read.
 
@@ -139,7 +139,8 @@ Source: the owner's real workflow, recorded 2026-11-12. No personal data of fami
   5. Write the list of ingredients to buy in a phone note.
 - Expected output: a menu note on phone or computer, and a combined, sensible shopping list sent automatically one day ahead.
 - Your approval: the menu is confirmed with the relatives (a person other than the owner is in the loop).
-- Data class: normal. Dietary restrictions or health conditions of a named member would be `private` (`?`, to be decided).
+- Data class: private. Health records and dietary restrictions of family members are part of the input (owner decision 2026-11-12) because they directly shape the menu; the rest (pantry, recipes) is normal.
+- Health data handling: steps that read health data run on the local model only; the menu and shopping list that leave the machine carry no health details, only dishes and ingredients.
 - Leaves the machine?: yes: the menu and shopping list go to the family members by message.
 - Success check: balanced nutrition, matches everyone's taste, easy to cook, fewer shopping trips.
 - Failure to avoid: wasted food; dishes unsuitable for some members' portions or needs.
@@ -151,7 +152,7 @@ Source: the owner's real workflow, recorded 2026-11-12. No personal data of fami
 1. The pantry has no digital source today (memory, phone notes). A flow cannot read it; the owner types or dictates it, or a small structured pantry file is kept. Decide the input channel before any plugin.
 2. Human-in-the-loop with people other than the owner: the Gate has one approver (the owner). "Relatives confirm the menu" is either the owner relaying their answers, or a new feature. Recommended for now: the owner is the only approver; relatives only receive.
 3. Send step needs the same declared recipient list as S1 (a family list, owner-edited in `config.toml`).
-4. Preference and history memory (what was cooked recently, who dislikes what): a store with a data class; health-related entries must be `private`.
+4. Preference and history memory (what was cooked recently, who dislikes what): a store with a data class; health entries are `private` (decided), so reading them needs the approval tier of that class and the local model. Open: how the output is checked to be free of health details before it is sent (a flow-level rule or a core filter).
 5. Nutrition analysis needs a food composition dataset; check its licence first. An LLM alone is not a reliable source for a nutrition claim.
 6. Schedule offset: the list goes out one day ahead of the cooking day, so the trigger and the target date differ.
 7. Phone notes: no connector exists; plain files in a synced folder are the likely route.
