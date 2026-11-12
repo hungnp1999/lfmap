@@ -1,0 +1,1 @@
+`topics.py`, `events_payload.py`, `events_retry.py` are folded into `events.py` and `events_names.py` into `events_adapter.py` (#195, K4): no behaviour change, no shim re-exports, all test cases kept. No new dependency.

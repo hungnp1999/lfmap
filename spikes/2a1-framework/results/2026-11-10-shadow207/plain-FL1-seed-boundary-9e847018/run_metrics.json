@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "FL1-seed-boundary",
+  "package": null,
+  "import_s": 0.007,
+  "wall_s": 1390.726,
+  "model_s": 1389.254,
+  "overhead_s": 1.473,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 389206.8063194,
+      "seconds": 1389.253617899958,
+      "prompt_chars": 12089,
+      "reply_chars": 865
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

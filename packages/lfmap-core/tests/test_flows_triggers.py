@@ -15,10 +15,9 @@ from typer.testing import CliRunner
 from lfmap_core import approvals, flows, flows_run, flows_triggers, jobs
 from lfmap_core.cli import build_app
 from lfmap_core.errors import ToolError
-from lfmap_core.events import Event, InProcessBus
+from lfmap_core.events import Event, InProcessBus, validate_pattern
 from lfmap_core.events_adapter import bus_path, drain_after_job, open_bus, run_adapter
 from lfmap_core.events_sqlite import SqliteBus
-from lfmap_core.topics import validate_pattern
 
 runner = CliRunner()
 
@@ -81,30 +80,10 @@ def run_ids(flow: str | None = None) -> set[str]:
     return {r.run_id for r in runs(flow)}
 
 
-# --- the event trigger: one durable subscription "flows" ---------------------------------------
+# --- the event trigger: one durable subscription "flows-<id>" per flow ---------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("patterns", "expected"),
-    [
-        (["a.b.c"], "a.b.c"),
-        (["a.b.c", "a.b.c"], "a.b.c"),
-        (["a.b.c", "a.d.c"], "a.*.c"),
-        (["markitdown.classify.completed", "markitdown.export.completed"], "markitdown.*.completed"),
-        (["a.b.c", "d.e.f"], "*.*.*"),
-        (["a.b.c", "a.b"], "a.>"),
-        (["a.b.c", "d.e"], "*.>"),
-        (["a.>", "a.b.c"], "a.>"),
-        (["a.*.c", "a.b.c"], "a.*.c"),
-        ([">"], ">"),
-    ],
-)
-def test_covering_pattern_is_one_valid_pattern_that_matches_everything_the_flows_ask_for(patterns, expected):
-    pattern = flows_triggers.covering_pattern(patterns)
-    assert pattern == expected and validate_pattern(pattern) == pattern
-
-
-def test_attach_subscribes_flows_once_with_the_union_of_the_enabled_event_patterns(registry, put):
+def test_attach_subscribes_one_flows_dash_id_per_enabled_event_flow(registry, put):
     put(
         flow_text("one", '{ event = "fake-plugin.greet.completed" }'),
         flow_text("two", '{ event = "fake-plugin.write.completed" }'),
@@ -113,26 +92,27 @@ def test_attach_subscribes_flows_once_with_the_union_of_the_enabled_event_patter
         flow_text("daily", "{ schedule = { daily = '06:30' } }"),
     )
     bus = InProcessBus()
-    assert flows_triggers.SUBSCRIPTION == "flows"
-    assert flows_triggers.attach(registry, bus) == "fake-plugin.*.completed"
+    assert flows_triggers.attach(registry, bus) == {"one": TOPIC, "two": "fake-plugin.write.completed"}
+    assert bus.subscriptions() == {"flows-one": TOPIC, "flows-two": "fake-plugin.write.completed"}
     event_on(bus)
     event_on(bus, "other.thing.done")
-    assert bus.drain() == 1  # only the first event reached the subscription
+    assert bus.drain() == 1  # only the first event reached a subscription, and only flow one's
+    assert {r.flow for r in runs()} == {"one"}
 
 
 def test_attach_does_nothing_without_an_enabled_event_flow(registry, put):
     put(flow_text("manual", "{ manual = true }"), flow_text("off", enabled=False))
     bus = InProcessBus()
-    assert flows_triggers.attach(registry, bus) is None
+    assert flows_triggers.attach(registry, bus) == {}
     event_on(bus)
     assert bus.drain() == 0
     put()
-    assert flows_triggers.attach(registry, bus) is None
+    assert flows_triggers.attach(registry, bus) == {}
 
 
 def test_a_broken_flows_file_never_stops_the_event_adapter(registry, put, caplog):
     put("[[flows]]\nid = 'x'\nthis is not toml")
-    assert flows_triggers.attach(registry, InProcessBus()) is None
+    assert flows_triggers.attach(registry, InProcessBus()) == {}
     assert "flows" in caplog.text
     assert flows_triggers.event_flows(registry) == []
 
@@ -148,7 +128,7 @@ def test_each_matching_flow_starts_once_with_the_event_payload(registry, put):
     bus = InProcessBus()
     flows_triggers.attach(registry, bus)
     event = event_on(bus)
-    assert bus.drain() == 1
+    assert bus.drain() == 2  # one delivery per matching flow
     assert {r.flow for r in runs()} == {"convert", "also"}
     for run in runs():
         assert run.run_id == f"ev-{event.id}-{run.flow}"
@@ -166,8 +146,9 @@ def test_an_event_delivered_twice_starts_no_second_run(registry, put):
     bus.drain()
     first = run_ids()
     assert len(first) == 2
-    flows_triggers.handle(registry, seen[0])
-    flows_triggers.handle(registry, seen[0].model_copy(update={"attempt": 2}))
+    for flow_id in ("convert", "also"):
+        flows_triggers.handle(registry, flow_id, seen[0])
+        flows_triggers.handle(registry, flow_id, seen[0].model_copy(update={"attempt": 2}))
     assert run_ids() == first
 
 
@@ -216,16 +197,14 @@ def test_a_failing_step_is_a_failed_run_and_the_delivery_is_done(registry, put):
     assert run.status == "failed" and bus.dead_letters() == []
 
 
-def test_a_flow_that_cannot_start_ends_as_a_dead_letter_and_does_not_block_the_others(registry, put):
-    too_long = "a" * 100  # "ev-" + event id + "-" + flow id is then longer than a run id may be
+def test_a_flow_whose_id_is_too_long_for_a_subscription_name_is_left_out(registry, put, caplog):
+    too_long = "a" * 100  # "flows-" + id is then longer than a subscription name may be
     put(flow_text(too_long), flow_text("convert"))
     bus = InProcessBus(max_attempts=1)
-    flows_triggers.attach(registry, bus)
+    assert flows_triggers.attach(registry, bus) == {"convert": TOPIC}
     event = event_on(bus)
-    assert bus.drain() == 1
-    assert run_ids() == {f"ev-{event.id}-convert"}
-    [letter] = bus.dead_letters()
-    assert letter.subscription == "flows" and letter.event.id == event.id
+    assert bus.drain() == 1 and bus.dead_letters() == []
+    assert run_ids() == {f"ev-{event.id}-convert"} and too_long in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -235,60 +214,98 @@ def test_a_flow_that_cannot_start_ends_as_a_dead_letter_and_does_not_block_the_o
 def test_triggers_that_could_match_flows_or_requested_topics_are_refused(registry, put, pattern):
     put(flow_text("loop", f'{{ event = "{pattern}" }}'))
     assert flows_triggers.event_flows(registry) == []
-    assert flows_triggers.attach(registry, InProcessBus()) is None
+    assert flows_triggers.attach(registry, InProcessBus()) == {}
     assert any(pattern in finding for finding in flows.check_flow(registry, flows.load_flows()[0]))
+
+
+def test_the_handler_starts_only_its_own_flow(registry, put):
+    put(flow_text("one"), flow_text("two"))
+    flows_triggers.handle(registry, "one", event_on(InProcessBus()))
+    assert {r.flow for r in runs()} == {"one"}
 
 
 def test_the_handler_ignores_topics_no_flow_asked_for(registry, put):
     put(flow_text("convert", '{ event = "fake-plugin.greet.completed" }'))
     bus = InProcessBus()
     for topic in ("flows.run.completed", "fake-plugin.greet.requested"):
-        flows_triggers.handle(registry, event_on(bus, topic))
+        flows_triggers.handle(registry, "convert", event_on(bus, topic))
     assert runs() == []
 
 
-def test_changing_the_patterns_replaces_the_subscription(registry, put):
-    put(flow_text("one", '{ event = "fake-plugin.greet.completed" }'))
+def test_changing_one_pattern_replaces_only_that_subscription(registry, put, caplog):
+    put(flow_text("one"), flow_text("two", '{ event = "x.y.z" }'))
     bus = open_bus()
     try:
-        assert flows_triggers.attach(registry, bus) == "fake-plugin.greet.completed"
-        put(flow_text("one", '{ event = "fake-plugin.greet.completed" }'), flow_text("two", '{ event = "x.y.z" }'))
-        assert flows_triggers.attach(registry, bus) == "*.*.*"
-        event_on(bus, "x.y.z")
-        bus.drain()  # the run's own flows.run.completed also matches *.*.* and is ignored by the handler
-        assert [r.flow for r in runs()] == ["two"]
+        flows_triggers.attach(registry, bus)
+        first, second = event_on(bus), event_on(bus, "x.y.z")  # both queued, nothing drained yet
+        put(flow_text("one"), flow_text("two", '{ event = "x.y.w" }'))
+        assert flows_triggers.attach(registry, bus) == {"one": TOPIC, "two": "x.y.w"}
+        assert "Flow two changed" in caplog.text
+        assert bus.drain() == 1  # flow two lost its delivery; flow one's is intact
+    finally:
+        bus.close()
+    assert run_ids() == {f"ev-{first.id}-one"} and second.id not in "".join(run_ids())
+
+
+def test_removing_or_disabling_a_flow_unsubscribes_only_its_subscription(registry, put):
+    put(flow_text("one"), flow_text("two"), flow_text("three"))
+    bus = open_bus()
+    try:
+        flows_triggers.attach(registry, bus)
+        put(flow_text("one", "{ manual = true }"), flow_text("two"), flow_text("three", enabled=False))
+        assert flows_triggers.attach(registry, bus) == {"two": TOPIC}
+        assert set(bus.subscriptions()) == {"flows-two"}
+        event_on(bus)
+        assert bus.drain() == 1
+        put()
+        assert flows_triggers.attach(registry, bus) == {}
+        assert bus.subscriptions() == {}
     finally:
         bus.close()
 
 
-def test_an_unusable_flows_file_leaves_the_subscription_and_its_queued_events_alone(registry, put):
+def test_a_flow_removed_from_flows_toml_loses_its_subscription(registry, put):
+    put(flow_text("keep"), flow_text("gone"))
+    bus = open_bus()
+    try:
+        flows_triggers.attach(registry, bus)
+        put(flow_text("keep"))  # "gone" has no id left to unsubscribe by
+        flows_triggers.attach(registry, bus)
+        assert set(bus.subscriptions()) == {"flows-keep"}
+    finally:
+        bus.close()
+
+
+def test_the_legacy_flows_subscription_is_removed_once(registry, put, caplog):
+    put(flow_text("convert"))
+    bus = open_bus()
+    try:
+        bus.subscribe("flows", TOPIC, lambda event: None)
+        event_on(bus)  # queued for the legacy subscription, dropped with it
+        bus.subscribe("other", "a.b", lambda event: None)
+        assert flows_triggers.attach(registry, bus) == {"convert": TOPIC}
+        assert set(bus.subscriptions()) == {"flows-convert", "other"}
+        assert caplog.text.count("legacy") == 1
+        flows_triggers.attach(registry, bus)
+        assert caplog.text.count("legacy") == 1
+    finally:
+        bus.close()
+
+
+def test_an_unusable_flows_file_leaves_all_subscriptions_and_queued_events_alone(registry, put):
     path = put(flow_text("convert"))
     bus = open_bus()
     try:
         flows_triggers.attach(registry, bus)
         event = event_on(bus)
         path.write_text("[[flows]\n", encoding="utf-8")  # a typo while editing
-        assert flows_triggers.attach(registry, bus) is None
+        assert flows_triggers.attach(registry, bus) == {"convert": TOPIC}
         put(flow_text("convert"))
-        assert flows_triggers.attach(registry, bus) == TOPIC
+        assert flows_triggers.attach(registry, bus) == {"convert": TOPIC}
         assert bus.drain() == 1
     finally:
         bus.close()
     assert run_ids() == {f"ev-{event.id}-convert"}
-
-
-def test_removing_the_last_event_flow_removes_the_subscription(registry, put):
-    put(flow_text("convert"))
-    bus = open_bus()
-    try:
-        flows_triggers.attach(registry, bus)
-        put(flow_text("convert", "{ manual = true }"))
-        assert flows_triggers.attach(registry, bus) is None
-        event_on(bus)
-        assert bus.drain() == 0
-        assert flows_triggers.attach(registry, bus) is None  # nothing to remove the second time
-    finally:
-        bus.close()
 
 
 def test_the_subscription_is_durable_across_processes(registry, put):
@@ -299,7 +316,7 @@ def test_the_subscription_is_durable_across_processes(registry, put):
     first.close()
     second = open_bus()  # a new process: attach again, then drain what was queued meanwhile
     try:
-        assert flows_triggers.attach(registry, second) == TOPIC
+        assert flows_triggers.attach(registry, second) == {"convert": TOPIC}
         assert second.drain() == 1
     finally:
         second.close()
@@ -574,7 +591,7 @@ def test_an_event_started_run_publishes_when_it_ends(registry, put, watch):
 def test_flows_run_events_never_start_a_flow(registry, put, watch):
     put(flow_text("convert"), flow_text("chain", '{ event = "flows.run.completed" }'))
     bus = open_bus()
-    assert flows_triggers.attach(registry, bus) == TOPIC  # the flows.* flow was left out
+    assert flows_triggers.attach(registry, bus) == {"convert": TOPIC}  # the flows.* flow was left out
     event_on(bus)
     bus.drain()
     bus.drain()
@@ -606,3 +623,4 @@ def test_flows_run_stays_within_the_230_line_cap():
 def test_the_triggers_live_in_their_own_module():
     source = FLOWS_RUN.read_text(encoding="utf-8")
     assert "covering_pattern" not in source and "task_commands" not in source
+    assert "covering_pattern" not in Path(flows_triggers.__file__).read_text(encoding="utf-8")

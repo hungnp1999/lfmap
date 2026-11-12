@@ -1,19 +1,176 @@
 """EventBus Protocol, the Event model and the in-process bus (ADR-006, ADR-021; docs/specs/events.md)."""
 
+import json
+import math
 import re
 import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Literal, Protocol, runtime_checkable
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from lfmap_core.errors import ToolError
-from lfmap_core.events_payload import decode_payload, encode_payload
-from lfmap_core.events_retry import after_failure, backoff_seconds, describe_error
-from lfmap_core.topics import topic_matches, validate_pattern, validate_topic
+
+# --- Topics and subscription patterns: dot-separated, `*` is one token, a final `>` is one or more ---
+
+MAX_TOKENS = 8
+MAX_LENGTH = 200
+_TOKEN = re.compile(r"[a-z0-9_-]+", re.ASCII)
+
+
+def _tokens(value: object, key: str, wildcards: bool) -> list[str]:
+    if not isinstance(value, str):
+        raise ToolError("invalid_input", f"Invalid {key}", {key: repr(value)})
+    tokens = value.split(".")
+    valid = 0 < len(value) <= MAX_LENGTH and len(tokens) <= MAX_TOKENS
+    for index, token in enumerate(tokens):
+        wild = wildcards and (token == "*" or (token == ">" and index == len(tokens) - 1))
+        valid = valid and (wild or _TOKEN.fullmatch(token) is not None)
+    if not valid:
+        raise ToolError("invalid_input", f"Invalid {key}: {value!r}", {key: value})
+    return tokens
+
+
+def validate_topic(topic: str) -> str:
+    """Return `topic` when it is a valid concrete topic."""
+    _tokens(topic, "topic", wildcards=False)
+    return topic
+
+
+def validate_pattern(pattern: str) -> str:
+    """Return `pattern` when it is a valid subscription pattern."""
+    _tokens(pattern, "pattern", wildcards=True)
+    return pattern
+
+
+def topic_matches(pattern: str, topic: str) -> bool:
+    """Whether `topic` matches `pattern`, compared token by token."""
+    wanted = _tokens(pattern, "pattern", wildcards=True)
+    tokens = _tokens(topic, "topic", wildcards=False)
+    if wanted[-1] == ">":
+        head = wanted[:-1]
+        if len(tokens) <= len(head):
+            return False
+        tokens = tokens[: len(head)]
+        wanted = head
+    if len(wanted) != len(tokens):
+        return False
+    return all(want in ("*", token) for want, token in zip(wanted, tokens, strict=True))
+
+
+# --- Payloads: small JSON objects with string keys ---
+
+MAX_PAYLOAD_BYTES = 65536
+
+
+def _keys_are_strings(value: Any) -> bool:
+    stack, seen = [value], set()
+    while stack:
+        item = stack.pop()
+        if isinstance(item, dict):
+            if id(item) in seen:
+                return False
+            seen.add(id(item))
+            if not all(isinstance(key, str) for key in item):
+                return False
+            stack.extend(item.values())
+        elif isinstance(item, list | tuple):
+            if id(item) in seen:
+                return False
+            seen.add(id(item))
+            stack.extend(item)
+    return True
+
+
+def encode_payload(payload: object) -> str:
+    """Compact, key-sorted JSON text of `payload`, at most MAX_PAYLOAD_BYTES UTF-8 bytes."""
+    if not isinstance(payload, dict):
+        raise ToolError("invalid_input", "Event payload must be a JSON object", {"reason": "not_object"})
+    if not _keys_are_strings(payload):
+        raise ToolError("invalid_input", "Event payload is not JSON", {"reason": "not_json"})
+    try:
+        text = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    except (TypeError, ValueError) as error:
+        raise ToolError("invalid_input", "Event payload is not JSON", {"reason": "not_json"}) from error
+    size = len(text.encode("utf-8"))
+    if size > MAX_PAYLOAD_BYTES:
+        raise ToolError(
+            "invalid_input",
+            "Event payload is too large",
+            {"reason": "too_large", "bytes": size, "limit": MAX_PAYLOAD_BYTES},
+        )
+    return text
+
+
+def _no_constant(name: str) -> Any:
+    raise ValueError(name)
+
+
+def decode_payload(text: str) -> dict[str, Any]:
+    """The object stored by `encode_payload`."""
+    if not isinstance(text, str):
+        raise ToolError("invalid_input", "Event payload is not JSON", {"reason": "not_json"})
+    try:
+        value = json.loads(text, parse_constant=_no_constant)
+    except ValueError as error:
+        raise ToolError("invalid_input", "Event payload is not JSON", {"reason": "not_json"}) from error
+    if not isinstance(value, dict):
+        raise ToolError("invalid_input", "Event payload must be a JSON object", {"reason": "not_object"})
+    return value
+
+
+# --- Retry policy: backoff, retry-or-dead and a short error text ---
+
+PERMANENT_CODES = frozenset({"invalid_input", "permission_denied", "not_found"})
+
+
+def _is_count(value: object) -> bool:
+    return type(value) is int and value >= 1
+
+
+def _is_positive(value: object) -> bool:
+    return type(value) in (int, float) and math.isfinite(value) and value > 0
+
+
+def backoff_seconds(attempt: int, base: float = 2.0, cap: float = 300.0) -> float:
+    """Seconds to wait after failed attempt `attempt`: base * 2**(attempt - 1), never more than `cap`."""
+    if not _is_count(attempt):
+        raise ToolError("invalid_input", "attempt must be an int >= 1", {"attempt": repr(attempt)})
+    if not (_is_positive(base) and _is_positive(cap) and cap >= base):
+        raise ToolError(
+            "invalid_input", "base and cap must be positive and cap >= base", {"base": repr(base), "cap": repr(cap)}
+        )
+    return float(min(cap, base * 2.0 ** min(attempt - 1, 1023)))
+
+
+def after_failure(error: BaseException, attempt: int, max_attempts: int) -> Literal["retry", "dead"]:
+    """Whether a failed delivery is tried again or goes to the dead letters."""
+    if not (_is_count(attempt) and _is_count(max_attempts)):
+        raise ToolError(
+            "invalid_input",
+            "attempt and max_attempts must be ints >= 1",
+            {"attempt": repr(attempt), "max_attempts": repr(max_attempts)},
+        )
+    if isinstance(error, ToolError) and error.code in PERMANENT_CODES:
+        return "dead"
+    return "dead" if attempt >= max_attempts else "retry"
+
+
+def describe_error(error: BaseException, limit: int = 500) -> str:
+    """One line describing `error`, at most `limit` characters."""
+    if type(limit) is not int or limit < 2:
+        raise ToolError("invalid_input", "limit must be an int >= 2", {"limit": repr(limit)})
+    if isinstance(error, ToolError):
+        text = f"{error.code}: {error.message}"
+    else:
+        message = str(error)
+        text = f"{type(error).__name__}: {message}" if message else type(error).__name__
+    text = text.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
 
 _SOURCE = re.compile(r"[a-z][a-z0-9-]{0,63}", re.ASCII)
 _NAME = re.compile(r"[a-z][a-z0-9_-]{0,63}", re.ASCII)
@@ -53,6 +210,8 @@ class EventBus(Protocol):
     def subscribe(self, name: str, pattern: str, handler: Handler) -> None: ...
 
     def unsubscribe(self, name: str) -> None: ...
+
+    def subscriptions(self) -> dict[str, str]: ...
 
     def drain(self, *, max_events: int = 1000) -> int: ...
 
@@ -149,6 +308,10 @@ class InProcessBus:
         if self._subscriptions.pop(name, None) is None:
             raise ToolError("not_found", "Unknown subscription", {"name": name})
         self._deliveries = [d for d in self._deliveries if d.subscription != name]
+
+    def subscriptions(self) -> dict[str, str]:
+        self._open()
+        return {name: pattern for name, (pattern, _handler) in self._subscriptions.items()}
 
     def _next(self) -> _Delivery | None:
         now = self._clock()

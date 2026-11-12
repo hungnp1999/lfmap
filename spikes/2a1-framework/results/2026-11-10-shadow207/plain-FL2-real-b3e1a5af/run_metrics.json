@@ -1,0 +1,24 @@
+{
+  "variant": "plain",
+  "case": "FL2-real",
+  "package": null,
+  "import_s": 0.008,
+  "wall_s": 1655.031,
+  "model_s": 1653.327,
+  "overhead_s": 1.705,
+  "calls": [
+    {
+      "model": "qwen3.8:27b",
+      "started": 382068.8374184,
+      "seconds": 1653.3266434000107,
+      "prompt_chars": 18201,
+      "reply_chars": 598
+    }
+  ],
+  "sequence": [
+    "qwen3.8:27b"
+  ],
+  "swaps": 0,
+  "guard_blocked": [],
+  "guard_allowed": 1
+}

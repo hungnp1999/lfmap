@@ -1,0 +1,1 @@
+`lfmap doctor [--json]` (#195, K3): one read-only report that groups `jobs doctor`, `flows check` and `events status`; exit 1 on a failed check or a flow finding, dead letters only warn, `events.db` is never created. The three old commands are unchanged. No new dependency.

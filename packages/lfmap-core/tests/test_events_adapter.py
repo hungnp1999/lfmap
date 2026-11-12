@@ -9,7 +9,7 @@ from lfmap_core import Tool, operation
 from lfmap_core.approval import TIERS, Policy, audit_path, decide
 from lfmap_core.approvals import approvals_dir
 from lfmap_core.errors import ToolError
-from lfmap_core.events import Event, InProcessBus
+from lfmap_core.events import MAX_PAYLOAD_BYTES, Event, InProcessBus
 from lfmap_core.events_adapter import (
     EventAdapter,
     PluginEvents,
@@ -18,7 +18,6 @@ from lfmap_core.events_adapter import (
     open_bus,
     subscription_name,
 )
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES
 from lfmap_core.manifest import parse_manifest
 from lfmap_core.registry import PluginEntry, Registry
 from lfmap_core.runtime import build_tool, default_context

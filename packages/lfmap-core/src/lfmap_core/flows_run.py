@@ -20,7 +20,7 @@ from lfmap_core import approvals, flows_triggers, jobs_flow
 from lfmap_core.approval import Asker, Gate, Policy, Tier
 from lfmap_core.config import app_dir, load_config
 from lfmap_core.errors import ToolError
-from lfmap_core.events_payload import MAX_PAYLOAD_BYTES, encode_payload
+from lfmap_core.events import MAX_PAYLOAD_BYTES, encode_payload
 from lfmap_core.flows import Flow, Step, check_flow, flows_path, parse_flows
 from lfmap_core.flows_refs import resolve, truthy
 from lfmap_core.registry import Registry

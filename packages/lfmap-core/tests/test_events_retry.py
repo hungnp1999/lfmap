@@ -1,7 +1,7 @@
 import pytest
 
 from lfmap_core import ToolError
-from lfmap_core.events_retry import PERMANENT_CODES, after_failure, backoff_seconds, describe_error
+from lfmap_core.events import PERMANENT_CODES, after_failure, backoff_seconds, describe_error
 
 
 @pytest.mark.parametrize(

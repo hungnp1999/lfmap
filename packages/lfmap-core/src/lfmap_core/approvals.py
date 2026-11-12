@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 
-from lfmap_core.approval import TIERS, DataLevel, Gate, Policy, Tier, audit, job_decision
+from lfmap_core.approval import TIERS, DataLevel, Gate, Policy, Tier, audit, class_fields, job_decision
 from lfmap_core.config import app_dir
 from lfmap_core.errors import ToolError
 from lfmap_core.tool import Channel
@@ -223,7 +223,15 @@ class JobApprover:
     proposer: Callable[[Tier, str, str], str] | None = None  # a flow step queues `flows.resume` instead of the call
 
     def __call__(
-        self, tier: Tier, reason: str, target: str = "", destination: str = "", data: DataLevel = "normal"
+        self,
+        tier: Tier,
+        reason: str,
+        target: str = "",
+        destination: str = "",
+        data: DataLevel = "normal",
+        *,
+        data_class: str = "",
+        action_tier: str = "",
     ) -> None:
         if tier == "T0":
             return
@@ -232,6 +240,7 @@ class JobApprover:
         reason, target = _with_destination(reason, target, destination, data)
         decision = job_decision(self.policy, plugin, op, tier, self.job.max_tier)
         record = {"channel": self.channel, "plugin": plugin, "operation": op, "tier": tier}
+        record |= class_fields(data_class, action_tier)
         record |= {"target": target} if target else {}
         if decision == "allow":
             audit({**record, "decision": "allow", "reason": reason})
@@ -265,16 +274,25 @@ class ApprovedGate:
     fallback: Gate
 
     def __call__(
-        self, tier: Tier, reason: str, target: str = "", destination: str = "", data: DataLevel = "normal"
+        self,
+        tier: Tier,
+        reason: str,
+        target: str = "",
+        destination: str = "",
+        data: DataLevel = "normal",
+        *,
+        data_class: str = "",
+        action_tier: str = "",
     ) -> None:
         if tier == "T0":
             return
         p = self.proposal
         denied = self.fallback.policy.action(p.plugin, p.operation, tier) == "deny"
         if denied or TIERS.index(tier) > TIERS.index(p.tier):
-            self.fallback(tier, reason, target, destination, data)
+            self.fallback(tier, reason, target, destination, data, data_class=data_class, action_tier=action_tier)
             return
         reason, target = _with_destination(reason, target, destination, data)
         record = {"channel": "cli", "plugin": p.plugin, "operation": p.operation, "tier": tier}
+        record |= class_fields(data_class, action_tier)
         record |= {"target": target} if target else {}
         audit({**record, "decision": "allow", "reason": f"{reason}; approved {p.id}"})

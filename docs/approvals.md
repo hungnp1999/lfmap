@@ -57,6 +57,26 @@ uv run lfmap approvals revoke powershell.run
 
 `lfmap serve mcp --approve <plugin>.<op>` (repeatable) is the lighter alternative for one MCP session: it pre-approves up to T2 for 8 hours from server start and refuses T3 operations at start-up.
 
+## The owner code: authenticator app or typed code
+
+With an authenticator enrolled (`lfmap auth enroll`), every command below asks for the 6-digit code from the app instead of the typed code:
+
+```text
+To grant powershell.run up to T3 for 2h, enter the code from your authenticator app:
+Code:
+```
+
+Each code works once, the current and the previous 30-second step are accepted, and five wrong codes lock the check for 5 minutes (an `auth locked` line goes to the audit log). Without an enrolment the typed code below works exactly as before. An unreadable `auth.json` refuses the command (`permission_denied`, fix with `lfmap auth reset`); it is never treated as "not enrolled".
+
+```text
+lfmap auth enroll   # Windows only: prints the otpauth URI and the secret once, stores them (DPAPI) after one code verifies;
+                    # replacing an enrolment asks the current app code
+lfmap auth status   # enrolled or not, since when, locked or not; never the secret
+lfmap auth reset    # lost phone: typed code, removes auth.json, audited; the typed code is used again
+```
+
+`auth.json` lives in `%LOCALAPPDATA%\lfmap\`, is encrypted for the current Windows user and is left out of `lfmap backup`: enrol again after a restore on a new machine. TOTP stops what can type into your console but cannot read your profile; a process running as you can still read it (ADR-023: agents run as a separate account).
+
 ## The typed confirmation code
 
 `approvals grant`, `approvals revoke` and `config add-folder` print a random 6-character code (letters and digits without `0`, `O`, `1`, `I`) and run only when you type it back:
@@ -70,6 +90,31 @@ A wrong code, an empty answer or end of input cancels the command with `permissi
 
 "Interactive terminal" means a person at a console. On Windows stdin must be a real console (`GetConsoleMode` succeeds; `<NUL` does not count) and the console must have a visible window, so hidden consoles of agent shells are refused; elsewhere stdin must be a TTY. This stops scripts and accidents, not an agent of the same Windows user that drives a visible console (#108); a separate Windows user for agents is a pending ADR.
 
+## Data classes: `[data.classes]`
+
+You can say how much a folder matters, once, in `config.toml` (ADR-025, [docs/specs/data-classes.md](specs/data-classes.md)):
+
+```toml
+[data.classes]
+'D:\Tmp'                 = "scratch"
+'D:\Work'                = "normal"
+'D:\Work\Contracts'      = "secret"
+```
+
+Classes are `scratch < normal < private < secret`. Once the table has an entry, a path in no entry is `private`; a folder counts as the highest class at or below it. **Without the table nothing changes.** An invalid table makes gated calls fail until you fix it. A class only changes whether you are asked and what is audited; it never lets a plugin read or write a folder it could not before.
+
+| Path class | Read | Create a file | Overwrite, rename, delete |
+|---|---|---|---|
+| `scratch` | as before | as before (T1) | T1 (audited, not asked) when the plugin names the paths and everything the call wrote is `scratch` too; otherwise T2 |
+| `normal`, `private` | as before | as before | as before (T2) |
+| `secret` | T1, always audited (once per call per entry, even with `T1 = "allow"`) | T2: asked at a terminal; on `mcp` elicitation, `--approve` or a grant; a proposal on `job`, `event`, `flow` | T2 |
+
+T3 is never lowered by a class. A scheduled job that reads a `secret` folder (for example `knowledge.reindex`) needs `max_tier = 1`, or each run queues a proposal. Lines about a classified path carry two more fields: `data_class` and `action_tier` (the tier before the class was applied; `tier` is the tier decided on):
+
+```json
+{"tier": "T1", "action_tier": "T2", "data_class": "scratch", "decision": "allow", "reason": "overwrite", "target": "D:\\Tmp\\out"}
+```
+
 ## The job approval queue
 
 A job (or an event call) never asks anyone. A call it may not run becomes a **proposal** and the job exits 1 with `permission_denied`, `Queued for approval`, and the proposal id in the error details. Proposals live in `%LOCALAPPDATA%\lfmap\approvals\` and are only moved, never deleted. The full flow is in [docs/jobs.md](jobs.md#approving-queued-calls).
@@ -80,7 +125,7 @@ uv run lfmap approvals approve <id>       # shows the proposal, asks, runs it on
 uv run lfmap approvals reject <id>        # moves it to approvals\rejected
 ```
 
-- `approve` asks `Run <plugin>.<op> now with this input?` (a yes/no prompt, not the code), moves the proposal to `approvals\done` before running, and runs it with the channel `cli`. Calls up to the proposal's recorded tier run and are audited; a higher tier, or a `deny` in the policy, goes through the normal CLI approval again.
+- `approve` asks `Run <plugin>.<op> now with this input?` (a yes/no prompt) for T1 and T2 proposals; a proposal whose recorded tier is T3 asks the owner code instead (authenticator code when enrolled, else the typed code). It moves the proposal to `approvals\done` before running, and runs it with the channel `cli`. Calls up to the proposal's recorded tier run and are audited; a higher tier, or a `deny` in the policy, goes through the normal CLI approval again.
 - A proposal expires after 7 days (`[jobs] approval_ttl_days` in `config.toml`, whole number 1 to 30).
 - An identical pending call reuses its proposal.
 - Proposal text is escaped before it is printed, and a proposal file is validated on every read.
@@ -109,6 +154,7 @@ approvals list [--json]            # show grants, including expired ones
 approvals pending [--json]         # job proposals waiting; expired ones move to approvals\expired
 approvals approve ID [--json]      # show a proposal and, once confirmed, run it one time; interactive
 approvals reject ID                # move a proposal to approvals\rejected; interactive
+auth enroll | status | reset       # authenticator for the owner code; enroll and reset are interactive
 ```
 
 ## Where things live
@@ -116,6 +162,7 @@ approvals reject ID                # move a proposal to approvals\rejected; inte
 | What | Where |
 |---|---|
 | Grants | `%LOCALAPPDATA%\lfmap\grants.json` |
+| Authenticator | `%LOCALAPPDATA%\lfmap\auth.json` (DPAPI-encrypted secret; not backed up) |
 | Proposals | `%LOCALAPPDATA%\lfmap\approvals\{pending,done,rejected,expired}\<id>.json` |
 | Audit log | `%LOCALAPPDATA%\lfmap\audit.jsonl`; `uv run lfmap audit tail -n 20 [--json]` |
 

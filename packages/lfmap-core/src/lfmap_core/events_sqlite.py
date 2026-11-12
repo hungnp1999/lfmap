@@ -14,14 +14,16 @@ from lfmap_core.events import (
     DeadLetter,
     Event,
     Handler,
+    after_failure,
+    backoff_seconds,
     check_max_attempts,
     check_max_events,
     check_subscription,
+    decode_payload,
+    describe_error,
     new_event,
+    topic_matches,
 )
-from lfmap_core.events_payload import decode_payload
-from lfmap_core.events_retry import after_failure, backoff_seconds, describe_error
-from lfmap_core.topics import topic_matches
 
 SCHEMA_VERSION = 1
 STATES = ("ready", "leased", "done", "dead")
@@ -165,6 +167,11 @@ class SqliteBus:
         self._handlers.pop(name, None)
         if not deleted:
             raise ToolError("not_found", "Unknown subscription", {"name": name})
+
+    def subscriptions(self) -> dict[str, str]:
+        """Every durable subscription, name to pattern, whether or not this process has a handler for it."""
+        rows = self._conn().execute("SELECT name, pattern FROM subscriptions ORDER BY name").fetchall()
+        return {name: pattern for name, pattern in rows}
 
     def _claim(self) -> tuple[int, str, str, Event] | None:
         db = self._conn()

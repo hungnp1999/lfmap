@@ -8,6 +8,8 @@ from pydantic import BaseModel
 
 from lfmap_core.approval import TIERS, Tier, audit, base_tier, raise_tier
 from lfmap_core.config import load_config, plugin_variables
+from lfmap_core.data_classes import load_class_map
+from lfmap_core.data_guard import ClassGuard
 from lfmap_core.errors import ToolError
 from lfmap_core.permissions import PermissionManager
 from lfmap_core.registry import PluginEntry
@@ -70,6 +72,32 @@ def _outside_read_audit(plugin_id: str, channel: Channel) -> Callable[[str], Non
     return audit_func
 
 
+def _attach_models(ctx: ToolContext, entry: PluginEntry, config: dict) -> None:
+    """Give `ctx.models` to a plugin whose manifest has `[adapters] models = true`; the config is read lazily."""
+    if not entry.manifest.adapters.models:
+        return
+    from lfmap_core.models_router import ModelRouter  # keeps the models modules out of plain imports
+
+    ctx.model_router = ModelRouter(
+        config,
+        plugin_id=entry.id,
+        channel=ctx.channel,
+        operation=getattr(ctx.approver, "operation", ""),
+        permissions=ctx.permissions,
+        cloud_ai=entry.manifest.permissions.cloud_ai,
+        approve=ctx.require_approval,
+    )
+
+
+def _class_guard(config: dict, approver: Any) -> ClassGuard | None:
+    """ADR-025: a guard only when `[data.classes]` has an entry and someone approves (plain SDK use has none).
+    An invalid table raises, so gated calls fail until the owner fixes it."""
+    if approver is None:
+        return None
+    class_map = load_class_map(config)
+    return ClassGuard(class_map, approver) if class_map else None
+
+
 def build_tool(
     entry: PluginEntry,
     variables: Variables | None = None,
@@ -83,6 +111,7 @@ def build_tool(
     """Variables and settings default to the user's config.toml, never to anything the caller sends.
 
     Only the interactive CLI sets `explicit_read`; reads outside the roots are then audited.
+    With `[data.classes]` and an approver, a `ClassGuard` sees every path the plugin resolves (ADR-025).
     `events` replaces the default `PluginEvents` (the event adapter passes its bus and the request);
     it is ignored unless the manifest has `[adapters] events = true`.
     """
@@ -91,6 +120,7 @@ def build_tool(
     config = load_config() if config is None else config
     if variables is None:
         variables = plugin_variables(config, entry.id)
+    guard = _class_guard(config, approver)
     ctx = ToolContext(
         plugin_id=entry.id,
         permissions=PermissionManager.from_manifest(
@@ -98,13 +128,16 @@ def build_tool(
             variables,
             explicit_read=explicit_read,
             on_outside_read=_outside_read_audit(entry.id, channel),
+            on_path=guard.on_path if guard else None,
         ),
         settings=_plugin_settings(config, entry.id),
         channel=channel,
         approver=approver,
         event_publisher=(events or PluginEvents(entry.id)) if entry.manifest.adapters.events else None,
+        data_guard=guard,
         **_plugin_dirs(variables),
     )
+    _attach_models(ctx, entry, config)
     return entry.tool_class(ctx)
 
 
@@ -123,15 +156,23 @@ def run_operation(
     return invoke(tool, name, payload)
 
 
-def context_for(plugin_id: str, parent: ToolContext, config: dict | None = None) -> ToolContext:
-    """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings."""
+def context_for(
+    plugin_id: str, parent: ToolContext, config: dict | None = None, entry: PluginEntry | None = None
+) -> ToolContext:
+    """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings.
+
+    Pass the callee's `entry` so a callee with `[adapters] models = true` gets its own `ctx.models`."""
     config = load_config() if config is None else config
-    return ToolContext(
+    ctx = ToolContext(
         plugin_id=plugin_id,
         permissions=parent.permissions,
         dry_run=parent.dry_run,
         settings=_plugin_settings(config, plugin_id),
         channel=parent.channel,
         approver=parent.approver,
+        data_guard=parent.data_guard,
         **_plugin_dirs(plugin_variables(config, plugin_id)),
     )
+    if entry is not None:
+        _attach_models(ctx, entry, config)
+    return ctx

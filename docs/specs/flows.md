@@ -36,7 +36,7 @@ max_tier = 1                    # 0 or 1, default 0; the ceiling for unattended 
 enabled = true
 
 [flows.trigger]                 # exactly one of: manual, schedule, event
-event = "markitdown.classify.completed"  # a topic pattern (topics.py grammar)
+event = "markitdown.classify.completed"  # a topic pattern (events.py topic grammar)
 # schedule = { daily = "06:30" } # the jobs Schedule model, unchanged
 # manual = true
 
@@ -75,7 +75,7 @@ Rules checked by `check_flow` (and by `lfmap flows check`, which exits 1 on any 
 
 - `start(registry, flow_id, trigger_payload, *, run_id=None)` creates a run; `run_id` from an event is `"ev-" + event.id + "-" + flow id` (one run per flow per event) so a redelivered event does not start a second run (at-least-once bus, handler idempotent).
 - State: one JSON file per run, `app_dir()/flows/runs/<run_id>.json`, written with temp file + `os.replace` after every step. Fields: flow id, flow file SHA-256, status (`running`, `awaiting_approval`, `completed`, `failed`, `rejected`, `expired`), trigger payload, per-step status and output, `approval_id`, times.
-- Step outputs are stored as `model_dump(mode="json")` (prefer operations that write files and return paths, such as `markitdown.export`, over ones that return document text, such as `markitdown.convert`); each stored output at most 64 KiB (`events_payload.MAX_PAYLOAD_BYTES`), else the step fails with `output_too_large`. Outputs carry references (paths, ids), not document text.
+- Step outputs are stored as `model_dump(mode="json")` (prefer operations that write files and return paths, such as `markitdown.export`, over ones that return document text, such as `markitdown.convert`); each stored output at most 64 KiB (`events.MAX_PAYLOAD_BYTES`), else the step fails with `output_too_large`. Outputs carry references (paths, ids), not document text.
 - Each `call` step runs through `run_operation(entry, op, input, channel="flow", approver=JobApprover(...))` with the flow's `max_tier`. Channel `flow` is a new value that `decide` treats like `job`.
 - When a step needs more than `max_tier`, or is an `approve` step, the run pauses: status `awaiting_approval`, one ADR-018 proposal with `job = "flows"`, `plugin = "flows"`, `operation = "resume"`, `tier = "T2"`, `input = {"run_id": ..., "step": ..., "call": ..., "resolved_input": ...}`. The process may exit.
 - `lfmap approvals approve <id>` (interactive terminal only, as today) on a `flows.resume` proposal resumes the run in that process: the paused step runs under `ApprovedGate` up to the tier the person saw (an `approve` step just passes), then the loop continues; a later step above the ceiling pauses again with a new proposal. `reject` sets the run `rejected`; an expired proposal sets it `expired` at the next `approvals pending` sweep.
@@ -87,7 +87,7 @@ Rules checked by `check_flow` (and by `lfmap flows check`, which exits 1 on any 
 
 - `manual`: only `lfmap flows start <id> [--input-json FILE]`.
 - `schedule`: `lfmap jobs register` also registers each enabled scheduled flow as task `\LFMAP\flow-<id>` running `lfmap flows start <id>` through `scripts/Invoke-LfmapJob.ps1` (same runtime root, logs and exit codes as jobs). No new scheduler.
-- `event`: one durable subscription `flows` on the bus with the union of the enabled flows' patterns (a bus subscription has one pattern, so the union is the narrowest single pattern that covers them, such as `markitdown.*.completed`, and the handler checks each flow's own pattern); its handler starts the matching flows (one run per flow per event). Only flows that pass `check_flow` are subscribed; an unusable `flows.toml` leaves the subscription as it is. Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
+- `event`: each enabled event flow has its own durable subscription `flows-<id>` with the flow's own pattern; its handler starts only that flow (one run per flow per event, `run_id = ev-<event id>-<flow id>`). Only flows that pass `check_flow` are subscribed. Every attach reconciles through `EventBus.subscriptions()`: it unsubscribes each `flows-*` that is not in the sound set (flow removed, disabled or no longer an event flow), and the legacy FL-3 `flows` subscription once (its queued deliveries are dropped); a flow whose pattern changed is unsubscribed and subscribed again, which drops only its own queued deliveries (logged). An unusable `flows.toml` leaves every subscription and queued event as it is. Runs only when a process drains (`lfmap events run`, end of `jobs run`), as for every handler.
 
 ## 7. CLI
 

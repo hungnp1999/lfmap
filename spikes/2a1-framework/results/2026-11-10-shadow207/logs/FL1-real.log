@@ -1,0 +1,13 @@
+next: python run.py resume plain-FL1-real-9f8660a6 --approve|--reject --state-dir D:\Development\lfmap-shadow207\spikes\2a1-framework\results\2026-11-10-shadow207
+{
+  "run_id": "plain-FL1-real-9f8660a6",
+  "variant": "plain",
+  "status": "awaiting_approval",
+  "verdicts": {
+    "FL1-real": "ready"
+  },
+  "attempts": {
+    "FL1-real": 1
+  },
+  "run_dir": "D:\\Development\\lfmap-shadow207\\spikes\\2a1-framework\\results\\2026-11-10-shadow207\\plain-FL1-real-9f8660a6"
+}
