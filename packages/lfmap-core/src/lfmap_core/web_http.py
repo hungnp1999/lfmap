@@ -64,6 +64,8 @@ def is_public(address: Address) -> bool:
             return is_public(ipaddress.IPv4Address(int(address) & 0xFFFFFFFF))
         if address.sixtofour is not None and not is_public(address.sixtofour):
             return False
+        if address.is_site_local:
+            return False
     special = (
         address.is_private,
         address.is_loopback,

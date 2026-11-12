@@ -159,6 +159,7 @@ def test_redirect_outside_allowlist_refused(server, guard):
         ["64:ff9b::7f00:1"],
         ["2002:7f00:1::1"],
         ["::"],
+        ["fec0::1"],
     ],
 )
 def test_private_ip_refused_after_dns(answer, server, guard):
