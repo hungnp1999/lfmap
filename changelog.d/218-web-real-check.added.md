@@ -1,0 +1,1 @@
+Real check of `web.fetch` on the two S1 sites (#218, WEB-3): report in `docs/research/2026-11-13-web-fetch-real-check.md`; all three requests failed (encoding refusal, HTTP 401, TLS), so G1 stays open. No code change, no new dependency.
