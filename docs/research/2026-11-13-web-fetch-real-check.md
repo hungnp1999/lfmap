@@ -49,3 +49,43 @@ Per site: `truncated`, list present, script-built, charset and size are all unkn
 ## Not done
 
 Steps 5 and 7 (comparison with the browser, offline replay) need a saved page; there is none. No sample is added to the repo.
+
+## WEB-4 re-check (2026-11-13)
+
+Task WEB-4b (#218 G4, refs #289). Machine DIEP-ANH (pc-01), account `lfmap-agent`, branch `claude/web4-recheck` from `main` at `e905aff` (contains WEB-4, `2429921`). Config unchanged, TLS verification on, no extra header.
+
+### Result
+
+One real request, by hand: `lfmap web fetch --url https://baodauthau.vn/thong-bao-moi-thau/ --save --json`. No retry. (An earlier attempt from a POSIX shell failed before the program started with `error: The system cannot find the file specified. (os error 2)`; the audit log shows no line for it, so nothing was sent. The command was then run from PowerShell.)
+
+- `status` 200, `content_type` `text/html`, `url_final` equal to the requested URL (no redirect).
+- Saved file in `data_dir`: 132 692 bytes, equal to audit `bytes_in`. `truncated` was not read from the JSON (the console output was cut by the session); it is false by inference, since 132 692 bytes is far below the 2 MiB cap.
+- Charset: UTF-8 (`<meta http-equiv="Content-Type" ... charset=utf-8>`), no U+FFFD in the decoded text, Vietnamese text intact. `lang="vi"`.
+- Comparison with the browser view was not done in this session (no browser); the comparison below is against the saved HTML only.
+
+### What the page holds
+
+- The list is **in the HTML text**, not built by scripts: 61 `<article class="story">` elements (main list plus side blocks), 30 distinct notice links of the form `https://baodauthau.vn/<slug>-post<id>.html`. Each story has a title, a publication timestamp (`story__meta`, e.g. `13/11/2026 00:00`, `12/11/2026 15:02`) and a short summary (`story__summary`).
+- Visible fields: title, link, publication date and time, summary. **Not visible in the listing**: closing date, field, bidding form (zero hits for "Thời điểm đóng thầu", "Lĩnh vực", "Hình thức"). They would be in each notice page (not requested; out of scope).
+- Items are of mixed kinds: tender notices, quotation requests, expressions of interest; several titles repeat (for example two identical "THƯ MỜI BÀY TỎ QUAN TÂM" entries on the same day), so de-duplication needs the post id.
+- Scripts exist (12 `<script>` tags; analytics, ads, a `cmsConfig` block) but the list does not depend on them. No login, captcha or consent wall. No pagination markers were found in the first page (not examined further).
+- The head declares an RSS feed: `<link rel="alternate" type="application/rss+xml" href="https://baodauthau.vn/rss/thong-bao-moi-thau-36.rss">`. The feed was **not requested** (not in scope; one request only). Its host is already `baodauthau.vn`, so it is allowed by the current config.
+
+### Audit check
+
+`audit.jsonl` gained exactly two lines for this request: `sent` (`bytes_out` 257) at 16:21:14Z and `ok` (`bytes_in` 132692) at 16:21:15Z, host `baodauthau.vn`. No URL path, query or page text. `bytes_in` equals the saved file size.
+
+### Verdict for `baodauthau.vn`
+
+**(a)** Direct fetch of the listing works and the list is plain HTML. WEB-4 fixed the failure of the first run (the encoding refusal). Evidence: status 200, 132 692 bytes, 30 notice links with title, date and summary in the saved HTML.
+
+### What it means for G4
+
+- G1 is now confirmed for the `baodauthau.vn` listing: `web.fetch` reads it.
+- S1 can use this listing for discovery (title, link, date, summary). Closing date, field and bidding form need a second request per notice page; whether that is worth it, or whether the RSS feed (`/rss/thong-bao-moi-thau-36.rss`) carries enough, is the next check, one request, same host.
+- `api.baodauthau.vn` (401) and `muasamcong` (TLS, POST plus reCAPTCHA, (c)) are unchanged and were not requested.
+- S1's daily job stays off until the notice-page or RSS check is done and the owner decides.
+
+### Not verified
+
+Browser comparison; the `truncated` field as printed; the notice page and RSS contents; pagination; stability of the markup over days.
