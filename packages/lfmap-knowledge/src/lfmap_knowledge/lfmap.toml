@@ -23,6 +23,7 @@ cli = true
 mcp = true
 rest = false
 events = false
+models = true
 
 [dependencies.licenses]
 allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0", "MPL-2.0"]
