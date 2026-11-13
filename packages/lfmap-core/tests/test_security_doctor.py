@@ -17,6 +17,22 @@ def sample(realtime=True, cfa=1, protected=None) -> str:
     return json.dumps({"Status": {"RealTimeProtectionEnabled": realtime}, "Preference": preference})
 
 
+def report(status="ok", preference="ok", products="skip", errors=None) -> str:
+    """The script's JSON shape: each part is a dict, `None` (failed) or, for products, a list."""
+    if status == "ok":
+        status = {"RealTimeProtectionEnabled": True, "AMServiceEnabled": True}
+    if preference == "ok":
+        preference = {"EnableControlledFolderAccess": 1, "ControlledFolderAccessProtectedFolders": None}
+    data = {"Status": status, "Preference": preference, "Errors": errors or {}}
+    if products != "skip":
+        data["Products"] = products
+    return json.dumps(data)
+
+
+DEFENDER = {"displayName": "Windows Defender", "productState": 401664}
+ESET = {"displayName": "ESET Security", "productState": 266240}
+
+
 def checks(text: str, folders=(), **extra):
     result = security_doctor.run_checks(
         runner=lambda command: text, folders=list(folders), profile=PROFILE, platform="win32", **extra
@@ -87,6 +103,76 @@ def test_missing_backup_and_paths_skipped() -> None:
     config = {"paths": {"documents": [r"D:\Docs"], "exports": r"D:\Out", "bad": 5}, "backup": {"folder": r"E:\B"}}
     assert security_doctor.declared_folders(config, r"C:\App") == [r"D:\Docs", r"D:\Out", r"E:\B", r"C:\App"]
     assert security_doctor.declared_folders({"backup": {"folder": 7}}, r"C:\App") == [r"C:\App"]
+
+
+def test_preference_error_keeps_status() -> None:
+    errors = {"Preference": "Something broke"}
+    result = checks(report(preference=None, errors=errors))
+    assert result["defender_realtime"].ok is True
+    assert result["cfa_enabled"].ok is None
+    assert result["cfa_enabled"].detail == "unknown: Something broke"
+    assert result["cfa_covers"].ok is None
+
+
+def test_status_error_keeps_preference() -> None:
+    result = checks(report(status=None, errors={"Status": "Status broke"}))
+    assert result["defender_realtime"].ok is None
+    assert result["defender_realtime"].detail == "unknown: Status broke"
+    assert result["cfa_enabled"].ok is True
+
+
+def test_error_detail_is_first_line_only() -> None:
+    long_line = "x" * 300
+    result = checks(report(status=None, errors={"Status": "first line\nsecond line C:\\Users\\me"}))
+    assert result["defender_realtime"].detail == "unknown: first line"
+    result = checks(report(preference=None, errors={"Preference": long_line + "\nmore"}))
+    assert result["cfa_enabled"].detail == "unknown: " + "x" * 200
+
+
+def test_defender_off_other_av_on_is_ok() -> None:
+    status = {"RealTimeProtectionEnabled": False, "AMServiceEnabled": False}
+    found = checks(report(status=status, products=[DEFENDER, ESET]))["defender_realtime"]
+    assert found.ok is True
+    assert found.detail == "Defender real-time is off; ESET Security is the active antivirus"
+
+
+def test_defender_off_no_other_av_warns() -> None:
+    status = {"RealTimeProtectionEnabled": False, "AMServiceEnabled": True}
+    for products in ([DEFENDER], [], None):
+        found = checks(report(status=status, products=products))["defender_realtime"]
+        assert found.ok is None
+        assert "another antivirus" in found.detail
+    inactive = {"displayName": "ESET Security", "productState": 393472}
+    assert checks(report(status=status, products=[DEFENDER, inactive]))["defender_realtime"].ok is None
+
+
+def test_cfa_na_when_defender_not_active() -> None:
+    expected = "n/a: Defender is not the active antivirus, Controlled folder access is a Defender feature"
+    status = {"RealTimeProtectionEnabled": False, "AMServiceEnabled": False}
+    result = checks(report(status=status, preference=None, errors={"Preference": "Failed"}))
+    assert result["cfa_enabled"].ok is None and result["cfa_enabled"].detail == expected
+    code = {"Preference": "Operation failed with the following error: 0x800106ba."}
+    result = checks(report(preference=None, errors=code))
+    assert result["cfa_enabled"].detail == expected
+    assert result["cfa_covers"].detail.startswith("n/a")
+
+
+def test_products_query_failure_is_not_an_error() -> None:
+    status = {"RealTimeProtectionEnabled": False, "AMServiceEnabled": True}
+    errors = {"Products": "Invalid namespace"}
+    result = checks(report(status=status, products=None, errors=errors))
+    assert all(check.ok is None or check.ok is True for check in result.values())
+    assert not any("Invalid namespace" in check.detail for check in result.values())
+    assert result["defender_realtime"].ok is None and "another antivirus" in result["defender_realtime"].detail
+    assert result["cfa_enabled"].ok is True
+
+
+def test_script_still_read_only() -> None:
+    script = security_doctor.SCRIPT
+    for verb in ("Set-", "Add-", "Remove-", "New-", "Invoke-", "Start-", "Stop-"):
+        assert verb not in script
+    assert script.count("try {") == 3 and script.count("catch {") == 3
+    assert "AntiVirusProduct" in script and "AMServiceEnabled" in script
 
 
 def test_powershell_missing_is_warn_unknown() -> None:
