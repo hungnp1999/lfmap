@@ -22,6 +22,10 @@ The owner has a Claude Pro subscription and no API key. Development work uses th
 | F7 | DeepSeek privacy policy: "we directly collect, process and store your Personal Data in People's Republic of China". Whether API traffic is excluded from training is not stated clearly; secondary sources disagree. | <https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy-2025-02-14.html> (search snippet, 2025-02-14 version) | partly verified |
 | F8 | Anthropic API data is governed by the Commercial Terms (not used for training by default; fixed retention window). | F2 and Anthropic privacy centre (<https://privacy.claude.com>, not reachable from the Cloud session) | **retention period unverified**; check before acceptance |
 
+| F9 | Plans (claude.com/pricing): Pro USD 20 monthly (17 annual); Max USD 100; Ultra USD 200; Team 2 to 150 seats, Standard seat USD 25 monthly / 20 annual, Premium USD 125 / 100, "No model training on your content by default", central billing; Enterprise USD 20 per seat annual, **20-seat minimum**, plus usage at API rates. Prices exclude tax. | <https://claude.com/pricing> | fetched 2026-11-13 |
+| F10 | Monthly API credits: Max USD 100, Ultra USD 200, Team USD 20 per Standard seat and USD 100 per Premium seat (pooled, cap USD 500). **Free, Pro and Enterprise are not eligible.** Covers the Claude API, Managed Agents, Agent SDK; not Claude Code. Expire each cycle, no rollover. One plan links to one Console organization; changing it needs support. | <https://platform.claude.com/docs/en/about-claude/api-credits-for-subscribers> | fetched 2026-11-13 |
+| F11 | Consumer Terms cover "Claude.ai, Claude Pro, and other products and services that we may offer for individuals"; they contain no clause forbidding work or business use, and say the Commercial Terms do "not include Claude.ai or Claude Pro use for individuals or entities". Account sharing is forbidden (F2). | <https://www.anthropic.com/legal/consumer-terms> | fetched 2026-11-13 |
+
 Not checked: payment from Vietnam (card acceptance, VAT on invoices) for either provider; Console spend-limit feature names.
 
 ## 3. Volume estimate
@@ -125,7 +129,27 @@ The owner overrode "local by default" on 2026-11-10 because of the 16 GB GPU. It
 - Claude on Amazon Bedrock or Google Vertex AI (regional hosting, for example Singapore): same models, separate cloud account and billing, more set-up for one person; reconsider only if data residency in Asia becomes a requirement.
 - Other providers (OpenAI, Google Gemini): not evaluated in this draft; `ModelClient` would accept them by config. Can be added if the owner asks.
 
-## 9. For the owner to check before accepting
+## 9. If the owner forms a company (Mộc Bản, added 2026-11-13)
+
+Context: the owner may form a company for the Mộc Bản project, run by himself alone at first. The questions: can he stay on Pro, must he move to a business plan, and can a business plan have one account?
+
+| Plan | Cost per month | Fits one person? | Gives | Notes |
+| --- | --- | --- | --- | --- |
+| Pro (today) + API pay-as-you-go | USD 20 + about 3–30 (section 4) | yes | dev quota as today; API under Commercial Terms | the Console organization can be owned by the company; API data not used for training by default |
+| Max | USD 100 | yes | 5x Pro quota for development + USD 100 API credit a month (F10), which covers Lan's base and heavy load (section 4) | worth it only when the Pro quota blocks development **and** API spend would exceed about USD 50; credit expires monthly |
+| Team, 2 Standard seats | USD 50 (monthly) or 40 (annual) | **no**: minimum 2 seats (F9), and one person may not use two seats (F2) | admin, SSO, central billing, no training by default, USD 40 pooled API credit | sensible when a second person joins; for one person it means paying for an empty seat |
+| Enterprise | at least 20 seats | no | compliance features | not relevant |
+
+Findings:
+
+1. **Pro stays allowed.** The Consumer Terms cover individual plans and do not forbid using them for one's own business work (F11). What they forbid is automated access outside Claude Code or an API key (F1) and sharing the account (F2). A sole operator using his own Pro account for development is fine; this is a reading of the published terms, not legal advice.
+2. **The company does not change the provider choice.** Lan's automated calls go through the API (option A) whether or not a company exists. With a company, the Console organization and the card should be the company's, so invoices and spend sit with it.
+3. **A business plan for one account is not possible.** Team needs at least 2 seats and Enterprise 20 (F9).
+4. **Customer data needs Commercial Terms.** If Mộc Bản or Lan ever processes other people's data (a seller's project dossier, a client's documents), that data goes only through the API under Commercial Terms, never through the Pro account, where training use depends on the account setting. This also touches Vietnam's personal data law (Luật BVDLCN 91/2025, mentioned in the Mộc Bản study); a lawyer must confirm what a cross-border processor requires.
+
+Proposed: stay on Pro now; when the company exists, open the Console organization in the company's name for option A; move to Max only by the trigger in the table; Team only when a second person joins.
+
+## 10. For the owner to check before accepting
 
 1. DeepSeek official price page (F6), only if the owner wants option C kept as a fallback.
 2. Anthropic API retention period (F8).
