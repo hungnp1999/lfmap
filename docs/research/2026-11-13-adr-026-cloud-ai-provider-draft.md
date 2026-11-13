@@ -1,9 +1,20 @@
 # ADR-026 draft: Cloud AI provider for production use of Lan Hài
 
-- Status: **Proposed** (draft for the owner's gate, `gate:po`). Not part of `03_Decisions_ADR.md` until accepted.
+- Status: **Accepted with change**: the owner decided on 2026-11-13 03:56Z (see section 0). The proposal text below is kept as the record of the analysis.
 - Date: 2026-11-13
 - Issue: #279. Related: #189 (ModelClient), #191 and draft PR #265 (acceptance scenarios), #157 and `docs/research/2026-11-10-lanhai-assistant-architecture.md` (§4.2, consequence 4), ADR-022, ADR-025, `docs/specs/model-client.md` §4, §5, §12.
 - Role: Architect / Research. No paid API call was made and no project data was sent anywhere while writing this.
+
+## 0. Owner decision (2026-11-13 03:56Z)
+
+The owner chose, for now, to keep the Pro plan and run Lan Hài's cloud route through `claude -p` on the existing quota, balanced so that it does not slow development of the other products much. Changing plan or provider is decided later. This replaces Decision (1) and (4) of section 6 for the interim; the rest of section 6 stays.
+
+Interim rules that follow from it:
+
+1. **Route:** a `ModelClient` endpoint kind for `claude -p` (subprocess, all tools disabled, no file or shell access, output as JSON). It is new core code that touches a subprocess, so its PR needs `/security-review`. Nothing is built before the first Phase 3 L2 task.
+2. **Data classes unchanged:** only `scratch` and `normal` (the owner's request text included) go to the cloud; `private` and `secret` stay local (section 6 point 6, column A applies to this route too). The Pro account's model-training setting is the owner's to check, because consumer data falls under the Consumer Terms (F1, F8).
+3. **Quota balance:** Lan uses the cheapest model that does the job (`--model` set in `[models]`, Haiku first), a daily call cap in `[models]` enforced by `ModelRouter`, and stops cloud calls (local only, clearly reported) when the cap is hit. The cap is set from the first two weeks of real use, against the existing budget of about 14 % of the weekly quota a day for development.
+4. **Re-evaluate** when any of these happens: Anthropic moves `claude -p` off subscription limits (the paused June 2026 change, F3, F4); Lan's use blocks development in a week; the company is formed and handles other people's data (section 9 point 4). Options A and Max (section 9) are the next steps then.
 
 ## 1. Question
 
