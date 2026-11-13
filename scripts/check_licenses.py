@@ -20,6 +20,7 @@ WORKSPACE = {
     "lfmap-llm",
     "lfmap-markitdown",
     "lfmap-powershell",
+    "lfmap-web",
     "lfmap-workspace",
 }
 # Reviewed exceptions: name -> reason. Keep in sync with 04_License_Register.md.
