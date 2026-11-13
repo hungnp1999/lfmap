@@ -7,7 +7,7 @@ Issue: [#270](https://github.com/hungnp1999/lfmap/issues/270). Parent handoff: [
 - Task: WEB-3, real check of `web.fetch` on the two S1 sites. Roadmap: Phase 2, #218 G1 / G4.
 - Labels: `exec:CC`, `P1`, `res:Local`.
 - Executor: Claude Code session on DIEP-ANH (pc-01) started by the owner. Model: Sonnet. Cloud sessions never fetch the real sites (spec section 12).
-- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged (PR #277, PR #278, 2026-11-13), and the agent clone `D:\Development\lfmap` pulled to main by `lfmap-agent` (ADR-023; `D:\lfmap-runtime` serves the owner's scheduled tasks and is not used here). Order: WEB-1, then WEB-2, then this.
+- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged (PR #277, PR #278, 2026-11-13), and the fresh worktree `D:\Development\lfmap-web3` (branch `claude/web3-real-check`, from `origin/main`, made by `lfmap-agent`; the old clone `D:\Development\lfmap` sits on `ag/spike-f6-results` and is not used) (ADR-023; `D:\lfmap-runtime` serves the owner's scheduled tasks and is not used here). Order: WEB-1, then WEB-2, then this.
 - Start when: WEB-2 is merged and the owner has one evening slot with internet. Preflight one day before (below).
 - Size: about 1 hour at the machine, no GPU.
 
@@ -23,7 +23,7 @@ Show, with two real requests, that the merged `web.fetch` reads the tender listi
 
 ## State to verify first (do not assume)
 
-- WEB-1 and WEB-2 are on `main`; `lfmap web fetch --help` works from `D:\Development\lfmap` (`uv run --directory D:\Development\lfmap lfmap web fetch --help`).
+- WEB-1 and WEB-2 are on `main`; `lfmap web fetch --help` works from `D:\Development\lfmap-web3` (`uv run --directory D:\Development\lfmap-web3 lfmap web fetch --help`).
 - The test `test_flow_step_fetch_then_convert` and `test_cli_and_mcp_generated` exist and pass on CI.
 - The fixes of spec section 16.4 are in: `test_dns_hang_respects_timeout`, `test_long_query_is_t3`.
 
@@ -42,8 +42,8 @@ Must not touch: any file under `packages/`, `plugins/`, `config.toml` of the rep
 ## Steps
 
 1. **Preflight (the day before, owner, 5 minutes).** Open both sites in a browser. Write down the exact host in the address bar of each listing page (with or without `www`), and whether the page shows tender rows without logging in. Paste the two hosts and two listing URLs into the issue. Matching is exact (spec section 3), so a wrong host fails closed.
-2. **Config (owner, by hand).** Add the two exact hosts to `[web] allowed_hosts` in the `config.toml` of the account that runs the session (`lfmap-agent`, see above); `lfmap config` must show them. Leave the other keys at default. Do not set anything else.
-3. **Dry checks, no internet.** `lfmap config` shows the `[web]` table; `lfmap web fetch https://example.com/` is refused with `host_not_allowed` and appends one `web_fetch` audit line; an `http://` URL is refused with `invalid_input`.
+2. **Config (owner, by hand).** Add the two exact hosts to `[web] allowed_hosts` in the `config.toml` of the account that runs the session (`lfmap-agent`, see above); `uv run python -c 'from lfmap_core.config import load_config,config_path; from lfmap_core.web import load_web_config; print(config_path()); print(load_web_config(load_config()).allowed_hosts)'` must print the config path and exactly the two hosts (`lfmap config` has no command that prints `[web]`). Leave the other keys at default. Do not set anything else.
+3. **Dry checks, no internet.** the one-line check of step 2 shows the two hosts; `lfmap web fetch https://example.com/` is refused with `host_not_allowed` and appends one `web_fetch` audit line; an `http://` URL is refused with `invalid_input`.
 4. **One real request per site**, from the interactive terminal, by hand: `lfmap web fetch <listing URL> --save`. One request each, no loop. If a site answers `http_403` or `http_429`, stop for that site and record it; do not retry or change the `User-Agent` (spec section 13).
 5. **Compare with the browser.** For each saved page: is the tender list present in the HTML text, or is the page a shell built by scripts? Record: closing date, field and bidding-form fields visible or not; `truncated`; encoding problems (Vietnamese diacritics, Russian); size in bytes.
 6. **Audit check** (spec section 12 step 4). `audit.jsonl` has exactly two `web_fetch` pairs (`sent`, then `ok` or the error reason), the right hosts, `bytes_in` equal to the saved file sizes, and no URL path, query or page text anywhere in the lines.
@@ -77,7 +77,7 @@ Public pages only, `normal` class. What leaves the machine: two HTTPS GETs (URL,
 ## Start prompt (paste into a new Claude Code session on pc-01, Sonnet, repo lfmap; owner writes the approval in that session)
 
 ```
-Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\Development\lfmap pulled (run the commands with `uv run --directory D:\Development\lfmap`); if not, stop and say so.
+Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\Development\lfmap-web3 prepared (run the commands with `uv run --directory D:\Development\lfmap-web3`); if not, stop and say so.
 Scope: only docs/research/2026-11-xx-web-fetch-real-check.md and changelog.d/218-web-real-check.added.md. No code under packages/ or plugins/, no ADR edit, no config.toml change by you (the owner added the two hosts).
 Do the steps of the card in order: dry checks, ONE real `lfmap web fetch <url> --save` per site from the interactive terminal, compare with the browser view, check audit.jsonl, replay offline, write the report with a verdict (a)/(b)/(c) per site. Do not retry on 403/429 and do not change headers. Stop on any condition in the card.
 Commit trailers: Dev-Environment: pc-01. Draft PR with "Refs #218" (never Closes). Follow the Session protocol of the card (draft PR at first commit, final report as a PR comment starting with DONE). Report the PR link.
