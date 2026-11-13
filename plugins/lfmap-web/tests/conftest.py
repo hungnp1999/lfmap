@@ -1,3 +1,4 @@
+import asyncio
 import importlib.util
 import sys
 from pathlib import Path
@@ -69,3 +70,10 @@ def registry(entry) -> Registry:
     reg = Registry()
     reg.register(entry)
     return reg
+
+
+@pytest.fixture
+def runner():
+    """An event loop made before the socket guard is installed: on Windows a new loop opens a loopback socketpair."""
+    with asyncio.Runner() as runner:
+        yield runner

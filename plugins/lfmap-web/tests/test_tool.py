@@ -5,7 +5,6 @@ import hashlib
 import sys
 from pathlib import Path
 
-import anyio
 import pytest
 from pydantic import BaseModel
 from typer.testing import CliRunner
@@ -164,14 +163,14 @@ def test_flow_step_fetch_then_convert(registry, server, guard, configure, user_d
     assert [seen.path for seen in server.requests] == ["/list"]
 
 
-def test_cli_and_mcp_generated(registry, server, guard, configure):
+def test_cli_and_mcp_generated(runner, registry, server, guard, configure):
     server.route("/hello", headers=TEXT, body=b"hello web")
     result = CliRunner().invoke(build_app(registry), ["web", "fetch", "--url", "https://fake.test/hello", "--json"])
     assert result.exit_code == 0, result.output
     assert '"text": "hello web"' in result.output
     assert '"content_type": "text/plain"' in result.output
 
-    mcp = anyio.run(build_server(registry, ["web"]).call_tool, "web_fetch", {"url": "https://fake.test/hello"})
+    mcp = runner.run(build_server(registry, ["web"]).call_tool("web_fetch", {"url": "https://fake.test/hello"}))
     assert "hello web" in str(mcp)
     assert [seen.path for seen in server.requests] == ["/hello", "/hello"]
     assert [seen.method for seen in server.requests] == ["GET", "GET"]
