@@ -5,11 +5,17 @@ Issue: [#270](https://github.com/hungnp1999/lfmap/issues/270). Parent handoff: [
 ## Task card
 
 - Task: WEB-3, real check of `web.fetch` on the two S1 sites. Roadmap: Phase 2, #218 G1 / G4.
-- Labels: `exec:CC`, `P1`, `res:Local`, `blocked`.
+- Labels: `exec:CC`, `P1`, `res:Local`.
 - Executor: Claude Code session on DIEP-ANH (pc-01) started by the owner. Model: Sonnet. Cloud sessions never fetch the real sites (spec section 12).
-- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged, and `D:\lfmap-runtime` updated from main. Order: WEB-1, then WEB-2, then this.
+- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged (PR #277, PR #278, 2026-11-13), and `D:\lfmap-runtime` updated from main. Order: WEB-1, then WEB-2, then this.
 - Start when: WEB-2 is merged and the owner has one evening slot with internet. Preflight one day before (below).
 - Size: about 1 hour at the machine, no GPU.
+
+## State on main (2026-11-13)
+
+- WEB-1 ([#277](https://github.com/hungnp1999/lfmap/pull/277)) and WEB-2 ([#278](https://github.com/hungnp1999/lfmap/pull/278)) are merged; #269 and #271 are closed, so WEB-3 is unblocked.
+- Known deviation ([#281](https://github.com/hungnp1999/lfmap/issues/281)): `--save` writes the page as UTF-8 text, not the raw body bytes the spec asks for. Fine for this check if both sites are UTF-8: check the `Content-Type` charset of each response and record it in the report. If a site is not UTF-8, say so as a finding; do not fix the plugin here.
+- The owner must set `[web] allowed_hosts` on pc-01 (step 2) before the session starts. Without it every request is refused.
 
 ## Goal
 
@@ -62,13 +68,19 @@ Stop and tell the owner (do not work around) if: a request goes to a host other 
 
 Public pages only, `normal` class. What leaves the machine: two HTTPS GETs (URL, fixed headers). Nothing of the owner's. No paid API, no secrets. Sample pages stay in `data_dir` unless the owner approves a trimmed copy.
 
+## Session protocol
+
+1. Open a draft PR at your first commit (`Refs #218`, and `Closes #270` is allowed here only because this issue is the task, not the tracker).
+2. Post your final report as a PR comment whose first line is `DONE`, followed by the verdict per site, the PR checks you ran and anything you could not verify.
+3. The thread that owns this card starts the review on `DONE` plus green CI on the head commit.
+
 ## Start prompt (paste into a new Claude Code session on pc-01, Sonnet, repo lfmap; owner writes the approval in that session)
 
 ```
 Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\lfmap-runtime updated; if not, stop and say so.
 Scope: only docs/research/2026-11-xx-web-fetch-real-check.md and changelog.d/218-web-real-check.added.md. No code under packages/ or plugins/, no ADR edit, no config.toml change by you (the owner added the two hosts).
 Do the steps of the card in order: dry checks, ONE real `lfmap web fetch <url> --save` per site from the interactive terminal, compare with the browser view, check audit.jsonl, replay offline, write the report with a verdict (a)/(b)/(c) per site. Do not retry on 403/429 and do not change headers. Stop on any condition in the card.
-Commit trailers: Dev-Environment: pc-01. Draft PR with "Refs #218" (never Closes). Report the PR link.
+Commit trailers: Dev-Environment: pc-01. Draft PR with "Refs #218" (never Closes). Follow the Session protocol of the card (draft PR at first commit, final report as a PR comment starting with DONE). Report the PR link.
 ```
 
 ## Review checklist for the thread (after the PR)
