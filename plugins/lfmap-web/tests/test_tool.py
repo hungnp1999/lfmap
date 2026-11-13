@@ -2,13 +2,15 @@
 server and socket guard of the core web tests, resolved through the runtime's own `ctx.web`."""
 
 import hashlib
+import sys
 from pathlib import Path
 
 import anyio
+import pytest
 from pydantic import BaseModel
 from typer.testing import CliRunner
 
-from lfmap_core import Tool, approvals, flows_run, operation
+from lfmap_core import Tool, ToolError, approvals, flows_run, operation
 from lfmap_core.approval import Policy, job_decision
 from lfmap_core.cli import build_app
 from lfmap_core.manifest import parse_manifest
@@ -16,6 +18,7 @@ from lfmap_core.mcp_adapter import build_server
 from lfmap_core.registry import PluginEntry
 from lfmap_core.runtime import call_tier, run_operation
 
+h = sys.modules["lfmap_web_test_harness"]  # loaded by conftest.py
 TEXT = (("Content-Type", "text/plain; charset=utf-8"),)
 HTML = (("Content-Type", "text/html; charset=utf-8"),)
 FLOW = """
@@ -118,6 +121,26 @@ def test_long_query_is_t3(entry, registry, server, guard, configure, user_dirs):
     assert server.requests == []
     assert guard.connects == []
     assert guard.lookups == []
+    assert [line for line in h.audit_lines() if line.get("event") == "web_fetch"] == []
+
+    server.route("/x", headers=TEXT, body=b"short")
+    out = run_operation(entry, "fetch", {"url": url_with_query(200)}, channel="job")  # the T0 case does run
+    assert out.text == "short"
+    sent, done = [line for line in h.audit_lines() if line.get("event") == "web_fetch"]
+    assert (sent["status"], done["status"]) == ("sent", "ok")
+    assert done["bytes_out"] > 200
+    assert done["bytes_in"] == 5
+
+
+def test_no_web_table_refuses_every_url_through_the_plugin(entry, server, guard, user_dirs):
+    (user_dirs / "config.toml").write_text("", encoding="utf-8")
+    server.route("/", headers=TEXT, body=b"never read")
+    with pytest.raises(ToolError) as caught:
+        run_operation(entry, "fetch", {"url": "https://fake.test/"})
+    assert caught.value.code == "permission_denied"
+    assert caught.value.details["reason"] == "host_not_allowed"
+    assert server.requests == []
+    assert guard.connects == []
 
 
 def test_flow_step_fetch_then_convert(registry, server, guard, configure, user_dirs):

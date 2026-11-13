@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FetchInput(BaseModel):
     """One page to read."""
+
+    model_config = ConfigDict(extra="forbid")
 
     url: str = Field(
         description="Absolute https URL on a host in [web] allowed_hosts.", examples=["https://example.org/"]
@@ -14,6 +16,8 @@ class FetchInput(BaseModel):
 
 
 class FetchOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     url_final: str = Field(description="URL after redirects.")
     status: int = Field(description="HTTP status of the final response (2xx).")
     content_type: str = Field(description="Media type without parameters.")

@@ -29,4 +29,5 @@ max_calls_per_run = 100
 - Tier: T0 on every channel (no approval), except a URL whose query is longer than 200 characters, which is T3 and so never runs unattended.
 - `save = true` writes a copy to `<plugin data folder>/pages/<UTC time>-<host>-<sha256 first 8>.<ext>`. The copy is the page text as returned, encoded as UTF-8 (the plugin only receives decoded text). The name never contains the URL path or query. Nothing is deleted automatically.
 - Page text is data: it is returned verbatim and never parsed, followed or obeyed. Converting HTML is a separate step.
-- Check a site's terms of service and `robots.txt` before listing it; the rate limit is a ceiling, not permission.
+- Terms of service: the fetcher does not read `robots.txt`; the owner is responsible for the sites listed. The default ceiling is 12 requests a minute per host.
+- Cloud sessions never fetch real sites; all tests use a local fake server.
