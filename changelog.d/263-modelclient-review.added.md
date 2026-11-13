@@ -1,0 +1,1 @@
+Post-merge review of ModelClient (#263): `docs/research/2026-11-15-modelclient-review.md` checks MC-1 to MC-5 against the spec. The security boundary holds; eleven findings (seven confirmed by a probe) are filed as #296 to #306, the first being that `knowledge reindex` stops embedding when a batch of chunks exceeds the 200 000-character embed limit. Docs only. No new dependency.
