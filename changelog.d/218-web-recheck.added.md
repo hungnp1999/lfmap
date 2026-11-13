@@ -1,0 +1,1 @@
+`web.fetch` re-check of the `baodauthau.vn` listing after WEB-4 (#218, #289): status 200, 132 692 bytes, the notice list is plain HTML (verdict (a)); findings in `docs/research/2026-11-13-web-fetch-real-check.md`. No code change, no new dependency.
