@@ -1,5 +1,6 @@
 """`WebFetcher`: allow-list, address guard, TLS, bounded read, redirects, deadline (docs/specs/web-plugin.md s. 5)."""
 
+import gzip
 import importlib.util
 import inspect
 import sqlite3
@@ -194,7 +195,7 @@ def test_no_cookies_no_proxy(server, guard, monkeypatch):
     assert first.header("Host") == "fake.test"
     assert first.header("User-Agent").startswith("lfmap-web/")
     assert first.header("Accept") == ACCEPT
-    assert first.header("Accept-Encoding") == "identity"
+    assert first.header("Accept-Encoding") == "gzip, deflate"
     assert first.header("Connection") == "close"
     assert second.headers == first.headers
     assert second.header("Cookie") is None
@@ -245,9 +246,9 @@ def test_non_text_content_type_refused(server, guard):
         assert result.text == "fine"
         assert result.content_type == media.split(";")[0].lower()
 
-    gzip = (("Content-Type", "text/html"), ("Content-Encoding", "gzip"))
-    server.route("/gz", headers=gzip, body=b"z" * MIB, chunk=16384, delay=0.002)
-    _raises(fetcher, "https://fake.test/gz", "backend_unavailable", "bad_response")
+    packed = (("Content-Type", "application/pdf"), ("Content-Encoding", "gzip"))
+    server.route("/gz", headers=packed, body=gzip.compress(b"z" * MIB), chunk=16384, delay=0.002)
+    _raises(fetcher, "https://fake.test/gz", "backend_unavailable", "unsupported_content_type")
     assert server.sent["/gz"] < MIB
 
     server.route("/latin", headers=(("Content-Type", "text/plain; charset=latin-1"),), body="café".encode("latin-1"))
