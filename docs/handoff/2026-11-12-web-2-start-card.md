@@ -4,7 +4,19 @@ Issue: WEB-2 [#271](https://github.com/hungnp1999/lfmap/issues/271) (blocked by 
 
 ## Start condition
 
-WEB-1 ([#269](https://github.com/hungnp1999/lfmap/issues/269), core fetcher: `web.py`, `web_http.py`, `web_rate.py`, `web_egress.py`, `Adapters.web`, `ctx.web`) must be merged to `main` first. Without `ctx.web` this task cannot be done: if `git grep -n "def web" packages/lfmap-core/src/lfmap_core/tool.py` finds nothing, stop and report. Environment: Cloud, Claude Code, **Sonnet**. One PR, draft, `Closes #271 and `Refs #218`.
+WEB-1 ([#269](https://github.com/hungnp1999/lfmap/issues/269), PR #277) is merged: `web.py`, `web_http.py`, `web_rate.py`, `web_egress.py`, `Adapters.web` and `ctx.web` are on `main`. This task is unblocked. If `git grep -n "def web" packages/lfmap-core/src/lfmap_core/tool.py` finds nothing on your checkout, you are on a stale base: update, else stop and report. Environment: Cloud, Claude Code, **Sonnet**. One PR, draft, `Closes #271` and `Refs #218`.
+
+## Session protocol (standing rule of the owner, 2026-11-13)
+
+1. Open the **draft PR at your first commit** (title `feat(web): plugin lfmap-web (WEB-2)`, body from the PR template, `Closes #271`, `Refs #218`), so the reviewing thread can subscribe to it from the start. Keep it a draft until CI is green.
+2. Post your **final report as a PR comment whose first line is `DONE`**, followed by: what changed, test results (including the Linux baseline failures), `/security-review` findings and your answers, open questions. Post it only when the work is complete and CI on the head commit is green or you state exactly why it is not. Do not post `DONE` earlier.
+3. Do not merge. The reviewing thread starts the review when it sees `DONE` with green CI.
+
+## Carry-overs from the WEB-1 review ([#271 comment](https://github.com/hungnp1999/lfmap/issues/271#issuecomment-6842397431))
+
+- `ctx.web_fetcher` is a public field of `ToolContext` (same as `model_router`), so in-process plugin code could replace it with its own `WebFetcher`. Plugins can already open sockets; this is not a sandbox. Record it as a **residual risk** in the `ARCHITECTURE.md` invariant text.
+- A failed `sent` audit write raises `backend_unavailable` with `reason: audit_failed`, which is missing from the error table of `docs/specs/web-plugin.md` section 10. Add the row (docs only; this is the one spec edit allowed).
+- `WebTool.call_tier` uses `web.long_query` from core (the bound and the core test exist); the plugin part of `test_long_query_is_t3` is owed here.
 
 ## Goal
 
@@ -14,7 +26,7 @@ A thin plugin `plugins/lfmap-web` with one operation `web.fetch`. All network ru
 
 From spec section 16 (owner, 2026-11-12):
 
-1. Tier is T0, but `WebTool.call_tier` returns `"T3"` when the URL has a query string longer than 200 characters (200 stays T0, 201 is T3). Use the constant WEB-1 put in `web.py` (do not define a second one). A T3 call is queued or refused on `job`, `event` and `flow`, so a long query never runs unattended.
+1. Tier is T0, but `WebTool.call_tier` returns `"T3"` when the URL has a query string longer than 200 characters (200 stays T0, 201 is T3). Use `web.long_query` from `web.py` (do not define a second bound). A T3 call is queued or refused on `job`, `event` and `flow`, so a long query never runs unattended.
 2. The ADR exception text is accepted but the ADR file is **not** edited here (separate gate:po step). The `ARCHITECTURE.md` invariant text of spec section 7 is applied in this PR.
 3. No `http`; `save` defaults to `false`.
 
@@ -38,8 +50,9 @@ May edit:
 - `ARCHITECTURE.md`: replace the "No network beyond loopback ..." invariant with the text of spec section 7, and add `web.py`, `web_http.py`, `web_rate.py`, `web_egress.py`, `web_rate.db` to the module map unless WEB-1 already did (check first)
 - root `pyproject.toml` (dependency list and `[tool.uv.sources]` entry for `lfmap-web`) and `uv.lock` (`uv lock`)
 - `docs/specs/flows.md` only if an example needs the new step (otherwise leave it)
+- `docs/specs/web-plugin.md` section 10 only: add the `audit_failed` row
 
-Must not touch: anything under `packages/lfmap-core/src/` (if the plugin seems to need a core change, stop and report to the thread: it belongs to WEB-1 or a new issue), `approval.py`, `permissions.py`, adapters, `config.toml` handling, other plugins, `docs/` ADR files.
+Must not touch: other sections of `docs/specs/web-plugin.md`, anything under `packages/lfmap-core/src/` (if the plugin seems to need a core change, stop and report to the thread: it belongs to WEB-1 or a new issue), `approval.py`, `permissions.py`, adapters, `config.toml` handling, other plugins, `docs/` ADR files.
 
 ## Steps
 
@@ -66,7 +79,7 @@ Note on overlap: #269 has a core part of `test_long_query_is_t3` (the constant a
 
 ## Dependencies
 
-Blocked by: #269 (WEB-1, core fetcher). WEB-3 (real check on DIEP-ANH, G4) follows this task and is not part of it.
+Blocked by: none (#269 merged).  WEB-3 (real check on DIEP-ANH, G4) follows this task and is not part of it.
 
 ## Resource
 
@@ -79,12 +92,14 @@ none (Cloud, offline).
 - [ ] With no `[web]` table every URL is refused with `host_not_allowed` (checked through the plugin, not only the fetcher)
 - [ ] `ARCHITECTURE.md` invariant and module map updated; changelog fragment present
 - [ ] `/security-review` run and every finding answered in the PR
+- [ ] `audit_failed` row added to spec section 10; residual risk of `ctx.web_fetcher` recorded in the `ARCHITECTURE.md` invariant
+- [ ] Draft PR opened at the first commit; final report posted as a PR comment starting `DONE`
 - [ ] CodeQL and tests green; PR is a draft until then
 
 ## Start prompt (paste into a new Claude Code Cloud session, model Sonnet, repo lfmap)
 
 ```
-Task WEB-2 of lfmap #218 (G1): plugin lfmap-web. Read docs/handoff/2026-11-12-web2-start-card.md first, then docs/specs/web-plugin.md sections 2, 4, 7, 9, 10, 11, 14, 16, plugins/lfmap-llm and plugins/lfmap-echo, and the merged WEB-1 core code (web.py, ctx.web in tool.py). WEB-1 must be on main; if ctx.web does not exist, stop and report. Branch from up-to-date main; merge origin/main again before push.
+Task WEB-2 of lfmap #218 (G1): plugin lfmap-web. Read docs/handoff/2026-11-12-web-2-start-card.md first, then docs/specs/web-plugin.md sections 2, 4, 7, 9, 10, 11, 14, 16, plugins/lfmap-llm and plugins/lfmap-echo, and the merged WEB-1 core code (web.py, ctx.web in tool.py). WEB-1 is on main (PR #277); if ctx.web does not exist on your checkout, update, else stop and report. Also read the WEB-1 carry-overs in issue #271 (comment 6842397431). Branch from up-to-date main; merge origin/main again before push.
 
 File scope: plugins/lfmap-web/** (new), changelog.d/218-web-plugin.added.md, ARCHITECTURE.md (invariant + module map), root pyproject.toml and uv.lock. Do not touch packages/lfmap-core/src, approval.py, permissions.py, adapters or other plugins. If you need another file, stop and report.
 
@@ -92,15 +107,16 @@ Write the frozen tests first with exactly these names: test_web_plugin_manifest_
 
 Rules: one operation fetch, side_effects external, min_tier T0; call_tier returns T3 when the URL query is longer than 200 characters (use WEB-1's constant; 200 stays T0, 201 is T3); no http; save defaults to false and the copy goes to ctx.data_dir/pages with a name made of UTC time, host and sha256[:8] only; page text is returned verbatim and never interpreted; no URL parsing duplicated in the plugin; no network code in the plugin; standard library plus lfmap-core only; do not edit the ADR file.
 
-Run uv run pytest, uv run ruff check . and uv run ruff format --check . (7 test_jobs_doctor failures on Linux are pre-existing). Commit trailers: Dev-Environment: cloud and Claude-Session (the cloud hook may not add Dev-Environment: add it by hand). Draft PR from the template with "Refs #218" and "Closes #271. Then run /security-review on the diff and answer every finding in the PR. Do not merge; report the PR link.
+Run uv run pytest, uv run ruff check . and uv run ruff format --check . (7 test_jobs_doctor failures on Linux are pre-existing). Commit trailers: Dev-Environment: cloud and Claude-Session (the cloud hook may not add Dev-Environment: add it by hand). Open the draft PR at your FIRST commit (template, "Refs #218", "Closes #271"). Then run /security-review on the diff and answer every finding in the PR. When complete and CI is green, post your final report as a PR comment whose first line is exactly DONE (what changed, test results, security-review answers, open questions). Do not post DONE earlier. Do not merge.
 ```
 
 ## Review checklist for the thread (after the PR)
 
 - Only files in the scope list changed; nothing under `packages/lfmap-core/src/`; ADR files untouched.
 - Manifest matches spec section 2 exactly (one operation, `network = true`, `cloud_ai = false`, `[adapters] web = true`).
-- `call_tier`: T0 normally, T3 at 201 characters of query, using WEB-1's constant; no second URL parser.
+- `call_tier`: T0 normally, T3 at 201 characters of query, using `web.long_query`; no second URL parser.
 - Saved-copy name has no URL path or query; the path stays inside `data_dir`; default is no copy.
 - The plugin opens no socket and imports no `http.client`, `socket`, `ssl` or `urllib.request`.
 - The 7 frozen tests exist with those names and pass; old suites green except the known Linux baseline; CodeQL green.
+- Review starts only on a `DONE` comment with green CI on the head commit. `audit_failed` row and `ctx.web_fetcher` residual risk present.
 - `/security-review` findings answered. Verdict: Approve / Approve with changes / Reject. Merge squash only when not draft.
