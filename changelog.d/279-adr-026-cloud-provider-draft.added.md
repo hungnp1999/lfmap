@@ -1,0 +1,1 @@
+ADR-026 draft on the Cloud AI provider for production use of Lan Hài (#279): compares the Claude API, `claude -p` on the Pro plan, DeepSeek and local only, with monthly cost estimates, data classes per provider and terms risk. Docs only. No new dependency.
