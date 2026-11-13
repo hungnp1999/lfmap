@@ -1,0 +1,1 @@
+Spec for #289 (WEB-4): `web.fetch` will accept `gzip` and `deflate` pages with decompression bounded by the byte cap (`br` and `zstd` stay refused), plus the start card for the code change. Docs only.
