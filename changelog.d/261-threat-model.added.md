@@ -1,0 +1,1 @@
+Threat model (#261): `docs/research/2026-11-13-threat-model.md` lists assets, attackers, entry points and 48 abuse cases mapped to controls, with 14 gaps filed as #308 to #321 and the checks only the owner can make as #322. Docs only. No new dependency.
