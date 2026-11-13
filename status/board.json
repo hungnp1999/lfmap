@@ -886,9 +886,9 @@
     {
       "number": 166,
       "repo": "hungnp1999/lfmap",
-      "title": "Backlog · RT-07: inventory Hùng's n8n flows and map them to LFMAP Flows",
+      "title": "RT-07: inventory Hùng's manual workflows and rank them for automation in Lan Hài Flows",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": "2026-11-09",
       "due": "2026-11-13",
       "labels": [
@@ -1292,7 +1292,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "13/11 · CC: Security core S3, read-only Windows Security checks in lfmap doctor",
       "type": "Issue",
-      "status": "Done",
+      "status": "Backlog",
       "start": "2026-11-13",
       "due": "2026-11-13",
       "labels": [
@@ -1955,7 +1955,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "13/11 · CC: MC-5 move knowledge embeddings onto ModelClient (MC-4 passed)",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-13",
       "due": "2026-11-13",
       "labels": [
@@ -2192,7 +2192,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "WEB-1: core web fetcher and [web] config (#218 G1)",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2206,13 +2206,12 @@
       "repo": "hungnp1999/lfmap",
       "title": "WEB-3: real check of web.fetch on DIEP-ANH with the two S1 sites (#218 G1/G4)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
         "exec:CC",
         "P1",
-        "blocked",
         "res:Local"
       ]
     },
@@ -2221,13 +2220,12 @@
       "repo": "hungnp1999/lfmap",
       "title": "WEB-2: plugin lfmap-web, operation web.fetch (#218 G1)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
         "exec:CC",
         "P1",
-        "blocked",
         "security-review"
       ]
     },
@@ -2248,7 +2246,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs(handoff): start card for WEB-2 plugin lfmap-web",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2260,7 +2258,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "docs(handoff): task card for WEB-3 real check of web.fetch (#218)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2295,6 +2293,193 @@
       "number": 277,
       "repo": "hungnp1999/lfmap",
       "title": "feat(core): web fetcher, [web] config, rate state and audit (#218 WEB-1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 278,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(web): plugin lfmap-web, operation fetch over ctx.web (#218 WEB-2)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 279,
+      "repo": "hungnp1999/lfmap",
+      "title": "ADR-026 draft: Cloud AI provider for production use of Lan Hài",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision",
+        "gate:po"
+      ]
+    },
+    {
+      "number": 280,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): ADR-026 Cloud AI provider, interim claude -p on Pro (#279)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "gate:po"
+      ]
+    },
+    {
+      "number": 281,
+      "repo": "hungnp1999/lfmap",
+      "title": "web.fetch: expose the raw body so `save` writes the page byte for byte (spec section 4)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 282,
+      "repo": "hungnp1999/lfmap",
+      "title": "chore(deps): bump soupsieve from 3.0.3 to 4.0 in the uv group across 1 directory",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "dependencies",
+        "python:uv"
+      ]
+    },
+    {
+      "number": 283,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(knowledge): embed through ctx.models, remove OllamaEmbedder (MC-5)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 284,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): WEB-3 card uses the agent account config and clone (#218)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 285,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): fix security group of lfmap doctor after real run (#198)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 286,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): WEB-3 card uses the lfmap-web3 worktree (#218)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 287,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): WEB-3 card adds api.baodauthau.vn and browser findings (#218)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 288,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): web.fetch real check on S1 sites (WEB-3)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 289,
+      "repo": "hungnp1999/lfmap",
+      "title": "WEB-4: web.fetch refuses compressed pages; name the offending header in the error (decision needed)",
+      "type": "Issue",
+      "status": "In Review",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 290,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(web): spec and start card for compressed pages (WEB-4)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 291,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(doctor): security group knows an active third-party antivirus (#198)",
+      "type": "PullRequest",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 292,
+      "repo": "hungnp1999/lfmap",
+      "title": "feat(web): read gzip and deflate pages (WEB-4)",
       "type": "PullRequest",
       "status": "Backlog",
       "start": null,

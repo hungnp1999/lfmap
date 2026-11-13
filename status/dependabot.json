@@ -5,5 +5,16 @@
     "MarkitdownTool": "ok",
     "isomp": "disabled"
   },
-  "alerts": []
+  "alerts": [
+    {
+      "repo": "lfmap",
+      "number": 3,
+      "package": "soupsieve",
+      "severity": "high",
+      "advisory": "GHSA-mmhr-3c5m-f64f",
+      "cve": "CVE-2026-126190",
+      "manifest": "uv.lock",
+      "created": "2026-11-13T03:59:16Z"
+    }
+  ]
 }
