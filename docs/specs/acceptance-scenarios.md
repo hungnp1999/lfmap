@@ -190,3 +190,17 @@ Source: the owner's real workflow, recorded 2026-11-13. No meeting content is re
 6. The approval step before send: the owner reads the minutes first. Needs the minutes as a reviewable file in the approval queue, then `email` with an attachment.
 7. Output as DOCX/PDF: same document-formatter gap as S2.
 8. Numbers and decisions must not be changed by the model: a check that every figure in the minutes appears in the transcript (like the citation check in S2).
+
+## Phase 2 selection (proposed 2026-11-13, for the owner to confirm)
+
+The owner stopped the list at S1 to S4 (a fifth scenario, technical drawing checking against earlier drawing notes to track construction progress, was judged more complex than S4 and is deferred). S0 stays as a quick smoke test and is not counted. At most three are used as the Phase 2 acceptance suite: inside the Phase 2 Roadmap scope, yet hard enough to prove the core.
+
+| Rank | Scenario | Scope for acceptance | Phase 2 items it exercises |
+| --- | --- | --- | --- |
+| 1 | S1 Tender package search | As written. Fetch public pages with the `web` plugin, match keywords, write the Excel table, send to the declared internal list, never resend a tender. | Flows on a schedule, jobs folded into Flows, EventBus and duplicate memory, `web`, `file`, `email`, approval rule for pre-approved destinations. Matches the Phase 2 exit criteria (end-to-end, no manual step). |
+| 2 | S3 Family meal planning | Reduced: owner-supplied pantry file, health data of synthetic members, local model only, output must not carry health details. No nutrition dataset. | `llm`/ModelClient with local routing, data classes in the Gate (ADR-025, `private`), declared recipient list, schedule offset, `file`. The only scenario that tests the `private` class. |
+| 3 | S2 Technology research | Trimmed: GitHub API and vendor docs only, Markdown output, every citation must be in the fetched page set. No social networks, no hands-on trial. | ModelClient and `llm`, `knowledge`, `web`, no-fabrication check, `file`. |
+
+Not selected: S4 Meeting minutes. It is the hardest and most varied (speech, per-run data class, approval before sending, email with attachment), but it needs a local speech-to-text plugin that is not in the Phase 2 list. Keep it as the first candidate for Phase 3, with its reduced form (a recording dropped into a folder). The part of S4 that Phase 2 already covers (approval before send, email with attachment, DOCX output) is tested through S1 and S3.
+
+Order of work: S1 first (no new model work), then S3 reduced, then S2 trimmed.
