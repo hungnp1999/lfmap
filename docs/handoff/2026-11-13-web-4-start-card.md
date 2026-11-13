@@ -60,7 +60,7 @@ Must not touch: `web.py`, `web_rate.py`, `web_egress.py`, the allow-list, addres
 In `packages/lfmap-core/tests/test_web_encoding.py`:
 
 - `test_gzip_and_deflate_decoded`
-- `test_zip_bomb_stops_at_cap`: a gzip body of about 20 KiB that expands to 1 GiB of zeros with `max_bytes = 1_048_576`; asserts `truncated`, `bytes == 1_048_576`, peak memory below 8 MiB (`tracemalloc`), the call finishes well inside `timeout_s`; also the exact-cap case and the wire-bound case. The bomb is generated in the test (`zlib.compressobj`), never committed.
+- `test_zip_bomb_stops_at_cap`: a gzip body of about 1 MiB on the wire (deflate cannot compress beyond about 1032:1) that expands to 1 GiB of zeros with `max_bytes = 1_048_576`; asserts `truncated`, `bytes == 1_048_576`, peak memory below 8 MiB (`tracemalloc`), the call finishes well inside `timeout_s`; also the exact-cap case and the wire-bound case. The bomb is generated in the test (`zlib.compressobj`), never committed.
 - `test_unsupported_encoding_refused`: `br`, `zstd`, `compress`, `gzip, gzip`, `gzip, br`, `foo`, `Transfer-Encoding: gzip`; message names the header; body not read; `http_404` with `br` keeps its reason.
 - `test_corrupt_compressed_stream`
 
