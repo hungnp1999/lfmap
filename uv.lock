@@ -18,6 +18,7 @@ members = [
     "lfmap-llm",
     "lfmap-markitdown",
     "lfmap-powershell",
+    "lfmap-web",
     "lfmap-workspace",
 ]
 
@@ -1086,6 +1087,17 @@ dependencies = [
 requires-dist = [{ name = "lfmap-core", editable = "packages/lfmap-core" }]
 
 [[package]]
+name = "lfmap-web"
+version = "0.1.0"
+source = { editable = "plugins/lfmap-web" }
+dependencies = [
+    { name = "lfmap-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "lfmap-core", editable = "packages/lfmap-core" }]
+
+[[package]]
 name = "lfmap-workspace"
 version = "0.0.0"
 source = { virtual = "." }
@@ -1096,6 +1108,7 @@ dependencies = [
     { name = "lfmap-llm" },
     { name = "lfmap-markitdown" },
     { name = "lfmap-powershell" },
+    { name = "lfmap-web" },
 ]
 
 [package.dev-dependencies]
@@ -1113,6 +1126,7 @@ requires-dist = [
     { name = "lfmap-llm", editable = "plugins/lfmap-llm" },
     { name = "lfmap-markitdown", editable = "plugins/lfmap-markitdown" },
     { name = "lfmap-powershell", editable = "plugins/lfmap-powershell" },
+    { name = "lfmap-web", editable = "plugins/lfmap-web" },
 ]
 
 [package.metadata.requires-dev]

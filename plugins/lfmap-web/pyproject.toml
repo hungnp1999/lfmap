@@ -1,0 +1,18 @@
+[project]
+name = "lfmap-web"
+version = "0.1.0"
+description = "LFMAP plugin: fetch one public web page from a host the owner allow-listed."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = ["lfmap-core"]
+
+[project.entry-points."lfmap.plugins"]
+web = "lfmap_web.tool:WebTool"
+
+[tool.uv.sources]
+lfmap-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
