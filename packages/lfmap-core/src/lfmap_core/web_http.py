@@ -4,7 +4,8 @@ Order of checks per request (spec section 5): network permission, per-run cap, U
 DNS and address check, `sent` audit line, connect to the checked address, TLS with host-name verification, bounded
 read. Every redirect hop starts again at the URL check. One wall-clock deadline covers DNS, connect, TLS, headers,
 body and every hop. Standard library only; the socket is opened here, so proxy variables have no path in, and
-there is no cookie jar, no decompression and no connection reuse.
+there is no cookie jar and no connection reuse. Only gzip and deflate bodies are decompressed, with `zlib`, in
+bounded steps: the byte cap counts decompressed output (spec section 4, Compression).
 
 The resolver, SSL context, clock, `NetworkPolicy` and `port` are keyword-only test seams. `runtime.py` builds the
 fetcher with the defaults and hands the plugin a `WebAccess` that exposes `fetch` only.
@@ -20,6 +21,7 @@ import ssl
 import threading
 import time
 import urllib.parse
+import zlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,6 +36,7 @@ from lfmap_core.web_rate import RateLimiter
 
 ERROR_BODY_CHARS = 500
 READ_CHUNK = 65536
+WIRE_SLACK = 65536
 REDIRECTS = frozenset({301, 302, 303, 307, 308})
 ACCEPT = "text/html,text/plain,text/xml,application/xml,application/xhtml+xml,application/json,text/csv;q=0.9,*/*;q=0.1"
 _NAT64 = ipaddress.IPv6Network("64:ff9b::/96")
@@ -131,13 +134,71 @@ def _decode(body: bytes, content_type: str | None, truncated: bool) -> str:
     return codecs.getincrementaldecoder("utf-8")(errors="replace").decode(body, final=not truncated)
 
 
+def _printable(value: str, limit: int = 50) -> str:
+    return "".join(char if " " <= char <= "~" else "?" for char in value[:limit])
+
+
+def _refused(header: str, value: str) -> ToolError:
+    return _unavailable("bad_response", f"Unsupported {header} from the page: {_printable(value)}")
+
+
+def _coding(response: http.client.HTTPResponse) -> str:
+    """`identity`, `gzip` or `deflate` for an accepted pair of headers; otherwise the refusal (spec section 4)."""
+    transfer = (response.getheader("Transfer-Encoding") or "").strip()
+    if transfer.lower() not in ("", "identity", "chunked"):
+        raise _refused("Transfer-Encoding", transfer)
+    content = (response.getheader("Content-Encoding") or "").strip()
+    token = content.lower()
+    if token in ("", "identity"):
+        return "identity"
+    if token in ("gzip", "x-gzip"):
+        return "gzip"
+    if token == "deflate":
+        return "deflate"
+    raise _refused("Content-Encoding", content)
+
+
+class _Inflater:
+    """Incremental gzip or deflate decoder; output per call is bounded by `room`, however small the input."""
+
+    def __init__(self, coding: str) -> None:
+        self._coding = coding
+        self._head = b""
+        self._z: Any = None
+        self.eof = False
+
+    def feed(self, data: bytes, room: int) -> bytes:
+        if self._z is None:
+            self._head += data
+            if len(self._head) < 2:
+                return b""
+            self._z = zlib.decompressobj(self._wbits(self._head))
+            data, self._head = self._head, b""
+        out: list[bytes] = []
+        while data and room > 0 and not self._z.eof:
+            piece = self._z.decompress(data, min(room, READ_CHUNK))
+            out.append(piece)
+            room -= len(piece)
+            if len(self._z.unconsumed_tail) >= len(data) and not piece:
+                break  # no progress: cannot happen with a positive max_length, so never spin
+            data = self._z.unconsumed_tail
+        self.eof = self._z.eof
+        return b"".join(out)
+
+    def _wbits(self, head: bytes) -> int:
+        if self._coding == "gzip":
+            return 31
+        zlib_header = head[0] & 0x0F == 8 and head[0] >> 4 <= 7 and (head[0] * 256 + head[1]) % 31 == 0
+        return 15 if zlib_header else -15  # deflate: zlib-wrapped, else a raw stream
+
+
 def _request(host: str, target: str) -> bytes:
     lines = (
         f"GET {target} HTTP/1.1",
         f"Host: {host}",
         f"User-Agent: lfmap-web/{__version__}",
         f"Accept: {ACCEPT}",
-        "Accept-Encoding: identity",
+        "Accept-Encoding: gzip, deflate",
         "Connection: close",
     )
     return ("\r\n".join(lines) + "\r\n\r\n").encode("ascii")
@@ -401,20 +462,26 @@ class WebFetcher:
             return self._location(response, url, last)
         content_type = response.getheader("Content-Type")
         media = _media_type(content_type)
-        encoding = (response.getheader("Content-Encoding") or "identity").strip().lower()
-        transfer = (response.getheader("Transfer-Encoding") or "").strip().lower()
-        plain = encoding == "identity" and transfer in ("", "chunked")
+        try:
+            coding: str | None = _coding(response)
+            refusal = None
+        except ToolError as error:
+            coding, refusal = None, error
         if not 200 <= status <= 299:
             body = b""
-            if plain and media in TEXT_TYPES:
-                body, _ = self._read(tls, response, ERROR_BODY_CHARS, deadline, progress, watch)
+            if coding is not None and media in TEXT_TYPES:
+                try:
+                    body, _ = self._read(tls, response, ERROR_BODY_CHARS, deadline, progress, watch, coding)
+                except ToolError as error:
+                    if _reason(error) != "bad_response" or watch.fired:
+                        raise
             text = body.decode("utf-8", errors="replace")[:ERROR_BODY_CHARS]
             raise _unavailable(f"http_{status}", f"The page answered HTTP {status}", status=status, body=text)
-        if not plain:
-            raise _unavailable("bad_response", "The page is compressed or has an unsupported transfer encoding")
+        if coding is None:
+            raise refusal  # type: ignore[misc]
         if media not in TEXT_TYPES:
             raise _unavailable("unsupported_content_type", "Only text pages are fetched", content_type=media[:100])
-        body, truncated = self._read(tls, response, cap, deadline, progress, watch)
+        body, truncated = self._read(tls, response, cap, deadline, progress, watch, coding)
         return WebResult(
             url_final=url,
             status=status,
@@ -445,8 +512,12 @@ class WebFetcher:
         deadline: float,
         progress: _Progress,
         watch: _Watchdog,
+        coding: str = "identity",
     ) -> tuple[bytes, bool]:
-        """At most `cap` body bytes, and True when more was on offer. Stops at the cap whatever Content-Length says."""
+        """At most `cap` body bytes (decompressed), and True when more was on offer. Stops at the cap whatever
+        Content-Length says. A compressed body is decoded in bounded steps; wire bytes are bounded by cap + 64 KiB."""
+        if coding != "identity":
+            return WebFetcher._read_compressed(tls, response, cap, deadline, progress, watch, coding)
         chunks: list[bytes] = []
         size = 0
         more = False
@@ -465,6 +536,44 @@ class WebFetcher:
         if watch.fired:
             raise _timeout()
         return b"".join(chunks), more
+
+    @staticmethod
+    def _read_compressed(
+        tls: ssl.SSLSocket,
+        response: http.client.HTTPResponse,
+        cap: int,
+        deadline: float,
+        progress: _Progress,
+        watch: _Watchdog,
+        coding: str,
+    ) -> tuple[bytes, bool]:
+        corrupt = "The compressed page is corrupt or ended early"
+        inflater = _Inflater(coding)
+        limit = cap + WIRE_SLACK
+        out = bytearray()
+        wire = 0
+        try:
+            while len(out) <= cap:  # one byte past the cap shows there was more
+                tls.settimeout(_remaining(deadline))
+                data = response.read1(min(READ_CHUNK, limit - wire + 1))
+                if not data:
+                    if inflater.eof:
+                        break
+                    raise _unavailable("bad_response", corrupt)
+                wire += len(data)
+                if wire > limit:
+                    raise _unavailable("bad_response", "The compressed page is too large for max_bytes")
+                out += inflater.feed(data, cap + 1 - len(out))
+                progress.bytes_in = min(len(out), cap)
+                if inflater.eof and len(out) <= cap:
+                    break
+        except zlib.error:
+            raise _unavailable("bad_response", corrupt) from None
+        if watch.fired:
+            raise _timeout()
+        more = len(out) > cap
+        del out[cap:]
+        return bytes(out), more
 
 
 class WebAccess:

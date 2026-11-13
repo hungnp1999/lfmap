@@ -31,7 +31,7 @@ REQUEST = (
     f"User-Agent: lfmap-web/{__version__}\r\n"
     "Accept: text/html,text/plain,text/xml,application/xml,application/xhtml+xml,application/json,"
     "text/csv;q=0.9,*/*;q=0.1\r\n"
-    "Accept-Encoding: identity\r\n"
+    "Accept-Encoding: gzip, deflate\r\n"
     "Connection: close\r\n"
     "\r\n"
 )
