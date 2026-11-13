@@ -191,7 +191,7 @@ Source: the owner's real workflow, recorded 2026-11-13. No meeting content is re
 7. Output as DOCX/PDF: same document-formatter gap as S2.
 8. Numbers and decisions must not be changed by the model: a check that every figure in the minutes appears in the transcript (like the citation check in S2).
 
-## Phase 2 selection (proposed 2026-11-13, for the owner to confirm)
+## Phase 2 selection (confirmed by the owner 2026-11-13)
 
 The owner stopped the list at S1 to S4 (a fifth scenario, technical drawing checking against earlier drawing notes to track construction progress, was judged more complex than S4 and is deferred). S0 stays as a quick smoke test and is not counted. At most three are used as the Phase 2 acceptance suite: inside the Phase 2 Roadmap scope, yet hard enough to prove the core.
 
