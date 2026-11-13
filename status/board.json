@@ -3,147 +3,6 @@
   "owner": "hungnp1999",
   "items": [
     {
-      "number": 97,
-      "repo": "hungnp1999/lfmap",
-      "title": "EB-1: topics, events and SQLite event store",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P1"
-      ]
-    },
-    {
-      "number": 98,
-      "repo": "hungnp1999/lfmap",
-      "title": "EB-2: event adapter, ctx.events and the event channel",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P1",
-        "security-review"
-      ]
-    },
-    {
-      "number": 99,
-      "repo": "hungnp1999/lfmap",
-      "title": "EB-3: lfmap events CLI and drain after jobs run",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P1",
-        "security-review"
-      ]
-    },
-    {
-      "number": 100,
-      "repo": "hungnp1999/lfmap",
-      "title": "EB-4: Windows smoke test of the EventBus on DIEP-ANH",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P1"
-      ]
-    },
-    {
-      "number": 101,
-      "repo": "hungnp1999/lfmap",
-      "title": "feat(core): EventBus core with in-process and SQLite buses (EB-1)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 102,
-      "repo": "hungnp1999/lfmap",
-      "title": "feat(core): event adapter, ctx.events and the event channel (EB-2)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 103,
-      "repo": "hungnp1999/lfmap",
-      "title": "feat(core): lfmap events commands and bounded drain after jobs run (EB-3)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 104,
-      "repo": "hungnp1999/lfmap",
-      "title": "EB-5: a core way to publish <plugin>.<op>.requested (jobs run event mode)",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P2"
-      ]
-    },
-    {
-      "number": 105,
-      "repo": "hungnp1999/lfmap",
-      "title": "docs: EventBus Windows smoke results on pc-01 (EB-4)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 106,
-      "repo": "hungnp1999/lfmap",
-      "title": "Interactive-terminal check accepts stdin redirected from NUL on Windows",
-      "type": "Issue",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "exec:CC",
-        "P1",
-        "security-review"
-      ]
-    },
-    {
-      "number": 107,
-      "repo": "hungnp1999/lfmap",
-      "title": "fix(core): require a real console for TTY-only commands on Windows",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
       "number": 108,
       "repo": "hungnp1999/lfmap",
       "title": "Same-user agent can still reach a real console for TTY-only commands (ADR-017)",
@@ -157,30 +16,6 @@
       ]
     },
     {
-      "number": 109,
-      "repo": "hungnp1999/lfmap",
-      "title": "fix(core): typed confirmation code and console window check for self-granting commands",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 110,
-      "repo": "hungnp1999/lfmap",
-      "title": "feat(core): jobs through the event bus with via = \"event\" (EB-5)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
       "number": 111,
       "repo": "hungnp1999/lfmap",
       "title": "06/11 · CC: EB-5 follow-ups, item 1 (job id in proposals) and an audit-lines note",
@@ -191,18 +26,6 @@
       "labels": [
         "exec:CC",
         "P3"
-      ]
-    },
-    {
-      "number": 112,
-      "repo": "hungnp1999/lfmap",
-      "title": "docs(handoff): run agents under a separate Windows account (ADR-023)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
       ]
     },
     {
@@ -257,18 +80,6 @@
       "labels": [
         "gate:po",
         "security-review"
-      ]
-    },
-    {
-      "number": 117,
-      "repo": "hungnp1999/lfmap",
-      "title": "docs(handoff): Antigravity task AG-E1, event bus user guide",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
       ]
     },
     {
@@ -2443,7 +2254,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "WEB-4: web.fetch refuses compressed pages; name the offending header in the error (decision needed)",
       "type": "Issue",
-      "status": "In Review",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2469,7 +2280,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "fix(doctor): security group knows an active third-party antivirus (#198)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2481,7 +2292,19 @@
       "repo": "hungnp1999/lfmap",
       "title": "feat(web): read gzip and deflate pages (WEB-4)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 293,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(web): re-check card for baodauthau.vn after WEB-4; fix zip-bomb wire size",
+      "type": "PullRequest",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
