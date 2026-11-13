@@ -7,7 +7,7 @@ Issue: [#270](https://github.com/hungnp1999/lfmap/issues/270). Parent handoff: [
 - Task: WEB-3, real check of `web.fetch` on the two S1 sites. Roadmap: Phase 2, #218 G1 / G4.
 - Labels: `exec:CC`, `P1`, `res:Local`.
 - Executor: Claude Code session on DIEP-ANH (pc-01) started by the owner. Model: Sonnet. Cloud sessions never fetch the real sites (spec section 12).
-- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged (PR #277, PR #278, 2026-11-13), and the agent clone `D:\Development\lfmap` pulled to main by `lfmap-agent` (ADR-023; `D:\lfmap-runtime` serves the owner's scheduled tasks and is not used here). Order: WEB-1, then WEB-2, then this.
+- Blocked by: [#269](https://github.com/hungnp1999/lfmap/issues/269) (WEB-1, core fetcher) and [#271](https://github.com/hungnp1999/lfmap/issues/271) (WEB-2, plugin `lfmap-web`), both merged (PR #277, PR #278, 2026-11-13), and the fresh worktree `D:\Development\lfmap-web3` (branch `claude/web3-real-check`, from `origin/main`, made by `lfmap-agent`; the old clone `D:\Development\lfmap` sits on `ag/spike-f6-results` and is not used) (ADR-023; `D:\lfmap-runtime` serves the owner's scheduled tasks and is not used here). Order: WEB-1, then WEB-2, then this.
 - Start when: WEB-2 is merged and the owner has one evening slot with internet. Preflight one day before (below).
 - Size: about 1 hour at the machine, no GPU.
 
@@ -23,7 +23,7 @@ Show, with two real requests, that the merged `web.fetch` reads the tender listi
 
 ## State to verify first (do not assume)
 
-- WEB-1 and WEB-2 are on `main`; `lfmap web fetch --help` works from `D:\Development\lfmap` (`uv run --directory D:\Development\lfmap lfmap web fetch --help`).
+- WEB-1 and WEB-2 are on `main`; `lfmap web fetch --help` works from `D:\Development\lfmap-web3` (`uv run --directory D:\Development\lfmap-web3 lfmap web fetch --help`).
 - The test `test_flow_step_fetch_then_convert` and `test_cli_and_mcp_generated` exist and pass on CI.
 - The fixes of spec section 16.4 are in: `test_dns_hang_respects_timeout`, `test_long_query_is_t3`.
 
@@ -77,7 +77,7 @@ Public pages only, `normal` class. What leaves the machine: two HTTPS GETs (URL,
 ## Start prompt (paste into a new Claude Code session on pc-01, Sonnet, repo lfmap; owner writes the approval in that session)
 
 ```
-Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\Development\lfmap pulled (run the commands with `uv run --directory D:\Development\lfmap`); if not, stop and say so.
+Task WEB-3 of lfmap #218 (real check of web.fetch on DIEP-ANH). Read docs/handoff/2026-11-12-web3-real-check-card.md and docs/specs/web-plugin.md sections 3, 8, 12, 16. WEB-1 and WEB-2 must be on main and D:\Development\lfmap-web3 prepared (run the commands with `uv run --directory D:\Development\lfmap-web3`); if not, stop and say so.
 Scope: only docs/research/2026-11-xx-web-fetch-real-check.md and changelog.d/218-web-real-check.added.md. No code under packages/ or plugins/, no ADR edit, no config.toml change by you (the owner added the two hosts).
 Do the steps of the card in order: dry checks, ONE real `lfmap web fetch <url> --save` per site from the interactive terminal, compare with the browser view, check audit.jsonl, replay offline, write the report with a verdict (a)/(b)/(c) per site. Do not retry on 403/429 and do not change headers. Stop on any condition in the card.
 Commit trailers: Dev-Environment: pc-01. Draft PR with "Refs #218" (never Closes). Follow the Session protocol of the card (draft PR at first commit, final report as a PR comment starting with DONE). Report the PR link.
