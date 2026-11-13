@@ -1,6 +1,7 @@
 """Incremental reindex (spec section 4) and read-only status of the knowledge catalog."""
 
 import itertools
+import logging
 import os
 import sqlite3
 import time
@@ -23,16 +24,79 @@ from lfmap_knowledge.store import connect, migrate, writer_lock
 from lfmap_knowledge.vectors import LanceVectorStore, model_slug
 
 DEFAULT_EMBED_MODEL = "bge-m3"
+BATCH_SIZE = 128  # texts per embed request; setting embed_batch overrides
+MAX_BATCH_SIZE = 1024
+MAX_CONCURRENCY = 4  # parallel embed requests; setting embed_concurrency
 MAX_ATTEMPTS = 3
 UPSERT_BATCH = 512  # chunks per embed call and vector write, gathered across files
 SENSITIVITIES = ("normal", "private", "secret")
 Progress = Callable[[str, int, int], None]  # stage ("scan" | "extract" | "embed"), done, total
+
+log = logging.getLogger(__name__)
 
 
 class Embedder(Protocol):
     model: str
 
     def embed(self, texts: list[str]) -> list[list[float]]: ...
+
+
+def _bounded(name: str, value: object, high: int) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= high:
+        raise ToolError("invalid_input", f"{name} must be an integer from 1 to {high}", {name: value})
+    return value
+
+
+def _embed_reason(reason: object) -> str:
+    """Keep the `embed_skipped_reason` values of the Ollama days: unreachable, bad_response, http_<code>."""
+    return "ollama_unreachable" if reason == "timeout" else f"ollama_{reason}"
+
+
+class ModelEmbedder:
+    """Embedder over `ctx.models.embed(task="embed")`: batches, optional parallel requests, stable error reasons."""
+
+    def __init__(self, models: Any, model: str, *, batch_size: int = BATCH_SIZE, concurrency: int = 1) -> None:
+        self.batch_size = _bounded("embed_batch", batch_size, MAX_BATCH_SIZE)
+        self.concurrency = _bounded("embed_concurrency", concurrency, MAX_CONCURRENCY)
+        if self.concurrency > 1:
+            log.warning(
+                "embed_concurrency = %d: Ollama loads embedding models such as bge-m3 with one slot, so parallel"
+                " requests gain nothing and can fail with HTTP 400",
+                self.concurrency,
+            )
+        self.models = models
+        self.model = model
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        """One vector per text, in input order; batches of batch_size, up to concurrency requests at once."""
+        if not texts:
+            return []
+        batches = [texts[start : start + self.batch_size] for start in range(0, len(texts), self.batch_size)]
+        if self.concurrency == 1 or len(batches) == 1:
+            results = map(self._embed_batch, batches)
+        else:
+            with ThreadPoolExecutor(min(self.concurrency, len(batches)), thread_name_prefix="lfmap-embed-req") as pool:
+                results = list(pool.map(self._embed_batch, batches))
+        return [vector for batch in results for vector in batch]
+
+    def _embed_batch(self, batch: list[str]) -> list[list[float]]:
+        try:
+            return self.models.embed(batch, task="embed", model=self.model)
+        except ToolError as error:
+            if error.code != "backend_unavailable":
+                raise
+            reason = _embed_reason(error.details.get("reason", "unreachable"))
+            raise ToolError(
+                "backend_unavailable", "The embedding model is not available", {**error.details, "reason": reason}
+            ) from error
+
+    def ping(self) -> bool:
+        """True if the embed route answers one short text; False when it fails or the network is not permitted."""
+        try:
+            self.models.embed(["ping"], task="embed", model=self.model)
+        except ToolError:
+            return False
+        return True
 
 
 def _key(path: str | os.PathLike[str]) -> str:

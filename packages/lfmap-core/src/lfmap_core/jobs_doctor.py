@@ -15,8 +15,11 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
-from lfmap_core import jobs
+from lfmap_core import auth, jobs
+from lfmap_core.config import load_config
+from lfmap_core.data_classes import load_class_map
 from lfmap_core.errors import ToolError
+from lfmap_core.permissions import _is_remote
 from lfmap_core.registry import Registry
 
 POWER_QUERY = ["powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE"]
@@ -29,6 +32,8 @@ OWNER_SCRIPT = (
     "param([Parameter(Mandatory)][string]$Path)\n"
     "(Get-Acl -LiteralPath $Path).GetOwner([System.Security.Principal.SecurityIdentifier]).Value\n"
 )
+DATA_FIX = "review [data.classes] with `uv run lfmap data classes`"
+OLD_SENSITIVITY = "[plugins.knowledge.settings.sensitivity] is still present; move its entries to [data.classes]"
 _HEX = re.compile(r"0x([0-9a-fA-F]+)")
 _SID = re.compile(r"S-1-\d+(-\d+)+")
 
@@ -409,6 +414,68 @@ def _check_runtime_acl(root: Path | None) -> Check:
     )
 
 
+def _overlaps(a: str, b: str) -> bool:
+    return any(x.startswith(y) and x[len(y) : len(y) + 1] in ("", os.sep) for x, y in ((a, b), (b, a)))
+
+
+def _knowledge_roots(config: dict) -> list[str]:
+    value = config.get("paths", {}).get("knowledge", []) if isinstance(config.get("paths"), dict) else []
+    roots = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+    return [r for r in roots if isinstance(r, str) and os.path.isabs(r) and not _is_remote(r)]
+
+
+def _has_old_sensitivity(config: dict) -> bool:
+    node: object = config
+    for key in ("plugins", "knowledge", "settings", "sensitivity"):
+        node = node.get(key) if isinstance(node, dict) else None
+    return bool(node)
+
+
+def _check_data_classes() -> Check:
+    try:
+        config = load_config()
+        class_map = load_class_map(config)
+    except ToolError as error:
+        return Check("data_classes", False, error.message, "edit [data.classes] in config.toml (docs/approvals.md)")
+    if not class_map:
+        detail = "no table (class model off)"
+        if _has_old_sensitivity(config):
+            return Check("data_classes", None, f"{detail}; {OLD_SENSITIVITY}", DATA_FIX)
+        return Check("data_classes", True, detail)
+    scratch = [e for e in class_map.entries if e.data_class == "scratch"]
+    warnings = [f"{e.path} does not exist" for e in class_map.entries if not os.path.isdir(e.path)]
+    roots = {r: os.path.normcase(os.path.realpath(r)).rstrip(os.sep) for r in _knowledge_roots(config)}
+    warnings += [
+        f"scratch {e.path} overlaps the knowledge root {os.path.realpath(root)}"
+        for e in scratch
+        for root, base in roots.items()
+        if _overlaps(e.base, base)
+    ]
+    if _has_old_sensitivity(config):
+        warnings.append(OLD_SENSITIVITY)
+    if warnings:
+        return Check("data_classes", None, "; ".join(warnings), DATA_FIX)
+    listed = ", ".join(e.path for e in scratch) if scratch else "none"
+    return Check("data_classes", True, f"{len(class_map.entries)} entries; scratch: {listed}")
+
+
+def _check_auth() -> Check:
+    try:
+        info = auth.status()
+    except ToolError as error:
+        return Check("auth", False, error.message, "uv run lfmap auth reset")
+    if not info["enrolled"]:
+        return Check("auth", None, "not enrolled: the typed code is in use", "uv run lfmap auth enroll")
+    try:
+        writers = other_writers(_read_acl(auth.auth_path()), _current_sid())
+    except (ToolError, OSError) as error:
+        return Check("auth", None, f"ACL of auth.json could not be read: {getattr(error, 'message', error)}")
+    if writers:
+        detail = f"auth.json can be changed by other accounts: {', '.join(writers)}"
+        return Check("auth", None, detail, "restrict auth.json to your account (icacls)")
+    return Check("auth", True, f"TOTP enrolled {str(info['enrolled_at'])[:10]}")
+
+
 def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
     path = path or jobs.jobs_path()
     uv = _check_uv()
@@ -433,4 +500,6 @@ def run_checks(registry: Registry, path: Path | None = None) -> list[Check]:
         _check_ollama(registry, enabled),
         _check_runtime_root(root, xml),
         _check_runtime_acl(root),
+        _check_data_classes(),
+        _check_auth(),
     ]

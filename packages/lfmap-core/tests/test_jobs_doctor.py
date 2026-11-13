@@ -171,7 +171,8 @@ def no_schtasks() -> ToolError:
 def test_check_names_and_order(jobs_file, registry, system):
     names = [check.name for check in jobs_doctor.run_checks(registry)]
     assert names == [
-        "uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama", "runtime_root", "runtime_acl"
+        "uv", "pwsh", "jobs_file", "tasks", "logon_mode", "wake", "sleep", "ollama", "runtime_root", "runtime_acl",
+        "data_classes", "auth",
     ]  # fmt: skip
 
 
@@ -632,3 +633,108 @@ def test_run_hides_the_console_window(monkeypatch):
     monkeypatch.setattr(jobs_doctor.subprocess, "run", fake_subprocess_run)
     assert jobs_doctor._run(["whoami.exe"]) == "ok"
     assert seen["creationflags"] == getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+def write_config(user_dirs: Path, text: str) -> None:
+    (user_dirs / "config.toml").write_text(text, encoding="utf-8")
+
+
+def test_data_classes_off_without_a_table(jobs_file, registry, system):
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert (check.ok, check.detail) == (True, "no table (class model off)")
+
+
+def test_data_classes_lists_scratch_entries(jobs_file, registry, system, user_dirs):
+    tmp, work = user_dirs / "tmp", user_dirs / "work"
+    tmp.mkdir()
+    work.mkdir()
+    write_config(user_dirs, f"[data.classes]\n'{tmp}' = \"scratch\"\n'{work}' = \"secret\"\n")
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert check.ok is True
+    assert check.detail == f"2 entries; scratch: {tmp.resolve()}"
+
+
+def test_data_classes_warns_about_a_missing_folder(jobs_file, registry, system, user_dirs):
+    gone = user_dirs / "gone"
+    write_config(user_dirs, f"[data.classes]\n'{gone}' = \"normal\"\n")
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert check.ok is None
+    assert f"{gone.resolve()} does not exist" in check.detail
+    assert check.fix
+
+
+@pytest.mark.parametrize("scratch_is_inside", [True, False])
+def test_data_classes_warns_about_scratch_and_a_knowledge_root(
+    jobs_file, registry, system, user_dirs, scratch_is_inside
+):
+    outer, inner = user_dirs / "kb", user_dirs / "kb" / "tmp"
+    inner.mkdir(parents=True)
+    scratch, knowledge = (inner, outer) if scratch_is_inside else (outer, inner)
+    write_config(user_dirs, f"[paths]\nknowledge = ['{knowledge}']\n\n[data.classes]\n'{scratch}' = \"scratch\"\n")
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert check.ok is None
+    assert f"scratch {scratch.resolve()} overlaps the knowledge root {knowledge.resolve()}" in check.detail
+
+
+def test_data_classes_warns_about_the_old_sensitivity_table(jobs_file, registry, system, user_dirs):
+    folder = user_dirs / "kb"
+    folder.mkdir()
+    old, new = "[plugins.knowledge.settings.sensitivity]", "[data.classes]"
+    write_config(user_dirs, f"{old}\n'{folder}' = \"secret\"\n\n{new}\n'{folder}' = \"secret\"\n")
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert check.ok is None
+    assert "[plugins.knowledge.settings.sensitivity] is still present" in check.detail
+
+
+def test_data_classes_invalid_table_is_a_failure(jobs_file, registry, system, user_dirs):
+    write_config(user_dirs, "[data.classes]\n'relative' = \"scratch\"\n")
+    check = by_name(jobs_doctor.run_checks(registry))["data_classes"]
+    assert check.ok is False
+    assert "[data.classes] in config.toml is invalid" in check.detail
+
+
+def test_auth_not_enrolled_is_a_warning(jobs_file, registry, system, user_dirs):
+    check = by_name(jobs_doctor.run_checks(registry))["auth"]
+    assert check.ok is None
+    assert "not enrolled" in check.detail
+    assert "typed code" in check.detail
+    assert check.fix == "uv run lfmap auth enroll"
+
+
+@pytest.fixture
+def enrolled(user_dirs, monkeypatch):
+    path = user_dirs / "localappdata" / "lfmap" / "auth.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        jobs_doctor.auth, "status", lambda: {"enrolled": True, "enrolled_at": "2026-11-10T08:00:00+00:00"}
+    )
+    return path
+
+
+def test_auth_enrolled_is_ok(jobs_file, registry, system, enrolled):
+    check = by_name(jobs_doctor.run_checks(registry))["auth"]
+    assert (check.ok, check.detail) == (True, "TOTP enrolled 2026-11-10")
+
+
+def test_auth_file_writable_by_another_account(jobs_file, registry, system, enrolled):
+    system["acl"]["by_path"][str(enrolled)] = f"D:PAI(A;;FA;;;SY)(A;;FA;;;{USER_SID})(A;;0x1301bf;;;{AGENT_SID})"
+    check = by_name(jobs_doctor.run_checks(registry))["auth"]
+    assert check.ok is None
+    assert AGENT_SID in check.detail
+    assert check.fix
+
+
+def test_auth_acl_that_only_you_can_write_is_ok(jobs_file, registry, system, enrolled):
+    system["acl"]["by_path"][str(enrolled)] = PROFILE_SDDL
+    assert by_name(jobs_doctor.run_checks(registry))["auth"].ok is True
+
+
+def test_auth_invalid_file_is_a_failure(jobs_file, registry, system, user_dirs):
+    path = user_dirs / "localappdata" / "lfmap" / "auth.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("not json", encoding="utf-8")
+    check = by_name(jobs_doctor.run_checks(registry))["auth"]
+    assert check.ok is False
+    assert "lfmap auth reset" in check.fix
+    assert "not json" not in check.detail

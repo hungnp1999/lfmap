@@ -3,11 +3,15 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
-from lfmap_core import Tool, operation
+from lfmap_core import Tool, ToolError, operation
+from lfmap_core.config import load_config
+from lfmap_core.models import ModelEndpoint, is_loopback_url
+from lfmap_core.models_router import ModelRouter
 from lfmap_knowledge import catalog, edges, indexer
 from lfmap_knowledge import search as chunk_search
-from lfmap_knowledge.embed import BATCH_SIZE, OllamaEmbedder
+from lfmap_knowledge.indexer import BATCH_SIZE, ModelEmbedder
 from lfmap_knowledge.schemas import (
     GetContextInput,
     GetContextOutput,
@@ -26,6 +30,8 @@ from lfmap_knowledge.schemas import (
 )
 from lfmap_knowledge.store import connect, migrate
 from lfmap_knowledge.vectors import LanceVectorStore
+
+DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
 
 
 def _print_progress(stage: str, done: int, total: int) -> None:
@@ -62,12 +68,34 @@ class KnowledgeTool(Tool):
         model = self.ctx.settings.get("embed_model", indexer.DEFAULT_EMBED_MODEL)
         return indexer.vector_store(self._data_dir(), model)
 
-    def _embedder(self) -> OllamaEmbedder:
+    def _models(self) -> Any:
+        """`ctx.models`, unless the settings must stand in for the embed route.
+
+        The owner's `[models]` table wins. Without it, a non-default `ollama_url` (or a context built without the
+        runtime) gets a local-only router whose one endpoint comes from the settings.
+        """
         settings = self.ctx.settings
-        return OllamaEmbedder(
-            settings.get("ollama_url", "http://127.0.0.1:11434"),
+        url = settings.get("ollama_url", DEFAULT_OLLAMA_URL)
+        if self.ctx.model_router is not None and (url == DEFAULT_OLLAMA_URL or load_config().get("models")):
+            return self.ctx.model_router
+        if not isinstance(url, str) or not is_loopback_url(url):
+            raise ToolError("invalid_input", "ollama_url must be a loopback address", {"url": url})
+        endpoint = ModelEndpoint(kind="local", base_url=url.rstrip("/") + "/v1")
+        config = {"models": {"endpoints": {"local": endpoint.model_dump()}, "routes": {"default": "local"}}}
+        return ModelRouter(
+            config,
+            plugin_id=self.ctx.plugin_id,
+            channel=self.ctx.channel,
+            permissions=self.ctx.permissions,
+            cloud_ai=False,
+            approve=self.ctx.require_approval,
+        )
+
+    def _embedder(self) -> ModelEmbedder:
+        settings = self.ctx.settings
+        return ModelEmbedder(
+            self._models(),
             settings.get("embed_model", indexer.DEFAULT_EMBED_MODEL),
-            self.ctx.permissions,
             batch_size=settings.get("embed_batch", BATCH_SIZE),
             concurrency=settings.get("embed_concurrency", 1),
         )

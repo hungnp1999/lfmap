@@ -1,0 +1,1 @@
+Equivalence of bge-m3 through Ollama `/v1/embeddings` and `/api/embed` measured (#249, MC-4): `spikes/mc4-embed-equivalence/run.py`, a `local` test and a report under `docs/research`. No product code or dependency changed.

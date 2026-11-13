@@ -102,6 +102,8 @@ uv run lfmap jobs doctor           # read-only machine check; exit 1 when a chec
 uv run lfmap doctor                # jobs doctor + flows check + events status in one report (--json)
 ```
 
+`lfmap doctor` also has a read-only `security` group (Windows only, warnings only, never changes the exit code) that reports whether Defender real-time protection and Controlled Folder Access are on and cover your configured folders; known limit: it cannot tell whether Controlled Folder Access covers Documents, Desktop or Pictures that Windows redirects to OneDrive, so such folders may be reported as not covered. When Defender real-time protection is off because another antivirus (for example ESET) is registered as active in Windows Security Center, the check is reported as ok and names that antivirus, and Controlled Folder Access is reported as n/a because it is a Defender feature.
+
 `register` creates or updates (`/F`) a task for every enabled job and deletes the tasks of jobs that are disabled
 or no longer in `jobs.toml`. It only ever touches tasks directly in `\LFMAP\`. `--dry-run` prints the
 `schtasks` commands without running them. `--repo` (default: `[runtime] root`, see below, else this checkout) and `--uv` (default: `uv` on
