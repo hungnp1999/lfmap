@@ -1,6 +1,6 @@
 # lfmap-knowledge
 
-LFMAP plugin that catalogs and indexes your local files once, so an agent can search them and get cited context without rescanning disks. Everything runs on this machine: text extraction through `lfmap-markitdown`, embeddings through a local Ollama, storage in SQLite and LanceDB. Roadmap Phase 1, items 1.4 and 1.5.
+LFMAP plugin that catalogs and indexes your local files once, so an agent can search them and get cited context without rescanning disks. Everything runs on this machine: text extraction through `lfmap-markitdown`, embeddings through a local Ollama via `ctx.models` (task `embed`), storage in SQLite and LanceDB. Roadmap Phase 1, items 1.4 and 1.5.
 
 | Operation | What it does | Side effects |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    [plugins.knowledge.settings]
    ollama_url = "http://127.0.0.1:11434"   # loopback only: 127.0.0.1, ::1 or localhost
    embed_model = "bge-m3"
-   embed_batch = 128                        # texts per Ollama /api/embed request, 1 to 1024
+   embed_batch = 128                        # texts per embed request, 1 to 1024
    embed_concurrency = 1                    # parallel requests, 1 to 4; keep 1 for bge-m3 (see below)
    pdf_backend = "markitdown"               # "docling": PDFs get nested headings (see below)
 
@@ -35,6 +35,7 @@ LFMAP plugin that catalogs and indexes your local files once, so an agent can se
    'D:\HR' = "secret"
    ```
 
+   - `ollama_url` and `embed_model` are the fallback for the `embed` route: an owner-written `[models]` table in `config.toml` takes over when present (endpoint and model come from it). `status` checks the route by embedding one short text.
    - `embed_concurrency` above 1 only helps when Ollama serves the model with several slots. Ollama loads bge-m3 with one slot even with `OLLAMA_NUM_PARALLEL=2`, so parallel requests gain nothing and some fail with HTTP 400 (seen on the 10k bench); a warning is logged when it is set above 1.
    - `normal` and `private`: returned on every channel. `secret`: only on `cli` and `sdk`, never over MCP.
    - Over MCP, roots that are secret or no longer in the config are hidden.
@@ -97,7 +98,7 @@ enabled = true
 
 - Every result is marked `untrusted`: it is text from your files, to be treated as data, not instructions.
 - Each `search` or `get_context` call that returns hits writes one row to `egress_log` in `catalog.db` (channel, operation, file and chunk ids, bytes).
-- No network except the loopback Ollama URL.
+- No network except the loopback embed endpoint (`ollama_url`, or the local endpoint the owner routes `embed` to; embeddings never go to cloud).
 - Legacy Office formats (`.doc`, `.rtf`, ...) and OCR follow `lfmap-markitdown`.
 - Vietnamese keyword search without diacritics can match several accented words ("ma" matches "mà", "má", "mã"); vector search narrows it.
 - One indexer at a time (`indexer.lock`); `status` shows `indexer_busy`.

@@ -18,13 +18,13 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+import urllib.request
 from pathlib import Path
 from typing import Any
 
 from lfmap_core import ToolContext
 from lfmap_core.models_http import OpenAICompatibleClient
 from lfmap_core.permissions import PermissionManager
-from lfmap_knowledge.embed import OllamaEmbedder
 from lfmap_knowledge.schemas import GetContextInput, ReindexInput, SearchInput
 from lfmap_knowledge.tool import KnowledgeTool
 
@@ -43,6 +43,25 @@ def _load_bench() -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class OllamaEmbedder:
+    """The embedder `knowledge` used before MC-5 (native POST /api/embed), kept here as the reference path."""
+
+    def __init__(self, url: str, model: str, perms: PermissionManager) -> None:
+        self.url, self.model, self.perms = url.rstrip("/"), model, perms
+        self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        out: list[list[float]] = []
+        for i in range(0, len(texts), 128):
+            body = json.dumps({"model": self.model, "input": texts[i : i + 128]}).encode()
+            request = urllib.request.Request(
+                f"{self.url}/api/embed", data=body, headers={"Content-Type": "application/json"}
+            )
+            with self._opener.open(request, timeout=120) as response:
+                out.extend(json.load(response)["embeddings"])
+        return out
 
 
 class V1Embedder:
