@@ -226,6 +226,7 @@ Each request (each redirect hop is one request) writes through the existing `aud
 | `backend_unavailable` | `too_many_redirects` | more than `max_redirects` hops |
 | `backend_unavailable` | `bad_response` | compressed body, malformed status line or headers, redirect without `Location` |
 | `backend_unavailable` | `rate_state` | `web_rate.db` unusable (fails closed) |
+| `backend_unavailable` | `audit_failed` | the `sent` audit line could not be written; nothing is sent (fails closed) |
 
 ## 11. Frozen tests (to implement with the code; written first)
 

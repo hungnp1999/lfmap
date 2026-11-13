@@ -1,0 +1,36 @@
+[plugin]
+id = "web"
+name = "Web"
+version = "0.1.0"
+description = "Fetch one public web page over HTTPS from a host the owner listed in [web] allowed_hosts."
+license = "Apache-2.0"
+authors = ["Hung Nguyen"]
+min_core_version = "0.1.0"
+
+[plugin.entrypoint]
+module = "lfmap_web.tool"
+class = "WebTool"
+
+[[operations]]
+name = "fetch"
+input = "lfmap_web.schemas:FetchInput"
+output = "lfmap_web.schemas:FetchOutput"
+side_effects = "external"
+min_tier = "T0"
+
+[permissions]
+fs_read = []
+fs_write = []
+network = true
+exec = []
+cloud_ai = false
+
+[adapters]
+cli = true
+mcp = true
+rest = false
+events = false
+web = true
+
+[dependencies.licenses]
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "PSF-2.0"]

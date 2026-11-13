@@ -89,6 +89,26 @@ def _attach_models(ctx: ToolContext, entry: PluginEntry, config: dict) -> None:
     )
 
 
+def _attach_web(ctx: ToolContext, entry: PluginEntry, config: dict) -> None:
+    """Give `ctx.web` to a plugin whose manifest has `[adapters] web = true`.
+
+    The fetcher takes `[web]` and nothing else: no resolver, SSL context, clock, policy or port (spec section 5)."""
+    if not entry.manifest.adapters.web:
+        return
+    from lfmap_core.web import load_web_config  # keeps the web modules out of plain imports
+    from lfmap_core.web_http import WebFetcher, web_access
+
+    plugin_id, channel, permissions = entry.id, ctx.channel, ctx.permissions
+    operation = getattr(ctx.approver, "operation", "")
+
+    def factory() -> WebFetcher:
+        return WebFetcher(
+            load_web_config(config), plugin_id=plugin_id, channel=channel, operation=operation, permissions=permissions
+        )
+
+    ctx.web_fetcher = web_access(factory)
+
+
 def _class_guard(config: dict, approver: Any) -> ClassGuard | None:
     """ADR-025: a guard only when `[data.classes]` has an entry and someone approves (plain SDK use has none).
     An invalid table raises, so gated calls fail until the owner fixes it."""
@@ -138,6 +158,7 @@ def build_tool(
         **_plugin_dirs(variables),
     )
     _attach_models(ctx, entry, config)
+    _attach_web(ctx, entry, config)
     return entry.tool_class(ctx)
 
 
@@ -161,7 +182,8 @@ def context_for(
 ) -> ToolContext:
     """Context for an in-process call to another plugin: the caller's rights, the callee's own folders and settings.
 
-    Pass the callee's `entry` so a callee with `[adapters] models = true` gets its own `ctx.models`."""
+    Pass the callee's `entry` so a callee with `[adapters] models = true` or `web = true` gets its own
+    `ctx.models` or `ctx.web`."""
     config = load_config() if config is None else config
     ctx = ToolContext(
         plugin_id=plugin_id,
@@ -175,4 +197,5 @@ def context_for(
     )
     if entry is not None:
         _attach_models(ctx, entry, config)
+        _attach_web(ctx, entry, config)
     return ctx

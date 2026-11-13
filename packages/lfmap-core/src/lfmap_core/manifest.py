@@ -62,6 +62,7 @@ class Adapters(_Strict):
     rest: bool = False
     events: bool = False
     models: bool = False
+    web: bool = False
 
 
 class LicensePolicy(_Strict):
