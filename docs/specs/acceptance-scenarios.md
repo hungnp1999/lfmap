@@ -156,3 +156,37 @@ Source: the owner's real workflow, recorded 2026-11-12. No personal data of fami
 5. Nutrition analysis needs a food composition dataset; check its licence first. An LLM alone is not a reliable source for a nutrition claim.
 6. Schedule offset: the list goes out one day ahead of the cooking day, so the trigger and the target date differ.
 7. Phone notes: no connector exists; plain files in a synced folder are the likely route.
+
+## S4: Meeting minutes
+
+Source: the owner's real workflow, recorded 2026-11-13. No meeting content is recorded here; only the kind of data.
+
+- Why it matters: taking notes distracts from the meeting, full notes are hard to keep, and compiling and standardising minutes afterwards takes a long time.
+- Frequency: per event.
+- Trigger: a meeting starts on MS Teams, Google Meet, Zoom or similar.
+- Input: audio, chat messages, shared screen, meeting documents; Vietnamese and English, sometimes Chinese, Korean, Japanese, Russian or French.
+- Steps today:
+  1. Follow the audio, chat, screen and documents during the meeting.
+  2. Take notes in an app (notebook, Word, Notepad) or by hand on paper, with sketches.
+  3. Listen to the recording again and transcribe it (when there is one).
+  4. Compile the minutes.
+  5. Email the attendees or attach the minutes to a system.
+- Expected output: a DOCX or PDF file (the minutes), sent by email or uploaded to a system.
+- Your approval: read and approve the minutes before they are sent.
+- Data class: normal, private or secret, depending on the meeting. The class is set per meeting, not per scenario.
+- Leaves the machine?: yes: the minutes go to the attendees by email or to a system. The audio must not leave the machine.
+- Success check: basic details complete, the discussion and the decisions of the chair or the person in authority recorded.
+- Failure to avoid: wrong figures, or opinions reported with a changed meaning.
+- Plugins you expect: meeting bot, speech-to-text, translation, analysis, report writer (`llm`, `file`, `email`).
+- Test data available?: Claude generates (real meetings are heavy and confidential and cannot be shared): synthetic audio from text-to-speech with a known script, so the expected minutes are known.
+
+### Core gaps this scenario exposes (to become issues before any plugin is built)
+
+1. A bot that joins Teams, Meet or Zoom is a separate product: it needs an account on a third-party platform, joins from outside the machine, and raises recording-consent and platform-terms questions. Not feasible as a Phase 2 plugin. Reduced version for acceptance: the owner drops a recording (or a local capture) into a declared folder and the flow starts from the file.
+2. No speech-to-text plugin. The model must run locally (audio stays on the machine), be licence-checked, and share the GPU strictly serially with other models.
+3. Multi-language speech and text (Vietnamese, English, plus CJK, Russian, French): decide the supported set for acceptance; the rest is best effort.
+4. Data class per run: the same flow handles `normal` to `secret` input. The class has to come from the input (folder, tag) and decide where each step runs; `secret` forces local-only steps and a stricter approval.
+5. Shared screen and handwritten notes need OCR or vision; `ocr` is on the Phase 2 list, vision is not. Leave out of the first version.
+6. The approval step before send: the owner reads the minutes first. Needs the minutes as a reviewable file in the approval queue, then `email` with an attachment.
+7. Output as DOCX/PDF: same document-formatter gap as S2.
+8. Numbers and decisions must not be changed by the model: a check that every figure in the minutes appears in the transcript (like the citation check in S2).
