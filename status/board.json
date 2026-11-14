@@ -1477,7 +1477,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "14/11 · CC: JF-1 a job edited while it waits for approval must not block itself; doctor check",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-12",
       "due": "2026-11-13",
       "labels": [
@@ -2717,7 +2717,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "Decide: Phase 3 shape and Roadmap changes from the Phase 3 outline (R1 to R7)",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2750,6 +2750,87 @@
       "due": null,
       "labels": [
         null
+      ]
+    },
+    {
+      "number": 329,
+      "repo": "hungnp1999/lfmap",
+      "title": "fix(jobs): a paused job edited in jobs.toml starts a new run; doctor checks the runner's load (JF-1)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 330,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): record owner decisions on the Phase 3 outline (#326)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 331,
+      "repo": "hungnp1999/lfmap",
+      "title": "Architecture baseline before the Phase 2 exit (tool-result label, channel chat, contract version)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 332,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): record owner confirmations on the Phase 3 outline (#326)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 333,
+      "repo": "hungnp1999/lfmap",
+      "title": "Lan core architecture for Phase 3a (JARVIS-grade core): design doc with options",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision",
+        "gate:po"
+      ]
+    },
+    {
+      "number": 334,
+      "repo": "hungnp1999/lfmap",
+      "title": "A10: design the core extension points for later plugins (Phase 3a, core freeze)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "gate:po",
+        "security-review"
       ]
     },
     {
