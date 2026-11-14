@@ -1,0 +1,1 @@
+Phase 3 outline (#326): section 12.3 of `docs/research/2026-11-14-phase3-outline.md` records the owner's confirmations of 2026-11-14 (definition of the core freeze, larger 3a, freeze test as a principle, architecture baseline before the Phase 2 exit #331, new Phase 2 exit wording). Docs only. No new dependency.

@@ -168,6 +168,7 @@ Goal: one runner and one proposal kind. A job in `jobs.toml` is translated on lo
 
 - A translated job that needs more than its ceiling pauses like any flow: one `flows.resume` proposal (T2 as section 5; the reason names the call's own tier). `approvals pending` shows the job id in the `job` column as today.
 - Run state: a translated job writes a run file **only when it pauses** (needed for resume); a run that completes or fails writes none, as jobs never had run files, so an hourly job does not create 24 files a day. Its result is the `jobs-YYYY-MM-DD.jsonl` line and `audit.jsonl`. (Open question 1.)
+- A job edited while its run waits (its translation hash no longer matches the run's `flow_sha256`): the next `jobs run` moves the old proposal to `expired`, closes the old run as `expired` and starts a new run, so the job never blocks itself. Approving the old proposal refuses with `flow changed` and names `lfmap approvals reject <id>`. `jobs doctor` runs the runner's own load (`flows.toml` and id clash) and fails with its message.
 - Audit channel: runs of translated jobs use channel `flow`. The channel `job` stays valid in `audit.jsonl` and in `approvals` for old lines and old proposals (section 13.4).
 - A `via = "event"` translated job still writes two audit lines for one T1 run (flow gate and event adapter), as `docs/jobs.md` explains.
 

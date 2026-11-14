@@ -71,6 +71,21 @@ def call(
     return run_operation(entry, operation, resolved, channel="flow" if approved is None else "cli", approver=gate)
 
 
+def expire(approval_id: str | None) -> None:
+    """Move a waiting job run's proposal to `expired` and close its run, as `approvals.sweep` does at its end of life.
+    A proposal that is already gone (approved, rejected or swept meanwhile) leaves nothing to do."""
+    from lfmap_core import flows_run  # flows_run imports this module
+
+    try:
+        proposal = approvals.load(approval_id or "")
+        approvals.move(proposal.id, "expired")
+    except ToolError as error:
+        if error.code != "not_found":
+            raise
+        return
+    flows_run.close(proposal, "expired")
+
+
 def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_events: int = 1000) -> BaseModel:
     """Run one job through the Flows runner. A run that waits for approval raises `permission_denied`
     ("Queued for approval"), a failed run raises its error, so exit codes and messages are those of `jobs run`."""
@@ -83,8 +98,14 @@ def run_job(registry: Registry, job_id: str, path: Path | None = None, *, max_ev
         raise ToolError("not_found", f"Unknown operation {job.plugin}.{job.operation}", {"job": job_id})
     approvals.sweep()
     [last] = flows_run.list_runs(job_id, 1) or [None]
-    if last is not None and last.status == "awaiting_approval":  # the same call keeps its pending proposal
-        raise ToolError("permission_denied", "Queued for approval", {"approval_id": last.approval_id, "job": job_id})
+    if last is not None and last.status == "awaiting_approval":
+        if last.flow_sha256 == flows_run._flows_file()[1].get(job_id):  # the same call keeps its pending proposal
+            raise ToolError(
+                "permission_denied", "Queued for approval", {"approval_id": last.approval_id, "job": job_id}
+            )
+        expire(
+            last.approval_id
+        )  # the job was edited: the old proposal can no longer be approved, so a new run replaces it
     token = EVENT_DRAIN.set(max_events)
     try:
         run = flows_run.start(registry, job_id, {})

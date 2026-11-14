@@ -15,7 +15,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
-from lfmap_core import auth, jobs
+from lfmap_core import auth, flows_run, jobs
 from lfmap_core.config import load_config
 from lfmap_core.data_classes import load_class_map
 from lfmap_core.errors import ToolError
@@ -25,6 +25,7 @@ from lfmap_core.registry import Registry
 POWER_QUERY = ["powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE"]
 OLLAMA_URL = "http://localhost:11434/api/version"
 REGISTER_FIX = "uv run lfmap jobs register"
+LOAD_FIX = "fix jobs.toml or flows.toml, then run `lfmap flows check` (docs/jobs.md)"
 SIGNED_OUT_FIX = 'Task Scheduler > \\LFMAP\\ > task > General: "Run whether user is logged on or not"'
 WAKE_FIX = 'Task Scheduler > \\LFMAP\\ > task > Conditions: "Wake the computer to run this task"'
 RUNTIME_FIX = "point [runtime] root in jobs.toml at a clone only you can write (docs/jobs.md), then register"
@@ -149,6 +150,11 @@ def _load(registry: Registry, path: Path) -> tuple[Check, list[jobs.Job] | None]
     if broken:
         detail = "unknown plugin or operation, or events not enabled: " + ", ".join(broken)
         return Check("jobs_file", False, detail, "fix the jobs or install the plugin"), job_list
+    try:
+        flows_run._flows_file()  # the load every job start does: flows.toml, the translation and the id clash
+    except ToolError as error:
+        detail = f"{error.message}: {error.details.get('error', '')}".strip(": ")
+        return Check("jobs_file", False, f"jobs cannot start: {detail}", LOAD_FIX), job_list
     return Check("jobs_file", True, f"{path}: {len(job_list)} job(s)"), job_list
 
 
