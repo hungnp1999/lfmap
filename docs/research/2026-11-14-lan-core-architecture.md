@@ -2,7 +2,7 @@
 
 - Date: 2026-11-14. Role: Architect. Issue #333. Requested by Hùng (project thread "Thiết kế kiến trúc lõi Lan kiểu Jarvis").
 - Question: what must the core of Lan be at the end of Phase 3a so that it deserves the word "JARVIS-grade", can carry every later capability as a plugin, and can stay architecturally unchanged for about four years (owner decisions of 2026-11-14, #326)?
-- Status: **design proposal with options. Nothing here is decided.** Docs only: no code, no ADR, no Roadmap line and no spec is changed by this file. Everything that touches an ADR, an accepted invariant or the Roadmap is marked **[needs Hùng]** and collected in sections 10 and 12.
+- Status: **accepted by the owner on 2026-11-14 14:27Z (section 14, which wins over earlier sections).** Written as a proposal with options; sections 1 to 13 keep that wording. Docs only: no code, no ADR, no Roadmap line and no spec is changed by this file. Everything that touches an ADR, an accepted invariant or the Roadmap is marked **[needs Hùng]** and collected in sections 10 and 12.
 - Builds on, and does not repeat: the Lan sketch `2026-11-10-lanhai-assistant-architecture.md` (levels L0 to L8, six blocks, safety rules 1 to 8, accepted 2026-11-10), the Phase 3 outline `2026-11-14-phase3-outline.md` (items A0 to A10, entry criteria, stop rules, section 12 decisions), the architecture review `2026-11-08-architecture-review.md` and the threat model `2026-11-13-threat-model.md`.
 - Boundaries with work running in parallel: issue #331 owns the tool-result label spec, the channel `chat` ADR draft, the contract version and the redrawn diagram. Outline item A10 (notify inbox, non-loopback bind and device identity, listener process, GPU lock, label for data without a path, and the freeze-test pages for L3 to L7) has its own spec: issue #334, `docs/specs/core-extension-points.md` (PR #335). This file gives both their frame and designs neither.
 - Sources: `/mnt/project-files/lfmap-docs/` 03 (ADR-001..026) and 05 (Roadmap of 2026-11-14), `ARCHITECTURE.md`, `docs/specs/` (model-client, flows, chat-ui, data-classes, acceptance-scenarios), `packages/lfmap-core/src/lfmap_core/` (`tool.py`, `runtime.py`, `approval.py`, `flows_run.py`) on `main` at 147d2dd.
@@ -433,3 +433,14 @@ None of the seven blocks Phase 2 work. Points 3 and 5 shape the documents of #33
 ## 13. Not covered
 
 The label spec, the channel `chat` ADR, the contract version and the redrawn diagram (#331). The five extension points and the freeze-test pages (A10 thread). Cloud-intake details: pre-check patterns, call cap, provider (outline A1 b, ADR-026). Security S4 and safe mode (outline A8). The web UI's screens (`chat-ui.md`). Bench A2. Installer, registry and packaging (3b). Voice, memory, proactivity, phone and devices beyond the seams named in 5.2.
+
+## 14. Decisions recorded (Hùng, 2026-11-14 14:27Z)
+
+1. **Principle accepted: freeze the mechanism, not the thinking.** The owner's name for this work is shaping the **framework** of Lan: it must not be so tight that it narrows the solutions, nor so wide that control is lost. Every 3a spec is judged against both halves.
+2. **All seven points of section 12 accepted**: the twelve properties as the meaning of "JARVIS-grade core" (C-definition), freeze by rings with a conformance suite and a four-week soak (C1), one step executor (C3), views by endpoint clearance with the "local only" switch and the "private" mark (C5), the blind planner and the two sink rules (C6), one decision record with the `covers` list (C9), and the ADR-001 note.
+3. **The proposed handling of the new ADR conflicts accepted** (section 10, rows 1, 2, 3 and 8): the loop stays in-house with an ADR-024 note and line caps set in the executor and kernel specs; an ADR-001 note names the engine in core and the one streaming route as exceptions; one ADR "labels and sinks" is drafted together with the label spec of #331; sketch rule 4 is read per view. Notes for ADR-024 and ADR-001 were added to `03_Decisions_ADR.md` (outside the repo) on 2026-11-14. The ADR "labels and sinks" is still to be written and accepted (`gate:po`, `/security-review`).
+4. **Scope**: the owner expected 3a to be larger than the earlier outline; the work list of section 8 stands.
+
+The choices listed in section 12 as the Architect's (C2, C4, C7, C8, C10, C11) stand as recommended.
+
+What this does not decide: the known conflicts of section 10 rows 4 to 7 (cloud intake, plan-level approval, approval from a UI) keep their own ADRs and entry criteria. No code starts from this file; each item of section 8 gets its spec or card when it is picked up.
