@@ -187,7 +187,7 @@ session = "interactive"       # interactive (needs the logged-on desktop: microp
 ```python
 class VoiceTool(Tool):
     @listener("wake")
-    def wake(self, stop: StopSignal) -> None: ...   # a loop; must return within 10 s of stop
+    def wake(self, stop: StopSignal) -> None: ...  # a loop; must return within 10 s of stop
 ```
 
 - **Off by default.** A listener runs only with `[listeners."<plugin>.<name>"] enabled = true` in the owner's `config.toml`. Installing a plugin never starts a process (supply chain, G8 #315).
@@ -215,7 +215,8 @@ class VoiceTool(Tool):
 ```python
 with ctx.resources.lease("gpu", purpose="transcribe", wait_seconds=None) as lease:
     ...
-    if lease.should_yield(): ...   # a background holder checks between units of work
+    if lease.should_yield():
+        ...  # a background holder checks between units of work
 ```
 
 - Resources are named by the owner: `[resources.gpu]` (exclusive; at 1.0 a resource has one holder). A plugin needs `[permissions] resources = ["gpu"]`.
