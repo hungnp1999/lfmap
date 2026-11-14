@@ -70,19 +70,6 @@
       ]
     },
     {
-      "number": 116,
-      "repo": "hungnp1999/lfmap",
-      "title": "AA-3: jobs run from a reviewed runtime root, ACL check in jobs doctor",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        "gate:po",
-        "security-review"
-      ]
-    },
-    {
       "number": 118,
       "repo": "hungnp1999/lfmap",
       "title": "AG-E1: user guide for the event bus (docs/events.md)",
@@ -119,30 +106,6 @@
       "labels": [
         "exec:CC",
         "P3"
-      ]
-    },
-    {
-      "number": 121,
-      "repo": "hungnp1999/lfmap",
-      "title": "docs(provenance): pc-01 agent account signs with its own key (ADR-023)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
-      ]
-    },
-    {
-      "number": 122,
-      "repo": "hungnp1999/lfmap",
-      "title": "docs: event bus user guide (AG-E1)",
-      "type": "PullRequest",
-      "status": "Done",
-      "start": null,
-      "due": null,
-      "labels": [
-        null
       ]
     },
     {
@@ -912,6 +875,7 @@
       "start": null,
       "due": null,
       "labels": [
+        "exec:PO",
         "P3"
       ]
     },
@@ -1031,7 +995,7 @@
     {
       "number": 193,
       "repo": "hungnp1999/lfmap",
-      "title": "14/11 · CC: weekly retrieval regression bench (grow to about 50 questions)",
+      "title": "16/11 · CC: weekly retrieval regression bench (grow to about 50 questions)",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-14",
@@ -1045,7 +1009,7 @@
     {
       "number": 194,
       "repo": "hungnp1999/lfmap",
-      "title": "14/11 · CC: Chat UI spec, web-first with Tauri later as a shell",
+      "title": "15/11 · CC: Chat UI spec, web-first with Tauri later as a shell",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-14",
@@ -1103,7 +1067,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "13/11 · CC: Security core S3, read-only Windows Security checks in lfmap doctor",
       "type": "Issue",
-      "status": "Backlog",
+      "status": "Done",
       "start": "2026-11-13",
       "due": "2026-11-13",
       "labels": [
@@ -1511,7 +1475,7 @@
     {
       "number": 231,
       "repo": "hungnp1999/lfmap",
-      "title": "12/11 · CC: JF-1 a job edited while it waits for approval must not block itself; doctor check",
+      "title": "14/11 · CC: JF-1 a job edited while it waits for approval must not block itself; doctor check",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-12",
@@ -1588,7 +1552,6 @@
       "labels": [
         "exec:CC",
         "P2",
-        "blocked",
         "security-review"
       ]
     },
@@ -1616,14 +1579,13 @@
       "due": null,
       "labels": [
         "exec:PO",
-        "P2",
-        "blocked"
+        "P2"
       ]
     },
     {
       "number": 239,
       "repo": "hungnp1999/lfmap",
-      "title": "13/11 · CC: JF-2 stop producing operation requests over the bus",
+      "title": "15/11 · CC: JF-2 stop producing operation requests over the bus",
       "type": "Issue",
       "status": "Ready",
       "start": "2026-11-13",
@@ -1643,7 +1605,8 @@
       "due": null,
       "labels": [
         "exec:CC",
-        "P2"
+        "P2",
+        "blocked"
       ]
     },
     {
@@ -1657,6 +1620,7 @@
       "labels": [
         "exec:CC",
         "P2",
+        "blocked",
         "gate:po",
         "security-review"
       ]
@@ -1672,6 +1636,7 @@
       "labels": [
         "exec:CC",
         "P3",
+        "blocked",
         "gate:po"
       ]
     },
@@ -1888,7 +1853,7 @@
       "repo": "hungnp1999/lfmap",
       "title": "12/11 · PO: review Operating Model B and the five commitments of 04/11",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-12",
       "due": "2026-11-12",
       "labels": [
@@ -1899,9 +1864,9 @@
     {
       "number": 261,
       "repo": "hungnp1999/lfmap",
-      "title": "13/11 · CC: threat model for LFMAP (assets, entry points, abuse cases) after ADR-025",
+      "title": "14/11 · CC: threat model for LFMAP (assets, entry points, abuse cases) after ADR-025",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-13",
       "due": "2026-11-13",
       "labels": [
@@ -1913,9 +1878,9 @@
     {
       "number": 262,
       "repo": "hungnp1999/lfmap",
-      "title": "14/11 · CC: Phase 3 outline (productization) with entry criteria and risks",
+      "title": "15/11 · CC: Phase 3 outline (productization) with entry criteria and risks",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-14",
       "due": "2026-11-14",
       "labels": [
@@ -1926,9 +1891,9 @@
     {
       "number": 263,
       "repo": "hungnp1999/lfmap",
-      "title": "15/11 · CC: post-merge review of ModelClient (PR #221, #225, #226)",
+      "title": "14/11 · CC: post-merge review of ModelClient (PR #221, #225, #226)",
       "type": "Issue",
-      "status": "Ready",
+      "status": "Done",
       "start": "2026-11-15",
       "due": "2026-11-15",
       "labels": [
@@ -1953,9 +1918,9 @@
     {
       "number": 265,
       "repo": "hungnp1999/lfmap",
-      "title": "docs: acceptance scenario S2, technology research (#191)",
+      "title": "docs: acceptance scenarios S2-S4 and Phase 2 selection (#191)",
       "type": "PullRequest",
-      "status": "Backlog",
+      "status": "Done",
       "start": null,
       "due": null,
       "labels": [
@@ -2303,6 +2268,482 @@
       "number": 293,
       "repo": "hungnp1999/lfmap",
       "title": "docs(web): re-check card for baodauthau.vn after WEB-4; fix zip-bomb wire size",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 294,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): web.fetch re-check of baodauthau.vn after WEB-4 (#218)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 295,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): start card for JF-1 (#231)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 296,
+      "repo": "hungnp1999/lfmap",
+      "title": "knowledge reindex never embeds when a batch exceeds the 200 000-character embed limit (ModelClient review F1)",
+      "type": "Issue",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1"
+      ]
+    },
+    {
+      "number": 297,
+      "repo": "hungnp1999/lfmap",
+      "title": "Decide: one T3 gate or two for a cloud llm call; preapproved destinations never cover the first (ModelClient review F2)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P2",
+        "needs-decision",
+        "security-review"
+      ]
+    },
+    {
+      "number": 298,
+      "repo": "hungnp1999/lfmap",
+      "title": "ModelRouter egress lines: `sent` written when nothing is sent, and no result line after a non-ToolError failure (ModelClient review F3)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 299,
+      "repo": "hungnp1999/lfmap",
+      "title": "Embeddings can reach a cloud endpoint through any task name other than `embed` (ModelClient review F4)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision",
+        "security-review"
+      ]
+    },
+    {
+      "number": 300,
+      "repo": "hungnp1999/lfmap",
+      "title": "llm.summarise returns an empty or cut-off summary as a success (ModelClient review F5)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2"
+      ]
+    },
+    {
+      "number": 301,
+      "repo": "hungnp1999/lfmap",
+      "title": "Smoke on pc-01: llm summarise, extract, classify against real Ollama (context window, thinking models) (ModelClient review F6)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "res:gpu"
+      ]
+    },
+    {
+      "number": 302,
+      "repo": "hungnp1999/lfmap",
+      "title": "ModelRouter: validate `task` and `model`; do not log the server's model string unchecked (ModelClient review F7)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "security-review"
+      ]
+    },
+    {
+      "number": 303,
+      "repo": "hungnp1999/lfmap",
+      "title": "knowledge.status loads the embedding model on every call (ModelClient review F8)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 304,
+      "repo": "hungnp1999/lfmap",
+      "title": "lfmap doctor: check `[models]` (config errors, routes, local endpoints) instead of a fixed Ollama URL (ModelClient review F9)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 305,
+      "repo": "hungnp1999/lfmap",
+      "title": "ModelClient minor hardening: byte count, total timeout, error body, in-process cloud_ai, small input checks (ModelClient review F10)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "security-review"
+      ]
+    },
+    {
+      "number": 306,
+      "repo": "hungnp1999/lfmap",
+      "title": "Bring `docs/specs/model-client.md` and ARCHITECTURE.md in line with the merged ModelClient (ModelClient review F11)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 307,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): post-merge review of ModelClient (#263)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 308,
+      "repo": "hungnp1999/lfmap",
+      "title": "G1: refuse `secret` reads on egress channels (mcp, rest), not only in knowledge",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P1",
+        "needs-decision",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 309,
+      "repo": "hungnp1999/lfmap",
+      "title": "G2: code merged to main runs as the owner within the hour with no check on pc-01",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1",
+        "needs-decision",
+        "gate:po",
+        "security-review"
+      ]
+    },
+    {
+      "number": 310,
+      "repo": "hungnp1999/lfmap",
+      "title": "G3: a T3 flow step is approved with yes/no; ask the owner code (with JF-4)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "needs-decision",
+        "security-review"
+      ]
+    },
+    {
+      "number": 311,
+      "repo": "hungnp1999/lfmap",
+      "title": "G4: check who listens on the local model port (loopback is shared between accounts)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 312,
+      "repo": "hungnp1999/lfmap",
+      "title": "G5: keep document text out of the backup (run files, event payloads, proposals)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 313,
+      "repo": "hungnp1999/lfmap",
+      "title": "G6: restore must not take grants and must show the security-relevant config first",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 314,
+      "repo": "hungnp1999/lfmap",
+      "title": "G7: tamper evidence for audit.jsonl and a notice when config.toml changes",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 315,
+      "repo": "hungnp1999/lfmap",
+      "title": "G8: owner allow-list of plugins before entry points are imported",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 316,
+      "repo": "hungnp1999/lfmap",
+      "title": "G9: minimal environment for child processes (scripts, OCR, later claude -p)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "security-review"
+      ]
+    },
+    {
+      "number": 317,
+      "repo": "hungnp1999/lfmap",
+      "title": "G10: provenance mark for untrusted content, carried with the class label (Phase 3 precondition)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P2",
+        "blocked",
+        "security-review"
+      ]
+    },
+    {
+      "number": 318,
+      "repo": "hungnp1999/lfmap",
+      "title": "G11: bound the URL path of web.fetch like the query (T3 above the limit)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "needs-decision"
+      ]
+    },
+    {
+      "number": 319,
+      "repo": "hungnp1999/lfmap",
+      "title": "G12: doctor warns when a declared root is writable by another account (check-then-use paths)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3",
+        "security-review"
+      ]
+    },
+    {
+      "number": 320,
+      "repo": "hungnp1999/lfmap",
+      "title": "G13: bounds for unattended pile-up (pending proposals, audit and events size, saved pages)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 321,
+      "repo": "hungnp1999/lfmap",
+      "title": "G14: doctor warns when the system or data volume is not encrypted",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 322,
+      "repo": "hungnp1999/lfmap",
+      "title": "PO: verify on pc-01 and GitHub what the threat model could not see (V1 to V8)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P1"
+      ]
+    },
+    {
+      "number": 323,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): threat model after ADR-025 (#261)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 324,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Operating Model B pilot review (#260)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 325,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(handoff): start card for #296 (embed batches by characters)",
+      "type": "PullRequest",
+      "status": "Done",
+      "start": null,
+      "due": null,
+      "labels": [
+        null
+      ]
+    },
+    {
+      "number": 326,
+      "repo": "hungnp1999/lfmap",
+      "title": "Decide: Phase 3 shape and Roadmap changes from the Phase 3 outline (R1 to R7)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:PO",
+        "P2",
+        "needs-decision",
+        "gate:po"
+      ]
+    },
+    {
+      "number": 327,
+      "repo": "hungnp1999/lfmap",
+      "title": "Approval load report: decisions per week by tier and channel from audit.jsonl (Phase 3 entry criterion E8)",
+      "type": "Issue",
+      "status": "Backlog",
+      "start": null,
+      "due": null,
+      "labels": [
+        "exec:CC",
+        "P3"
+      ]
+    },
+    {
+      "number": 328,
+      "repo": "hungnp1999/lfmap",
+      "title": "docs(research): Phase 3 outline with entry criteria and risks (#262)",
       "type": "PullRequest",
       "status": "Done",
       "start": null,

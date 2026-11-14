@@ -15,6 +15,16 @@
       "cve": "CVE-2026-126190",
       "manifest": "uv.lock",
       "created": "2026-11-13T03:59:16Z"
+    },
+    {
+      "repo": "lfmap",
+      "number": 4,
+      "package": "opentelemetry-api",
+      "severity": "medium",
+      "advisory": "GHSA-mf5v-w3w3-f6cg",
+      "cve": "CVE-2026-126360",
+      "manifest": "uv.lock",
+      "created": "2026-11-14T01:02:29Z"
     }
   ]
 }
