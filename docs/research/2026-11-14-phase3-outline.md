@@ -2,7 +2,7 @@
 
 - Date: 2026-11-14. Role: Planner / Architect. Issue #262 (item K7 of the 11/11 report).
 - Question: what is in Phase 3, what must be true before each item starts, what does each item need from Phase 2, what does it cost and risk, and what leaves Phase 2 if Phase 2 grows.
-- Outline only. No code, no ADR, no Roadmap line and no owner decision is changed by this file. The Roadmap lives outside the repo; proposed changes are listed in section 8 for the owner. Anything that touches an ADR, the Blueprint or the Roadmap is marked **[needs Hùng]**.
+- Outline only (owner decisions of 2026-11-14 recorded in section 12, which wins over earlier sections). No code, no ADR and no Roadmap line is changed by this file. The Roadmap lives outside the repo; proposed changes are listed in section 8 for the owner. Anything that touches an ADR, the Blueprint or the Roadmap is marked **[needs Hùng]**.
 - Sources: `/mnt/project-files/lfmap-docs/` 01, 03, 05 (Blueprint v0.3 §15, ADR-001..026, Roadmap), `ARCHITECTURE.md`, `docs/specs/` (acceptance-scenarios, chat-ui, data-classes), `docs/research/` 2026-11-08 architecture review, 2026-11-10 Lan Hài sketch, 2026-11-13 threat model, 2026-11-15 ModelClient review, open issues on 2026-11-13 (47 open; milestone "Phase 3" holds #157, #183, #199).
 - Limits: sizes are relative estimates, not forecasts (S = one card such as DC-2; M = a short series such as MC-1..MC-5; L = a handoff series such as Flows or knowledge K4..K14; XL = a product of its own). No licence, price, legal or vendor-policy fact was checked for this file; each is marked "verify". What other people's machines can run was not measured.
 
@@ -187,3 +187,38 @@ Items 1 to 4 change the Roadmap. Nothing here blocks Phase 2 work.
 ## 11. Not covered
 
 Designs of the items (each gets a spec or ADR at its start), prices, branding and trademark (parked until Phase 2 ends), the owner's separate commercial project, levels L3 to L7 of the Lan sketch, a calendar: the Roadmap counts by results, not dates.
+
+## 12. Decisions recorded (Hùng, 2026-11-14 03:55Z)
+
+Answers to the six points of section 9 (#326). Where a decision changes an earlier section, this section wins.
+
+1. **Split accepted: 3a and 3b.** 3a must complete the **core of Lan** in the JARVIS direction. The other JARVIS functions become plugins. A plugin that can compete commercially becomes a project of its own, after Phase 3.
+2. **Marketplace, Cloud Sync and Team Edition wait.** The signal comes from the owner's separate commercial project, not from the three signals of section 4.3. Each may become its own project or be folded into a running one, as the situation shows.
+3. **3a entry and exit criteria must prove a core at JARVIS standard.** After 3a only additional features are built; the core is not touched for at least one technology product life cycle (about 4 years). 3b (installer, registry, packaging) needs no change.
+4. **Phase 2 is trimmed.** Its most important exit condition: Lan's automation core handles basic tasks without specialised plugins, and the overall architecture of Lan is settled. Phase 3 completes Lan on that architecture; nothing is torn down and rebuilt. The owner's picture: Phase 0 the foundation, Phase 1 the main pillars, Phase 2 the load-bearing frame, Phase 3 the walls, roof and interior.
+5. **All voice work is one plugin, after Phase 3.** In Phase 3 the owner works with Lan through chat and tasks.
+6. **Stop rules S1 to S4 and the analysis accepted;** points that need clarifying are discussed separately.
+
+### 12.1 What the decisions change in this outline
+
+| Section | Change |
+| --- | --- |
+| 4.1 A9 | Removed. `speech` and scenario S4 (meeting minutes) move after Phase 3 (decision 5). Stop rule S1 and bench A2 stay, without the speech part |
+| 4.1 A5 | No longer optional: see 12.2, point 2 |
+| 4.2 B6 | Reduced to "a plugin can be built, versioned and installed as a wheel". Publishing and selling a plugin belongs to its own project after Phase 3 (decision 1) |
+| 4.3 | Start signals replaced by "a signal from the owner's commercial project" (decision 2). Sizes and reasons stay |
+| 5, stage 3a-2 | Runs without A9. The 3a exit uses a chat-and-task scenario written by the owner in the template of `docs/specs/acceptance-scenarios.md`, not S4 |
+| 6 | Cut order accepted (decision 4). The n8n line is removed from the Roadmap |
+| 8 R4 | 3a exit criteria gain the core-freeze test of 12.2. 3b exit unchanged |
+
+### 12.2 Consequences that need the owner's confirmation **[needs Hùng]**
+
+These follow from decisions 1, 3 and 4. They are this file's reading, not yet decisions.
+
+1. **What "the core is not touched" means.** A literal reading (no commit in `lfmap-core` for 4 years) cannot hold: security fixes and changes forced by Windows or Python will come (the Python version in use leaves upstream support inside that window: verify). Proposed reading: for 4 years there is **no breaking change** to the Plugin Contract, to the formats of `config.toml`, `flows.toml` and the state files, or to the gate invariants of `ARCHITECTURE.md`. Fixes and additive, optional interfaces are allowed. The contract is declared **1.0** at the 3a exit.
+2. **3a grows by the extension points that later plugins need.** If memory, voice, proactivity, phone and device control must be plugins that do not change the core, the core has to offer their hooks before it is frozen. Found so far: tool calling and streaming in `ModelClient` (A5, now required); a notification inbox as a core surface; a rule for a non-loopback bind and a device identity in audit lines; a rule for a long-running listener process; a GPU lock; the label of A0 able to carry data that has no path (a memory fact, audio). Each needs at least its ADR and interface in 3a, even where the plugin comes years later. New item **A10: extension points for L3 to L7**, size M to L, mostly design.
+3. **Core-freeze test for the 3a exit.** For each of L3 to L7, a one-page plugin design written against contract 1.0 shows that it needs no core change. A change it does need is either made in 3a or written down as an accepted exception. Cheap to do, and the only way to check decision 3 before four years have passed.
+4. **"Architecture settled" at the Phase 2 exit pulls some design forward.** Three things shape the frame and are planned as Phase 3 items: the label on tool results (A0), channel `chat` (A1 (a)) and the contract version from JF-4. Their **design** (spec or ADR, no code) should be accepted before Phase 2 ends; building stays in 3a. Proposed extra Phase 2 exit condition: an architecture baseline (redrawn diagram plus `ARCHITECTURE.md`) accepted by the owner. Entry criterion E7 becomes that baseline.
+5. **Proposed Phase 2 exit wording:** scenarios S1, S3 (reduced) and S2 (trimmed) run with the core (Flows, EventBus, gate, data classes, `ModelClient`) and general-purpose plugins only (`web`, `file`, `email`, `llm`, `knowledge`, `markitdown`), and the architecture baseline is accepted.
+
+Scope warning, restated: decisions 1 and 3 make 3a larger than section 4.1 estimated, because A5 and A10 are now required. They also make it finite: after the freeze test, new capability is plugin work.
