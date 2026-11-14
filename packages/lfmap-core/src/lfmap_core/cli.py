@@ -422,7 +422,14 @@ def build_app(registry: Registry) -> typer.Typer:
         audit({**record, "decision": decision, "reason": f"proposal {proposal.id}"})
 
     def approve_flow(proposal: approvals.Proposal, json_output: bool) -> None:
-        flow, run, index = flows_run.check_resume(proposal)
+        try:
+            flow, run, index = flows_run.check_resume(proposal)
+        except ToolError as error:
+            if error.message == "flow changed; start a new run":
+                raise ToolError(
+                    error.code, f"{error.message} (or run: lfmap approvals reject {proposal.id})", error.details
+                ) from error
+            raise
         step = flow.steps[index]
         typer.echo(
             f"Proposal {proposal.id} from flow {run.flow}, run {run.run_id}, created {proposal.created.isoformat()}"

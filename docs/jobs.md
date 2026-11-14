@@ -72,6 +72,9 @@ to `ask` is queued. Every decision above T0 is written to `audit.jsonl` with cha
 A queued call is not run. The job exits 1 with `Error [permission_denied]: Queued for approval` and writes a
 proposal to `%LOCALAPPDATA%\lfmap\approvals\pending\<id>.json` (job, plugin, operation, input, tier, reason).
 A job that keeps hitting the same call reuses its pending proposal instead of writing a new one.
+If you edit the job in `jobs.toml` while it waits (changed input, removed and added again, disabled and enabled
+with a change), the next `jobs run` expires the old proposal and its run and queues a new proposal for the edited
+job; approving the old one would refuse with `flow changed`, so reject it or let it go.
 
 ```powershell
 uv run lfmap approvals pending          # proposals waiting; expired ones move to approvals\expired
@@ -156,6 +159,9 @@ Get-Content "$env:LOCALAPPDATA\lfmap\logs\jobs-$(Get-Date -Format yyyy-MM-dd).js
 
 ## Checking the machine
 
+Every job start also reads `flows.toml`, so a mistake in either file stops all jobs. Run `uv run lfmap flows check`
+after editing `jobs.toml` or `flows.toml`; `jobs doctor` fails on the same errors.
+
 `uv run lfmap jobs doctor [--json]` checks, without changing anything, that this machine can run the jobs. It
 only runs `schtasks /Query`, `powercfg /query`, `whoami /user`, `icacls <root> /save` and a two-line `Get-Acl` script (written to a temporary
 folder) that prints a folder owner; all by full path in `%SystemRoot%\System32`), and asks Ollama for its version. Each line shows the check,
@@ -166,7 +172,7 @@ folder) that prints a folder owner; all by full path in `%SystemRoot%\System32`)
 | --- | --- | --- | --- |
 | `uv` | uv found (same rule as the runner script) | | uv not found |
 | `pwsh` | PowerShell 7 found, and every task starts it by full path | | not found, or a task starts plain `pwsh`; run `register` |
-| `jobs_file` | `jobs.toml` valid, every plugin and operation exists | no `jobs.toml` | invalid file, or a job names an unknown plugin or operation |
+| `jobs_file` | `jobs.toml` valid, every plugin and operation exists, and the load a job start does (`flows.toml` parse, translation, id clash) succeeds | no `jobs.toml` | invalid file, a job names an unknown plugin or operation, or the load fails (broken `flows.toml`, a job and a flow with the same id; the runner's own message is shown) |
 | `tasks` | a task in `\LFMAP\` for each enabled job, and no other | no `schtasks`, or no job and no task | a task is missing, or a disabled or removed job still has one; run `register` |
 | `logon_mode` | every task runs whether you are logged on or not | a task runs only while you are logged on (`InteractiveToken`), or no task | |
 | `wake` | the machine never sleeps on AC power, or every task has "Wake the computer" | no task, no `schtasks`, or sleep unknown | the machine sleeps and a task does not wake it |
