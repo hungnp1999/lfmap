@@ -211,9 +211,9 @@ Answers to the six points of section 9 (#326). Where a decision changes an earli
 | 6 | Cut order accepted (decision 4). The n8n line is removed from the Roadmap |
 | 8 R4 | 3a exit criteria gain the core-freeze test of 12.2. 3b exit unchanged |
 
-### 12.2 Consequences that need the owner's confirmation **[needs Hùng]**
+### 12.2 Consequences of decisions 1, 3 and 4
 
-These follow from decisions 1, 3 and 4. They are this file's reading, not yet decisions.
+Written as this file's reading on 2026-11-14 03:57Z; the owner answered each point the same day (12.3).
 
 1. **What "the core is not touched" means.** A literal reading (no commit in `lfmap-core` for 4 years) cannot hold: security fixes and changes forced by Windows or Python will come (the Python version in use leaves upstream support inside that window: verify). Proposed reading: for 4 years there is **no breaking change** to the Plugin Contract, to the formats of `config.toml`, `flows.toml` and the state files, or to the gate invariants of `ARCHITECTURE.md`. Fixes and additive, optional interfaces are allowed. The contract is declared **1.0** at the 3a exit.
 2. **3a grows by the extension points that later plugins need.** If memory, voice, proactivity, phone and device control must be plugins that do not change the core, the core has to offer their hooks before it is frozen. Found so far: tool calling and streaming in `ModelClient` (A5, now required); a notification inbox as a core surface; a rule for a non-loopback bind and a device identity in audit lines; a rule for a long-running listener process; a GPU lock; the label of A0 able to carry data that has no path (a memory fact, audio). Each needs at least its ADR and interface in 3a, even where the plugin comes years later. New item **A10: extension points for L3 to L7**, size M to L, mostly design.
@@ -222,3 +222,13 @@ These follow from decisions 1, 3 and 4. They are this file's reading, not yet de
 5. **Proposed Phase 2 exit wording:** scenarios S1, S3 (reduced) and S2 (trimmed) run with the core (Flows, EventBus, gate, data classes, `ModelClient`) and general-purpose plugins only (`web`, `file`, `email`, `llm`, `knowledge`, `markitdown`), and the architecture baseline is accepted.
 
 Scope warning, restated: decisions 1 and 3 make 3a larger than section 4.1 estimated, because A5 and A10 are now required. They also make it finite: after the freeze test, new capability is plugin work.
+
+### 12.3 Confirmations (Hùng, 2026-11-14 04:11Z)
+
+1. **Core freeze, the owner's definition (replaces the proposed reading of 12.2 point 1):** no change request that alters the **basic architecture of the core**. Bug fixes, additional functions, configuration and the like continue as normal.
+2. **3a is allowed to be larger than this outline.** The aim is that plugins added later never force a change to the core's architecture. A10 (extension points for L3 to L7) and A5 are therefore part of 3a.
+3. **Core-freeze test accepted,** with the owner's caveat: the work is done as carefully as what is known today allows; real use may still bring events that need a flexible response. The freeze is a principle that every design and planning decision must uphold, not a guarantee.
+4. **Architecture baseline before the Phase 2 exit: accepted** (designs of the tool-result label, channel `chat` and the JF-4 contract version as specs; baseline accepted by the owner). Tracked in #331.
+5. **Phase 2 exit wording of 12.2 point 5: accepted.**
+
+How to apply the freeze in reviews, from now on: a design or card that would change a core invariant, the shape of the Plugin Contract or the place where a decision is made (gate, routing, labels) after the 3a exit is refused or raised to the owner as an exception. Before the 3a exit, the same question is asked of every Phase 2 and 3a design: "will a later plugin force this to change?"
