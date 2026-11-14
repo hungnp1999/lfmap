@@ -1,7 +1,7 @@
 # Design: core extension points before the freeze (Phase 3a, item A10)
 
 - Date: 2026-11-14. Role: Architect. Issue #334. Item A10 of `docs/research/2026-11-14-phase3-outline.md` section 12.2 point 2.
-- Status: **draft for the owner** (`gate:po`). Design only: no code, no ADR and no invariant is changed by this file. Each point that amends an accepted ADR is listed in section 6 with the ADR draft that would settle it. Building each point is separate 3a work with its own card.
+- Status: **direction accepted by the owner on 2026-11-14 14:40Z** (all seven decisions of section 8 and the ADR amendments of section 6; recorded in section 10). Design only: no code and no invariant is changed by this file. The ADR texts are in `docs/research/2026-11-14-adr-027-029-drafts.md`. Building each point is separate 3a work with its own card.
 - Question: which hooks must the core offer before it is frozen, so that the later plugins (memory, voice, proactivity, phone, devices: levels L3 to L7 of `docs/research/2026-11-10-lanhai-assistant-architecture.md`) need no change to the core's architecture.
 - Owner frame (2026-11-14): after the 3a exit, for about 4 years, no change request alters the basic architecture of the core. Fixes, additive functions and configuration continue as normal. Surprises are handled as exceptions raised to the owner, but the freeze is upheld in every design and planning decision.
 - Sources: `/mnt/project-files/lfmap-docs/` 02 (Plugin Contract v0.2) and 03 (ADR-001..026), `ARCHITECTURE.md`, `docs/specs/` (model-client, chat-ui, rest, flows, events, data-classes), the Lan sketch, the threat model of 2026-11-13, `lfmap-core` at `147d2dd`.
@@ -332,3 +332,25 @@ Nothing here blocks Phase 2 work. D2 and D4 are the ones to read slowly.
 - Credentials for plugins (a hub token, a mail password): ADR-018 (5) points at Windows Credential Manager and `model-client.md` at an environment variable. One rule should be written with the `email` spec in Phase 2; it is not an A10 point because `email` forces it earlier.
 - Counted or prioritised resources, and VRAM accounting (section 4.6).
 - The threat model's own trigger list (section 12 there) asks for a redo before the REST adapter or the chat loop is merged; N1 and N2 should be in that redo.
+
+## 10. Decisions recorded (Hùng, 2026-11-14 14:40Z)
+
+The owner accepted the ADR amendments of section 6 and the proposals for all seven decisions of section 8 (D1 to D7), as written.
+
+His frame for reading this file and the Lan core architecture document together: the project is shaping a **framework**. A risk that cannot be handled at the level of the framework is covered by another solution later. Example given: security risks that are hard to pin down while the Lan core is being designed are resolved in the security core, not by tightening the framework now.
+
+What follows from it:
+
+| Item | State |
+| --- | --- |
+| D1: test F1 to F7, eight channels closed | Accepted. Used in every 3a design review; goes into `ARCHITECTURE.md` with the first code that relies on it |
+| D2: operations stay unary | Accepted. Note on ADR-001 |
+| D3: inbox as a core store, T0 inside a budget | Accepted. ADR-029 |
+| D4: network posture (listen through `[listen]`, TLS, enrolled devices; connect through named endpoints, scope `private` included) | Accepted. ADR-027. Code PRs still run `/security-review` |
+| D5: process model (zero by default, owner-enabled listeners under Task Scheduler) | Accepted. ADR-028 |
+| D6: resource leases, optional shared lock folder | Accepted. No ADR needed (no accepted text is amended) |
+| D7: design frozen at 1.0, code on demand; 3a grows by X2, X6, X7 | Accepted. Roadmap line for A10 to be widened by the coordinator |
+
+Risks this file names but leaves to other work, in line with the owner's frame: in-process plugin code can open its own socket or start its own process (the rules bind honest plugins; the control is the plugin allow-list G8 #315 and the security core); an advisory lock is ignored by programs outside LFMAP; the points of section 9 stay open until their first user.
+
+Accepting the direction is not accepting code: each point is built from its own card, and `ARCHITECTURE.md` changes only in the PR that lands the code.
