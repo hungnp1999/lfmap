@@ -1,0 +1,1 @@
+Phase 3 outline (#262, #326): section 12 of `docs/research/2026-11-14-phase3-outline.md` records the owner decisions of 2026-11-14 (3a/3b split, core freeze after 3a, voice after Phase 3, Phase 2 trimmed) and the consequences that still need confirmation. Docs only. No new dependency.
