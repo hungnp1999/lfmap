@@ -348,9 +348,11 @@ What follows from it:
 | D3: inbox as a core store, T0 inside a budget | Accepted. ADR-029 |
 | D4: network posture (listen through `[listen]`, TLS, enrolled devices; connect through named endpoints, scope `private` included) | Accepted. ADR-027. Code PRs still run `/security-review` |
 | D5: process model (zero by default, owner-enabled listeners under Task Scheduler) | Accepted. ADR-028 |
-| D6: resource leases, optional shared lock folder | Accepted. No ADR needed (no accepted text is amended) |
+| D6: resource leases, optional shared lock folder | Accepted. No ADR needed (no accepted text is amended). Backlog card: #339 |
 | D7: design frozen at 1.0, code on demand; 3a grows by X2, X6, X7 | Accepted. Roadmap line for A10 to be widened by the coordinator |
 
 Risks this file names but leaves to other work, in line with the owner's frame: in-process plugin code can open its own socket or start its own process (the rules bind honest plugins; the control is the plugin allow-list G8 #315 and the security core); an advisory lock is ignored by programs outside LFMAP; the points of section 9 stay open until their first user.
 
 Accepting the direction is not accepting code: each point is built from its own card, and `ARCHITECTURE.md` changes only in the PR that lands the code.
+
+ADR numbers: 027, 028 and 029 are taken by this file. ADR-030 is reserved for "labels and sinks" (the two sink rules of the Lan core architecture document, #333), written together with the label spec of #331.
